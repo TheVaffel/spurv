@@ -943,6 +943,7 @@ namespace spurv {
     
     void output_preamble(std::vector<uint32_t>& binary);
     void output_shader_header_begin(std::vector<uint32_t>& binary);
+    void output_shader_header_end(std::vector<uint32_t>& binary);
     void output_used_builtin_ids(std::vector<uint32_t>& bin);
     void output_shader_header_decorate_begin(std::vector<uint32_t>& bin);
 
@@ -1196,6 +1197,16 @@ namespace spurv {
     }
 
     output_used_builtin_ids(bin);
+  }
+
+  template<SpurvShaderType type, typename... InputTypes>
+  void SpurvShader<type, InputTypes...>::output_shader_header_end(std::vector<uint32_t>& bin) {
+    if constexpr(type == SPURV_SHADER_FRAGMENT) {
+	// OpExecutionMode <entry_point_id> OriginUpperLeft
+	add(bin, (3 << 16) | 16);
+	add(bin, this->entry_point_id);
+	add(bin, 7);
+      }
   }
   
   template<SpurvShaderType type, typename... InputTypes>
@@ -1599,15 +1610,19 @@ namespace spurv {
 
     this->output_preamble(res);
     this->output_shader_header_begin(res);
+    
     constexpr int num_args = sizeof...(NodeTypes);
-
-    res[this->entry_point_declaration_size_index] |= ( 3 + 2 + this->input_entries.size() + num_args + get_num_defined_builtins()) << 16;
-
+    
     for(int i = 0; i < num_args; i++) {
       this->output_pointer_ids.push_back(this->get_new_value_id());
     }
     
     this->output_shader_header_output_variables(res, 0, args...);
+
+    this->output_shader_header_end(res);
+
+    res[this->entry_point_declaration_size_index] |= ( 3 + 2 + this->input_entries.size() + num_args + get_num_defined_builtins()) << 16;
+    
 
     this->output_shader_header_decorate_begin(res);
 
