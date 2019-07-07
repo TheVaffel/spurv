@@ -6,10 +6,51 @@ namespace spurv {
   /*
    * Global util functions
    */
+  
   template<int n, typename...Types>
   struct Utils::NthType {
     using type = typename std::tuple_element<n, std::tuple<Types...> >::type;
   };
+
+  template<typename FirstType, typename... InnerTypes>
+  void Utils::ensureDefinedRecursive(std::vector<uint32_t>& bin,
+				     std::vector<int*>& ids) {
+    FirstType::ensure_defined(bin, ids);
+
+    if constexpr(sizeof...(InnerTypes) > 0) {
+	Utils::ensureDefinedRecursive<InnerTypes...>(bin, ids);
+      }
+  }
+
+  template<typename FirstType, typename... InnerTypes>
+  void Utils::addIDsRecursive(std::vector<uint32_t>& bin) {
+    Utils::add(bin, FirstType::id);
+
+    if constexpr(sizeof...(InnerTypes) > 0) {
+	Utils::addIDsRecursive<InnerTypes...>(bin);
+      }
+  }
+
+  template<typename FirstType, typename... InnerTypes>
+  constexpr bool Utils::isSpurvTypeRecursive() {
+    if constexpr(is_spurv_type<FirstType>::value == false) {
+	return false;
+      }
+    
+    if constexpr(sizeof...(InnerTypes) > 0) {
+	return Utils::isSpurvTypeRecursive<InnerTypes...>();
+      }
+
+    return true;
+  }
+
+  template<typename FirstType, typename... InnerTypes>
+  void Utils::getDSpurvTypesRecursive(DSpurvType *pp) {
+    FirstType::getDSpurvType(pp);
+    if constexpr(sizeof...(InnerTypes) > 0) {
+	Utils::getDSpurvTypesRecursive<InnerTypes...>(pp + 1);
+      }
+  }
   
   int Utils::global_id_counter = 1;
 

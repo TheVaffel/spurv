@@ -18,7 +18,8 @@ namespace spurv {
     SPURV_TYPE_FLOAT,
     SPURV_TYPE_MAT,
     SPURV_TYPE_ARR,
-    SPURV_TYPE_POINTER
+    SPURV_TYPE_POINTER,
+    SPURV_TYPE_STRUCT
   };
   
   enum SpurvShaderType {
@@ -58,6 +59,8 @@ namespace spurv {
   /*
    * Classes
    */
+
+  struct DSpurvType;
   
   template<SpurvTypeKind kind, int arg0, int arg1, typename inner_type>
   class SpurvType;
@@ -91,6 +94,7 @@ namespace spurv {
    * Static util class for Spurv
    */
   class Utils {
+    
     static int getNewID();
     static int getCurrentID();
     static void resetID();
@@ -99,6 +103,19 @@ namespace spurv {
     static void add(std::vector<uint32_t>& binary, std::string str);
     static int stringWordLength(std::string);
 
+    template<typename First, typename... Types>
+    static void ensureDefinedRecursive(std::vector<uint32_t>& bin,
+				       std::vector<int*>& ids);
+    
+    template<typename First, typename... Types>
+    static void addIDsRecursive(std::vector<uint32_t>& bin);
+
+    template<typename First, typename... Types>
+    static constexpr bool isSpurvTypeRecursive();
+
+    template<typename First, typename... Types>
+    static void getDSpurvTypesRecursive(DSpurvType *pp);
+    
     template<int n, typename...Types>
     struct NthType;
     
@@ -163,12 +180,14 @@ namespace spurv {
     // is_spurv_type below as well
     SpurvTypeKind kind;
     int a0, a1;
+    
+    // NB: This will be a list if kind == SPURV_TYPE_STRUCT
     DSpurvType* inner_type;
     
     constexpr DSpurvType() : kind(SPURV_TYPE_INVALID),
       a0(0), a1(0), inner_type(nullptr) { }
 
-    ~DSpurvType();
+    ~DSpurvType() ;
     
     bool operator==(const DSpurvType& ds) const;
   };
@@ -282,6 +301,22 @@ namespace spurv {
     static void define(std::vector<uint32_t>& bin);
   };
 
+
+  /*
+   * SpurvStruct - Representation of structs
+   */
+  
+  template<typename... InnerTypes>
+  class SpurvStruct : public SpurvType<SPURV_TYPE_STRUCT, 0, 0, NullType> {
+  public:
+    static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
+					    std::vector<int*>& ids);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<int*>& ids);
+    static void define(std::vector<uint32_t>& bin);
+    static void getDSpurvType(DSpurvType* type);
+  };
+
+    
   /*
    * More specialized type checks
    */
@@ -293,6 +328,9 @@ namespace spurv {
 
   template<SpurvStorageClass storage, typename tt>
   struct is_spurv_type<SpurvPointer<storage, tt> > : std::true_type { static_assert(is_spurv_type<tt>::value); };
+
+  template<typename... InnerTypes>
+  struct is_spurv_type<SpurvStruct<InnerTypes...> > : std::true_type{ static_assert(Utils::isSpurvTypeRecursive<InnerTypes...>); };
 
   template<int n, int m>
   struct is_spurv_mat_type<SpurvMat<n, m> > : std::true_type {};

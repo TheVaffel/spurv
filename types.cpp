@@ -16,8 +16,12 @@ namespace spurv {
    */
   
   DSpurvType::~DSpurvType() {
-    if (inner_type) {
-      delete inner_type;
+    if (this->inner_type) {
+      if(this->kind == SPURV_TYPE_STRUCT) {
+	delete[] this->inner_type;
+      } else {
+	delete this->inner_type;
+      }
     }
   }
   

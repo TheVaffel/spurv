@@ -186,6 +186,43 @@ namespace spurv {
 
   
   /*
+   * Struct member functions
+   */
+  
+  template<typename... InnerTypes>
+  void SpurvStruct<InnerTypes...>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
+							       std::vector<int*>& ids) {
+    Utils::ensureDefinedRecursive<InnerTypes...>(bin, ids);
+  }
+
+  template<typename... InnerTypes>
+  void SpurvStruct<InnerTypes...>::ensure_defined(std::vector<uint32_t>& bin,
+						   std::vector<int*>& ids) {
+    if(SpurvStruct<InnerTypes...>::id < 0) {
+      ensure_defined_dependencies(bin, ids);
+      define(bin);
+      ids.push_back(&(SpurvStruct<InnerTypes...>::id));
+    }
+  }
+
+  template<typename... InnerTypes>
+  void SpurvStruct<InnerTypes...>::define(std::vector<uint32_t>& bin) {
+    SpurvStruct<InnerTypes...>::id = Utils::getNewID();
+    Utils::add(bin, ((2 + sizeof...(InnerTypes)) << 16) | 30);
+    Utils::add(bin, SpurvStruct<InnerTypes...>::id);
+    Utils::addIDsRecursive<InnerTypes...>(bin);
+  }
+
+  template<typename... InnerTypes>
+  void SpurvStruct<InnerTypes...>::getDSpurvType(DSpurvType* type) {
+    constexpr int n = sizeof...(InnerTypes);
+    type->kind = SPURV_TYPE_STRUCT;
+    type->inner_type = new DSpurvType[sizeof...(InnerTypes)];
+    Utils::getDSpurvTypesRecursive<InnerTypes...>(type);
+  }
+  
+  
+  /*
    * Type mapper
    */
   template<>
