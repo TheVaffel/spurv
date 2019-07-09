@@ -86,12 +86,12 @@ namespace spurv {
   
   template<typename tt, ExpressionOperation op, typename tt2, typename tt3>
   void Expr<tt, op, tt2, tt3>::define(std::vector<uint32_t>& res) {
-    if(this->v1 && !this->v1->isDefined()) {
-      this->v1->define(res);
+    if(this->v1) {
+      this->v1->ensure_defined(res);
     }
 
-    if(this->v2 && !this->v2->isDefined()) {
-      this->v2->define(res);
+    if(this->v2) {
+      this->v2->ensure_defined(res);
     }
 
     DSpurvType d1, d2, d3;
@@ -199,7 +199,6 @@ namespace spurv {
 	}
     }
     
-    this->defined = true;
   }
 
 

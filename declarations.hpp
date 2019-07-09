@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdint> // uint32_t
 #include <string>
+#include <map>
 
 namespace spurv {
 
@@ -62,7 +63,7 @@ namespace spurv {
 
   struct DSpurvType;
   
-  template<SpurvTypeKind kind, int arg0, int arg1, typename inner_type>
+  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
   class SpurvType;
 
   template<SpurvShaderType type, typename... InputTypes>
@@ -89,10 +90,16 @@ namespace spurv {
   template<typename tt, ExpressionOperation op,
 	   typename t1, typename t2>
   struct Expr;
+
+  class SpurvUniformBindingBase;
+
+  class ConstantRegistry;
+  
   
   /*
    * Static util class for Spurv
    */
+  
   class Utils {
     
     static int getNewID();
@@ -123,7 +130,7 @@ namespace spurv {
     
     static int global_id_counter;
 
-    template<SpurvTypeKind kind, int n, int m, typename inner>
+    template<SpurvTypeKind kind, int n, int m, typename... InnerTypes>
     friend class SpurvType;
     
     template<SpurvShaderType type, typename... InputTypes>
@@ -155,10 +162,43 @@ namespace spurv {
 
     template<typename tt>
     friend class InputVar;
+
+    friend class SpurvUniformBindingBase;
+
+    friend class ConstantRegistry;
     
   };
 
+  
+  /*
+   * ConstantRegistry - Class holding static data structures to ensure each scalar constant is only defined once
+   */
+  
+  class ConstantRegistry {
+    // Tuples for ints contain <data type size, signedness, constant> maps to id
+    // Pairs for floats contain <data type size, constant>, maps to id
+    static std::map<std::tuple<int, int, int>, int> integer_registry;
+    static std::map<std::pair<int, float>, int > float_registry;
 
+    static void registerInt(int n, int s, int m, int id);
+    static void registerFloat(int n, float f, int id);
+    
+  public:
+
+    static bool isDefinedInt(int n, int s, int m);
+    static bool isDefinedFloat(int n, float f);
+
+    static int getIDInteger(int n, int s, int m);
+    static int getIDFloat(int n, float f);
+
+    template<typename nt>
+    static void ensureDefinedConstant(const nt& val, int id,
+				      std::vector<uint32_t>& res);
+    
+    static void resetRegistry();
+  };
+
+  
   /*
    * NullType
    */
@@ -182,10 +222,11 @@ namespace spurv {
     int a0, a1;
     
     // NB: This will be a list if kind == SPURV_TYPE_STRUCT
-    DSpurvType* inner_type;
+    DSpurvType* inner_types;
+    int num_inner_types;
     
     constexpr DSpurvType() : kind(SPURV_TYPE_INVALID),
-      a0(0), a1(0), inner_type(nullptr) { }
+      a0(0), a1(0), inner_types(nullptr), num_inner_types(0) { }
 
     ~DSpurvType() ;
     
@@ -197,12 +238,11 @@ namespace spurv {
    * SpurvType - The mother of them all
    */
   
-  template<SpurvTypeKind kind, int arg0 = 0, int arg1 = 0, typename inner_type = NullType>
+  template<SpurvTypeKind kind, int arg0 = 0, int arg1 = 0, typename... InnerTypes >
   class SpurvType {
   protected:
     static int id;
   public:
-    char name[32];
     constexpr SpurvType() {
       static_assert(kind == SPURV_TYPE_VOID); id = -1;
     }
@@ -214,8 +254,13 @@ namespace spurv {
     static void getDSpurvType(DSpurvType* type);
 
     static int getID();
+    
+    static constexpr SpurvTypeKind getKind();
+    static constexpr int getArg0();
+    static constexpr int getArg1();
   };
 
+    
   /*
    * SpurvInt - Representation of integers
    */
@@ -307,12 +352,17 @@ namespace spurv {
    */
   
   template<typename... InnerTypes>
-  class SpurvStruct : public SpurvType<SPURV_TYPE_STRUCT, 0, 0, NullType> {
+  class SpurvStruct : public SpurvType<SPURV_TYPE_STRUCT, 0, 0, InnerTypes...> {
+    static bool is_decorated;
+    
   public:
+    
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
 					    std::vector<int*>& ids);
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<int*>& ids);
     static void define(std::vector<uint32_t>& bin);
+    static void ensure_decorated(std::vector<uint32_t>& bin);
+    
     static void getDSpurvType(DSpurvType* type);
   };
 
@@ -377,6 +427,8 @@ namespace spurv {
     void declareDefined();
     bool isDefined() const;
     void incrementRefCount();
+
+    void ensure_defined(std::vector<uint32_t>& res);
     
     virtual void define(std::vector<uint32_t>& res) = 0;
 
@@ -419,11 +471,15 @@ namespace spurv {
    * UniformVar - Represents uniforms (duh)
    */
   
-  template<typename tt>
+  template<typename tt> // n is element number within binding
   struct UniformVar : public Var<tt> {
-    int set_no, bind_no;
+    int set_no, bind_no, member_no;
+    int pointer_id, parent_struct_id;
     
-    UniformVar(int s, int b) ;
+    UniformVar(int s, int b, int m, int pointer_id, int parent_struct_id) ;
+    virtual void define(std::vector<uint32_t>& res);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res,
+				     std::vector<int*>& ids);
   };
 
 
@@ -494,16 +550,57 @@ namespace spurv {
 
   
   /*
+   * SpurvUniformBindingBase - base class to make it possible for SpurvShader to keep track of uniforms
+   */
+
+  class SpurvUniformBindingBase {
+
+  protected:
+    int set_no, binding_no;
+    int pointer_id;
+    
+  public:
+    SpurvUniformBindingBase(int s, int b);
+
+    int getSetNo();
+    int getBindingNo();
+    int getPointerID();
+
+    virtual void definePointer(std::vector<uint32_t>& bin,
+			       std::vector<int*>& ids) = 0;
+    virtual void decorateType(std::vector<uint32_t>& bin) = 0;
+  };
+
+
+  /*
+   * SpurvUniformBinding - represents a single uniform binding of a descriptor set
+   */
+  
+  template<typename... InnerTypes>
+  class SpurvUniformBinding : public SpurvUniformBindingBase {
+    
+  private:
+    std::vector<void*> value_pointers;
+    
+  public:  
+    SpurvUniformBinding(int sn, int bn);
+    
+    template<int n>
+    ValueNode<typename Utils::NthType<n, InnerTypes...>::type >& getBinding();
+
+    virtual void definePointer(std::vector<uint32_t>& bin,
+			       std::vector<int*>& ids);
+    virtual void decorateType(std::vector<uint32_t>& bin);
+  };
+  
+  
+  /*
    * SpurvShader - The object responsible for IO and compilation of the shader
    */
   
   template<SpurvShaderType type, typename... InputTypes>
   class SpurvShader {
-    struct UniformEntry {
-      int set_no, bind_no;
-      int id;
-      DSpurvType ds;
-    };
+
 
     struct InputVariableEntry {
       int id;
@@ -524,9 +621,9 @@ namespace spurv {
     // We use this to reset the type ids (stored for each type) after compilation
     std::vector<int*> defined_type_ids;
     
-    std::vector<UniformEntry> uniform_entries;
     std::vector<InputVariableEntry> input_entries;
     std::vector<uint32_t> output_pointer_ids;
+    std::vector<SpurvUniformBindingBase*> uniform_bindings;
 
     int glsl_id;
     int entry_point_id;
@@ -582,6 +679,8 @@ namespace spurv {
     template<typename tt>
     void output_output_pointers(std::vector<uint32_t>& res, int n, ValueNode<tt>& val);
 
+    void output_uniform_pointers(std::vector<uint32_t>& res);
+    
     void output_used_builtin_pointers(std::vector<uint32_t>& res);
     
     void output_builtin_output_definitions(std::vector<uint32_t>& res);
@@ -601,9 +700,12 @@ namespace spurv {
 
     template<BuiltinVariableIndex ind, typename tt>
     void setBuiltinOutput(ValueNode<tt>& val);
-    
+
+    // In SPIR-V, most bindings must (excluding more complex datatypes like images)
+    // be given in a struct, thus we let the developer specify which member of the
+    // struct that is desirable
     template<typename tt>
-    ValueNode<tt>& addUniform(int set_no, int bind_no);
+    ValueNode<tt>& getUniform(int set_no, int bind_no, int member_no);
 
     template<int n, typename First>
     auto& getInputVariable();
@@ -614,6 +716,9 @@ namespace spurv {
     template<int n>
     auto& getInputVariable();
 
+    template<typename... InnerTypes>
+    SpurvUniformBinding<InnerTypes...>& getUniformBinding(int set_no, int binding_no);
+    
     template<typename... NodeTypes>
     void compileToSpirv(std::vector<uint32_t>& res, NodeTypes&... args);
   };

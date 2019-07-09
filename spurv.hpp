@@ -6,6 +6,7 @@
 #include "nodes.hpp"
 #include "expressions.hpp"
 #include "utils.hpp"
+#include "uniform.hpp"
 #include "shader.hpp"
 
 #endif // ndef __SPURV_SPURV

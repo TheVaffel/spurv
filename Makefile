@@ -9,9 +9,9 @@ INCLUDE_DIRS=-I$(HCONLIB_ROOT)/include -I.
 
 ANTI_WARNINGS=-Wno-delete-non-virtual-dtor
 
-HDRS=declarations.hpp types.hpp nodes.hpp expressions.hpp shader.hpp spurv.hpp
+HDRS=declarations.hpp types.hpp nodes.hpp expressions.hpp shader.hpp spurv.hpp uniform.hpp constant_registry.hpp
 
-SRCS=types.cpp	
+SRCS=types.cpp uniform.cpp constant_registry.cpp
 
 all: test test2
 

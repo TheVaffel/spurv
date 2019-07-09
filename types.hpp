@@ -5,45 +5,65 @@
 
 #include <FlatAlg.hpp>
 namespace spurv {
+  
   /* 
    * Static methods
    */
   
-  template<SpurvTypeKind kind, int arg0, int arg1, typename inner_type>
-  void SpurvType<kind, arg0, arg1, inner_type>::getDSpurvType(DSpurvType* type) {
+  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
+  void SpurvType<kind, arg0, arg1, InnerTypes...>::getDSpurvType(DSpurvType* type) {
       type->kind = kind;
       type->a0 = arg0;
       type->a1 = arg1;
-      if constexpr (!std::is_same<inner_type, NullType>::value) {
-	type->inner_type = new DSpurvType();
-	inner_type::getDSpurvType(type->inner_type);
+
+      constexpr int n = sizeof...(InnerTypes);
+      
+      if constexpr (n > 0) {
+	type->inner_types = new DSpurvType[n];
+	Utils::getDSpurvTypesRecursive<InnerTypes...>(type->inner_types);
       }
     }
 
-  template<SpurvTypeKind kind, int arg0, int arg1, typename inner_type>
-  int SpurvType<kind, arg0, arg1, inner_type>::getID() {
+  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
+  int SpurvType<kind, arg0, arg1, InnerTypes...>::getID() {
     if(id == -1) {
       printf("Kind = %d, arg0 = %d, arg1 = %d\n", kind, arg0, arg1);
-      printf("Tried to use id before defined\n");
-      exit(-1);
+      printf("Tried to use type id before defined\n");
+      // Fall through to catch errors other places..
     }
     return id;
   }
-  
 
+  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
+  constexpr SpurvTypeKind SpurvType<kind, arg0, arg1, InnerTypes...>::getKind() {
+    return kind;
+  }
+
+  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
+  constexpr int SpurvType<kind, arg0, arg1, InnerTypes...>::getArg0() {
+    return arg0;
+  }
+
+  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
+  constexpr int SpurvType<kind, arg0, arg1, InnerTypes...>::getArg1() {
+    return arg1;
+  }
+
+  
   /*
    * Static variables
    */
   
-  template<SpurvTypeKind kind, int arg0, int arg1, typename inner_type>
-  int SpurvType<kind, arg0, arg1, inner_type>::id = -1;
+  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
+  int SpurvType<kind, arg0, arg1, InnerTypes...>::id = -1;
 
+  
   /*
    * Default Member functions
    */
 
-  template<SpurvTypeKind kind, int arg0, int arg1, typename inner_type>
-  void SpurvType<kind, arg0, arg1, inner_type>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
+  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
+  void SpurvType<kind, arg0, arg1, InnerTypes...>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
 									    std::vector<int*>& ids) { }
   
   /*
@@ -61,9 +81,9 @@ namespace spurv {
 
   template<int n, int signedness>
   void SpurvInt<n, signedness>::ensure_defined(std::vector<uint32_t>& bin, std::vector<int*>& ids) {
-    if(SpurvType<SPURV_TYPE_INT, n>::id < 0) {
+    if(SpurvType<SPURV_TYPE_INT, n, signedness>::id < 0) {
       define(bin);
-      ids.push_back(&(SpurvType<SPURV_TYPE_INT, n>::id));
+      ids.push_back(&(SpurvType<SPURV_TYPE_INT, n, signedness>::id));
     }
   }
 
@@ -184,6 +204,14 @@ namespace spurv {
     Utils::add(bin, tt::getID());
   }
 
+
+  /*
+   * Struct member variables
+   */ 
+
+  template<typename... InnerTypes>
+  bool SpurvStruct<InnerTypes...>::is_decorated = false;
+  
   
   /*
    * Struct member functions
@@ -217,22 +245,42 @@ namespace spurv {
   void SpurvStruct<InnerTypes...>::getDSpurvType(DSpurvType* type) {
     constexpr int n = sizeof...(InnerTypes);
     type->kind = SPURV_TYPE_STRUCT;
-    type->inner_type = new DSpurvType[sizeof...(InnerTypes)];
+    type->inner_types = new DSpurvType[sizeof...(InnerTypes)];
     Utils::getDSpurvTypesRecursive<InnerTypes...>(type);
+  }
+
+  template<typename... InnerTypes>
+  void SpurvStruct<InnerTypes...>::ensure_decorated(std::vector<uint32_t>& bin) {
+    if( is_decorated) {
+      return;
+    }
+
+    is_decorated = true;
+
+    // OpDecorate <type id> Block
+    Utils::add(bin, (3 << 16) | 71);
+    Utils::add(bin, SpurvStruct<InnerTypes...>::id);
+    Utils::add(bin, 2);
   }
   
   
   /*
    * Type mapper
    */
+  
   template<>
   struct MapSpurvType<void> {
     typedef void_s type;
   };
 
   template<>
-  struct MapSpurvType<int> {
+  struct MapSpurvType<int32_t> {
     typedef int_s type;
+  };
+
+  template<>
+  struct MapSpurvType<uint32_t> {
+    typedef uint_s type;
   };
 
   template<>

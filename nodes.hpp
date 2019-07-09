@@ -2,6 +2,8 @@
 #define __SPURV_NODES
 
 #include "declarations.hpp"
+#include "constant_registry.hpp"
+
 #include <cassert>
 
 namespace spurv {
@@ -39,6 +41,16 @@ namespace spurv {
   ValueNode<tt>::ValueNode() { this->id = Utils::getNewID(); this->ref_count = 0; this->defined = false; }
 
   template<typename tt>
+  void ValueNode<tt>::ensure_defined(std::vector<uint32_t>& res) {
+    if(this->isDefined()) {
+      return;
+    }
+
+    this->define(res);
+    this->declareDefined();
+  }
+  
+  template<typename tt>
   void ValueNode<tt>::ensure_type_defined(std::vector<uint32_t>& res, std::vector<int32_t*>& ids) {
     tt::ensure_defined(res, ids);
   }
@@ -63,25 +75,9 @@ namespace spurv {
 
   template<typename tt>
   void Constant<tt>::define(std::vector<uint32_t>& res) {
-    DSpurvType ds;
-    MapSpurvType<tt>::type::getDSpurvType(&ds);
-    if (ds.kind == SPURV_TYPE_FLOAT ||
-	ds.kind == SPURV_TYPE_INT) {
-      if(ds.a0 != 32) {
-	printf("Bitwidth of 32 is the only supported at this point\n");
-	exit(-1);
-      }
-      assert(ds.a0 == 32);
-      Utils::add(res, (4 << 16) | 43);
-      Utils::add(res, MapSpurvType<tt>::type::getID());
-      Utils::add(res, this->getID());
-      Utils::add(res, *(int32_t*)(&this->value));
-    } else {
-      printf("Constants not of integer or float type not yet supported");
-      exit(-1);
-    }
 
-    this->declareDefined();
+    ConstantRegistry::ensureDefinedConstant<tt>(this->value, this->id,
+						res);
   }
 
 
@@ -105,18 +101,58 @@ namespace spurv {
     }
   }
 
+  
   /*
    * UniformVar member functions
    */
+  
   template<typename tt>
-  UniformVar<tt>::UniformVar(int s, int b) {
+  UniformVar<tt>::UniformVar(int s, int b, int m, int pointer_id, int parent_struct_id) {
     this->set_no = s;
     this->bind_no = b;
+    this->member_no = m;
+    this->pointer_id = pointer_id;
+    this->parent_struct_id = parent_struct_id;
   }
 
+  template<typename tt>
+  void UniformVar<tt>::define(std::vector<uint32_t>& res) {
+
+    int individual_pointer_id = Utils::getNewID();
+    
+    // OpAccessChain
+    Utils::add(res, (5 << 16) | 65);
+    Utils::add(res, SpurvPointer<SPURV_STORAGE_UNIFORM, tt>::id);
+    Utils::add(res, individual_pointer_id);
+    Utils::add(res, this->parent_struct_id);
+    Utils::add(res, ConstantRegistry::getIDInteger(32, 1, this->member_no)); 
+    
+    // OpLoad
+    Utils::add(res, (4 << 16) | 61);
+    Utils::add(res, tt::getID());
+    Utils::add(res, this->id);
+    Utils::add(res, individual_pointer_id);
+  }
+
+  template<typename tt>
+  void UniformVar<tt>::ensure_type_defined(std::vector<uint32_t>& res,
+					      std::vector<int*>& ids) {
+    tt::ensure_defined(res, ids);
+
+    // A little bit hacky, but at least it makes the job done
+    // This ensures that the constant int we need to use when
+    // accessing this variable within the uniformbinding, is
+    // defined
+    
+    SpurvInt<32, 1>::ensure_defined(res, ids);
+    ConstantRegistry::ensureDefinedConstant((int32_t)this->member_no, Utils::getNewID(), res);
+  }
+
+  
   /*
    * InputVar member functions
    */
+  
   template<typename tt>
   InputVar<tt>::InputVar(int n, int pointer_id) {
     this->input_no = n;
@@ -130,8 +166,6 @@ namespace spurv {
     Utils::add(res, tt::getID());
     Utils::add(res, this->id);
     Utils::add(res, this->pointer_id);
-
-    this->declareDefined();
   }
 };
 

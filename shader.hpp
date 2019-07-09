@@ -252,9 +252,22 @@ namespace spurv {
       Utils::add(bin, i);
     }
 
-    for(uint i = 0; i < uniform_entries.size(); i++) {
-      printf("Uniforms not properly implemented yet\n");
-      exit(-1);
+    // Put decorations on uniforms
+    for(uint i = 0; i < uniform_bindings.size(); i++) {
+      
+      uniform_bindings[i]->decorateType(bin);
+
+      // Decorate <uniform_binding> DescriptorSet <num>
+      Utils::add(bin, (4 << 16) | 71);
+      Utils::add(bin, uniform_bindings[i]->getPointerID());
+      Utils::add(bin, 34);
+      Utils::add(bin, uniform_bindings[i]->getSetNo());
+
+      // Decorate <uniform_binding> Binding <num>
+      Utils::add(bin, (4 << 16) | 71);
+      Utils::add(bin, uniform_bindings[i]->getPointerID());
+      Utils::add(bin, 33);
+      Utils::add(bin, uniform_bindings[i]->getBindingNo());
     }
   }
 
@@ -295,7 +308,7 @@ namespace spurv {
   template<typename tt, typename... NodeTypes>
   void SpurvShader<type, InputTypes...>::output_output_definitions(std::vector<uint32_t>& res, int n,
 								   ValueNode<tt>& node, NodeTypes... args) {
-    node.define(res);
+    node.ensure_defined(res);
 
     // OpStore
     Utils::add(res, (3 << 16) | 62);
@@ -309,7 +322,7 @@ namespace spurv {
   template<typename tt>
   void SpurvShader<type, InputTypes...>::output_output_definitions(std::vector<uint32_t>& res, int n,
 								   ValueNode<tt>& node) {
-    node.define(res);
+    node.ensure_defined(res);
 
     // OpStore
     Utils::add(res, (3 << 16) | 62);
@@ -366,6 +379,13 @@ namespace spurv {
   }
 
   template<SpurvShaderType type, typename... InputTypes>
+  void SpurvShader<type, InputTypes...>::output_uniform_pointers(std::vector<uint32_t>& res) {
+    for(uint i = 0; i < this->uniform_bindings.size(); i++) {
+      this->uniform_bindings[i]->definePointer(res, this->defined_type_ids);
+    }
+  }
+
+  template<SpurvShaderType type, typename... InputTypes>
   void SpurvShader<type, InputTypes...>::output_used_builtin_pointers(std::vector<uint32_t>& res){
     if(this->builtin_vec4_0) {
       SpurvPointer<SPURV_STORAGE_OUTPUT, vec4_s>::ensure_defined(res, this->defined_type_ids);
@@ -408,7 +428,7 @@ namespace spurv {
   template<SpurvShaderType type, typename... InputTypes>
   void SpurvShader<type, InputTypes...>::output_builtin_output_definitions(std::vector<uint32_t>& res) {
     if(this->builtin_vec4_0) {
-      this->builtin_vec4_0->value_node->define(res);
+      this->builtin_vec4_0->value_node->ensure_defined(res);
       
       // OpStore
       Utils::add(res, (3 << 16) | 62);
@@ -417,7 +437,7 @@ namespace spurv {
       
     }
     if(this->builtin_float_0) {
-      this->builtin_float_0->value_node->define(res);
+      this->builtin_float_0->value_node->ensure_defined(res);
       
       // OpStore
       Utils::add(res, (3 << 16) | 62);
@@ -425,7 +445,7 @@ namespace spurv {
       Utils::add(res, this->builtin_float_0->value_node->getID());
     }
     if(this->builtin_arr_1_float_0) {
-      this->builtin_arr_1_float_0->value_node->define(res);
+      this->builtin_arr_1_float_0->value_node->ensure_defined(res);
       
       // OpStore
       Utils::add(res, (3 << 16) | 62);
@@ -433,7 +453,7 @@ namespace spurv {
       Utils::add(res, this->builtin_arr_1_float_0->value_node->getID());
     }
     if(this->builtin_arr_1_float_1) {
-      this->builtin_arr_1_float_1->value_node->define(res);
+      this->builtin_arr_1_float_1->value_node->ensure_defined(res);
       
       // OpStore
       Utils::add(res, (3 << 16) | 62);
@@ -500,24 +520,6 @@ namespace spurv {
       exit(-1);
     }
   }
-
-  template<SpurvShaderType type, typename... InputTypes>
-  template<typename tt>
-  ValueNode<tt>& SpurvShader<type, InputTypes...>::addUniform(int set_no, int bind_no) {
-    UniformEntry entry;
-    
-    entry.set_no = set_no;
-    entry.bind_no = bind_no;
-    tt::getDSpurvType(&(entry.ds));
-
-    this->uniform_entries.push_back(entry);
-
-    UniformVar<tt> *uv = new UniformVar<tt>(set_no, bind_no);
-
-    entry.id = uv->getID();
-    
-    return *uv;
-  }
   
   template<SpurvShaderType type, typename... InputTypes>
   template<int n>
@@ -561,6 +563,22 @@ namespace spurv {
   }
 
   template<SpurvShaderType type, typename... InputTypes>
+  template<typename... InnerTypes>
+  SpurvUniformBinding<InnerTypes...>& SpurvShader<type, InputTypes...>::getUniformBinding(int set_no, int binding_no) {
+    // O(n^2).. But hopefully nobody cares
+    for(uint i = 0; i < this->uniform_bindings.size(); i++) {
+      if(this->uniform_bindings[i]->getSetNo() == set_no &&
+	 this->uniform_bindings[i]->getBindingNo() == binding_no) {
+	return (SpurvUniformBinding<InnerTypes...>*)uniform_bindings[i];
+      }
+    }
+
+    SpurvUniformBinding<InnerTypes...>* pp = new SpurvUniformBinding<InnerTypes...>(set_no, binding_no);
+    this->uniform_bindings.push_back((SpurvUniformBindingBase*)pp);
+    return *pp;
+  }
+
+  template<SpurvShaderType type, typename... InputTypes>
   template<typename... NodeTypes>
   void SpurvShader<type, InputTypes...>::compileToSpirv(std::vector<uint32_t>& res, NodeTypes&... args) {
 
@@ -581,15 +599,13 @@ namespace spurv {
     
 
     this->output_shader_header_decorate_begin(res);
-
     this->output_shader_header_decorate_output_variables(res, 0, args...);
 
     this->output_type_definitions(res, args...);
 
     this->output_input_pointers<0, InputTypes...>(res);
-
     this->output_output_pointers(res, 0, args...);
-
+    this->output_uniform_pointers(res);
     this->output_used_builtin_pointers(res);
 
     this->output_main_function_begin(res);
@@ -604,6 +620,7 @@ namespace spurv {
     this->cleanup_ids();
 
     Utils::resetID();
+    ConstantRegistry::resetRegistry();
   }
 };
 

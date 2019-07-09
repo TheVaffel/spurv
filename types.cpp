@@ -16,12 +16,8 @@ namespace spurv {
    */
   
   DSpurvType::~DSpurvType() {
-    if (this->inner_type) {
-      if(this->kind == SPURV_TYPE_STRUCT) {
-	delete[] this->inner_type;
-      } else {
-	delete this->inner_type;
-      }
+    if (this->inner_types) {
+      delete[] this->inner_types;
     }
   }
   
@@ -30,9 +26,14 @@ namespace spurv {
     a = a && this->kind == ds.kind;
     a = a && this->a0 == ds.a0;
     a = a && this->a1 == ds.a1;
-    if(this->inner_type && ds.inner_type) {
-      return a && (*this->inner_type == *ds.inner_type);
-    } else if( this->inner_type || ds.inner_type) {
+    
+    if(this->inner_types && ds.inner_types) {
+      for(int i = 0; i < this->num_inner_types; i++) {
+	a = a && (this->inner_types[i] == ds.inner_types[i]);
+      }
+      
+      return a;
+    } else if( this->inner_types || ds.inner_types) {
       return false;
     }
       
