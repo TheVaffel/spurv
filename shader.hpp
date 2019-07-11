@@ -248,7 +248,7 @@ namespace spurv {
     // Decorate <input_var> Location <index>
     for(uint i = 0; i < input_entries.size(); i++) {
       Utils::add(bin, (4 << 16) | 71);
-      Utils::add(bin, input_entries[i].id);
+      Utils::add(bin, input_entries[i].pointer_id);
       Utils::add(bin, 30);
       Utils::add(bin, i);
     }
