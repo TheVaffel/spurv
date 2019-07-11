@@ -14,11 +14,11 @@ namespace spurv {
 
   template<typename FirstType, typename... InnerTypes>
   void Utils::ensureDefinedRecursive(std::vector<uint32_t>& bin,
-				     std::vector<int*>& ids) {
-    FirstType::ensure_defined(bin, ids);
+				     std::vector<TypeDeclarationState*>& declaration_states) {
+    FirstType::ensure_defined(bin, declaration_states);
 
     if constexpr(sizeof...(InnerTypes) > 0) {
-	Utils::ensureDefinedRecursive<InnerTypes...>(bin, ids);
+	Utils::ensureDefinedRecursive<InnerTypes...>(bin, declaration_states);
       }
   }
 

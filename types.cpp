@@ -3,6 +3,13 @@
 namespace spurv {
 
   /*
+   * TypeDeclarationState constructor
+   */
+  
+  
+  TypeDeclarationState::TypeDeclarationState() : id(-1), is_defined(false) {}
+  
+  /*
    * NullType member functions
    */
   
@@ -47,16 +54,19 @@ namespace spurv {
   
   template<>
   void SpurvType<SPURV_TYPE_VOID>::define(std::vector<uint32_t>& bin) {
-    id = Utils::getNewID();
+    SpurvType<SPURV_TYPE_VOID>::ensureInitID();
+    SpurvType<SPURV_TYPE_VOID>::declareDefined();
+    
     Utils::add(bin, (2 << 16) | 19);
-    Utils::add(bin, SpurvType<SPURV_TYPE_VOID>::id);
+    Utils::add(bin, SpurvType<SPURV_TYPE_VOID>::getID());
+    
   }
 
   template<>
-  void SpurvType<SPURV_TYPE_VOID>::ensure_defined(std::vector<uint32_t>& bin, std::vector<int*>& ids) {
-    if( SpurvType<SPURV_TYPE_VOID>::id < 0) {
+  void SpurvType<SPURV_TYPE_VOID>::ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states) {
+    if( !SpurvType<SPURV_TYPE_VOID>::isDefined()) {
       define(bin);
-      ids.push_back(&(SpurvType<SPURV_TYPE_VOID>::id));
+      declaration_states.push_back(&(SpurvType<SPURV_TYPE_VOID>::declarationState));
     }
   }
 };

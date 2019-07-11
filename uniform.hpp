@@ -31,8 +31,8 @@ namespace spurv {
 
   template<typename... InnerTypes>
   void SpurvUniformBinding<InnerTypes...>::definePointer(std::vector<uint32_t>& bin,
-							 std::vector<int*>& ids) {
-    SpurvPointer<SPURV_STORAGE_UNIFORM, SpurvStruct<InnerTypes...> >::ensure_defined(bin, ids);
+							 std::vector<TypeDeclarationState*>& declaration_states) {
+    SpurvPointer<SPURV_STORAGE_UNIFORM, SpurvStruct<InnerTypes...> >::ensure_defined(bin, declaration_states);
 
     this->pointer_id = Utils::getNewID();
     

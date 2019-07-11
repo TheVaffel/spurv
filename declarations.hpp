@@ -56,7 +56,7 @@ namespace spurv {
     BUILTIN_CULL_DISTANCE
   };
 
-  
+
   /*
    * Classes
    */
@@ -97,6 +97,17 @@ namespace spurv {
   
   
   /*
+   * Utility struct for SpurvType
+   */
+
+  struct TypeDeclarationState {
+    TypeDeclarationState();
+    int id;
+    bool is_defined;
+  };
+  
+  
+  /*
    * Static util class for Spurv
    */
   
@@ -112,7 +123,7 @@ namespace spurv {
 
     template<typename First, typename... Types>
     static void ensureDefinedRecursive(std::vector<uint32_t>& bin,
-				       std::vector<int*>& ids);
+				       std::vector<TypeDeclarationState*>& declaration_states);
     
     template<typename First, typename... Types>
     static void addIDsRecursive(std::vector<uint32_t>& bin);
@@ -232,7 +243,7 @@ namespace spurv {
     
     bool operator==(const DSpurvType& ds) const;
   };
-
+  
 
   /*
    * SpurvType - The mother of them all
@@ -240,20 +251,26 @@ namespace spurv {
   
   template<SpurvTypeKind kind, int arg0 = 0, int arg1 = 0, typename... InnerTypes >
   class SpurvType {
+    
   protected:
-    static int id;
+    
+    static TypeDeclarationState declarationState;
+    static void declareDefined();
   public:
-    constexpr SpurvType() {
+    /* constexpr SpurvType() {
       static_assert(kind == SPURV_TYPE_VOID); id = -1;
-    }
+      is_defined = false;
+      } */
 
-    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<int*>& ids);
-    static void ensure_defined_dependencies(std::vector<uint32_t>& bin, std::vector<int*>& ids);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
+    static void ensure_defined_dependencies(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
     
     static void getDSpurvType(DSpurvType* type);
 
     static int getID();
+    static bool isDefined();
+    static int ensureInitID();
     
     static constexpr SpurvTypeKind getKind();
     static constexpr int getArg0();
@@ -268,7 +285,7 @@ namespace spurv {
   template<int n, int signedness>
   class SpurvInt : public SpurvType<SPURV_TYPE_INT, n, signedness> {
   public:
-    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<int*>& ids);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
   };
   
@@ -280,7 +297,7 @@ namespace spurv {
   template<int n>
   class SpurvFloat : public SpurvType<SPURV_TYPE_FLOAT, n> {
   public:
-    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<int*>& ids);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
   };
   
@@ -293,8 +310,8 @@ namespace spurv {
   class SpurvMat : public SpurvType<SPURV_TYPE_MAT, n, m> {
   public:
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
-					    std::vector<int*>& ids);
-    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<int*>& ids);
+					    std::vector<TypeDeclarationState*>& declaration_states);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
   };
 
@@ -329,8 +346,8 @@ namespace spurv {
 
   public:    
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
-					    std::vector<int*>& ids);
-    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<int*>& ids);
+					    std::vector<TypeDeclarationState*>& declaration_states);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
   };
 
@@ -341,8 +358,8 @@ namespace spurv {
   class SpurvPointer : public SpurvType<SPURV_TYPE_POINTER, (int)storage, 0, tt> {
   public:
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
-					    std::vector<int*>& ids);
-    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<int*>& ids);
+					    std::vector<TypeDeclarationState*>& declaration_states);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
   };
 
@@ -358,8 +375,8 @@ namespace spurv {
   public:
     
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
-					    std::vector<int*>& ids);
-    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<int*>& ids);
+					    std::vector<TypeDeclarationState*>& declaration_states);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
     static void ensure_decorated(std::vector<uint32_t>& bin);
     
@@ -432,7 +449,7 @@ namespace spurv {
     
     virtual void define(std::vector<uint32_t>& res) = 0;
 
-    virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<int32_t*>& ids);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<TypeDeclarationState*>& declaration_states);
       
     // Only deletes tree if ref_count reaches zero
     virtual void unref_tree() = 0;
@@ -479,7 +496,7 @@ namespace spurv {
     UniformVar(int s, int b, int m, int pointer_id, int parent_struct_id) ;
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
-				     std::vector<int*>& ids);
+				     std::vector<TypeDeclarationState*>& declaration_states);
   };
 
 
@@ -544,7 +561,7 @@ namespace spurv {
 
     virtual void print_nodes_post_order(std::ostream& str) const ;
     virtual void unref_tree();
-    virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<int32_t*>& ids);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<TypeDeclarationState*>& declaration_states);
     virtual void define(std::vector<uint32_t>& res);
   };
 
@@ -567,7 +584,7 @@ namespace spurv {
     int getPointerID();
 
     virtual void definePointer(std::vector<uint32_t>& bin,
-			       std::vector<int*>& ids) = 0;
+			       std::vector<TypeDeclarationState*>& declaration_states) = 0;
     virtual void decorateType(std::vector<uint32_t>& bin) = 0;
   };
 
@@ -589,7 +606,7 @@ namespace spurv {
     ValueNode<typename Utils::NthType<n, InnerTypes...>::type >& getBinding();
 
     virtual void definePointer(std::vector<uint32_t>& bin,
-			       std::vector<int*>& ids);
+			       std::vector<TypeDeclarationState*>& declaration_states);
     virtual void decorateType(std::vector<uint32_t>& bin);
   };
   
@@ -618,8 +635,8 @@ namespace spurv {
       int pointer_id;
     };
     
-    // We use this to reset the type ids (stored for each type) after compilation
-    std::vector<int*> defined_type_ids;
+    // We use this to reset the type declaration_states (stored for each type) after compilation
+    std::vector<TypeDeclarationState*> defined_type_declaration_states;
     
     std::vector<InputVariableEntry> input_entries;
     std::vector<uint32_t> output_pointer_ids;
@@ -629,6 +646,7 @@ namespace spurv {
     int entry_point_id;
     int entry_point_declaration_size_index;
     int id_max_bound_index; // Will be constant, but oh well
+    int builtin_pointer_id;
     
     void output_preamble(std::vector<uint32_t>& binary);
     void output_shader_header_begin(std::vector<uint32_t>& binary);
@@ -693,7 +711,7 @@ namespace spurv {
     BuiltinEntry<arr_1_float_s>* builtin_arr_1_float_0; // Vertex: Clip Distance
     BuiltinEntry<arr_1_float_s>* builtin_arr_1_float_1; // Vertex: Cull Distance
 
-    void cleanup_ids();
+    void cleanup_declaration_states();
     
   public:
     SpurvShader();

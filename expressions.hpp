@@ -67,16 +67,16 @@ namespace spurv {
 
   
   template<typename tt, ExpressionOperation op, typename tt2, typename tt3>
-  void Expr<tt, op, tt2, tt3>::ensure_type_defined(std::vector<uint32_t>& res, std::vector<int32_t*>& ids) {
+  void Expr<tt, op, tt2, tt3>::ensure_type_defined(std::vector<uint32_t>& res, std::vector<TypeDeclarationState*>& declaration_states) {
     if(this->v1) {
-      this->v1->ensure_type_defined(res, ids);
+      this->v1->ensure_type_defined(res, declaration_states);
     }
 
     if(this->v2) {
-      this->v2->ensure_type_defined(res, ids);
+      this->v2->ensure_type_defined(res, declaration_states);
     }
 
-    tt::ensure_defined(res, ids);
+    tt::ensure_defined(res, declaration_states);
   }
 
 

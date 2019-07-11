@@ -52,9 +52,10 @@ namespace spurv {
   }
   
   template<SpurvShaderType type, typename...InputTypes>
-  void SpurvShader<type, InputTypes...>::cleanup_ids() {
-    for(uint i = 0; i < this->defined_type_ids.size(); i++) {
-      *(this->defined_type_ids[i]) = -1;
+  void SpurvShader<type, InputTypes...>::cleanup_declaration_states() {
+    for(uint i = 0; i < this->defined_type_declaration_states.size(); i++) {
+      this->defined_type_declaration_states[i]->is_defined  = false;
+      this->defined_type_declaration_states[i]->id = -1;
     }
   }
   
@@ -133,7 +134,7 @@ namespace spurv {
   void SpurvShader<type, InputTypes...>::output_type_definitions(std::vector<uint32_t>& bin, ValueNode<tt>& val) {
     
     printf("Ensuring type %s\n", typeid(tt).name());
-    val.ensure_type_defined(bin, this->defined_type_ids);
+    val.ensure_type_defined(bin, this->defined_type_declaration_states);
   }
 
   
@@ -141,7 +142,7 @@ namespace spurv {
   template<typename tt, typename... NodeTypes>
   void SpurvShader<type, InputTypes...>::output_type_definitions(std::vector<uint32_t>& bin, ValueNode<tt>& val, NodeTypes... args) {
     printf("Ensuring type %s\n", typeid(tt).name());
-    val.ensure_type_defined(bin, this->defined_type_ids);
+    val.ensure_type_defined(bin, this->defined_type_declaration_states);
 
     this->output_type_definitions(bin, args...);
   }
@@ -273,7 +274,7 @@ namespace spurv {
 
   template<SpurvShaderType type, typename... InputTypes>
   void SpurvShader<type, InputTypes...>::output_main_function_begin(std::vector<uint32_t>& res) {
-    SpurvType<SPURV_TYPE_VOID>::ensure_defined(res, this->defined_type_ids);
+    SpurvType<SPURV_TYPE_VOID>::ensure_defined(res, this->defined_type_declaration_states);
 
     int void_function_type = Utils::getNewID();
     
@@ -340,7 +341,7 @@ namespace spurv {
   template<SpurvShaderType type, typename... InputTypes>
   template<int n, typename CurrInput, typename... RestInput>
   void SpurvShader<type, InputTypes...>::output_input_pointers(std::vector<uint32_t>& res) {
-    SpurvPointer<SPURV_STORAGE_INPUT, CurrInput>::ensure_defined(res, this->defined_type_ids);
+    SpurvPointer<SPURV_STORAGE_INPUT, CurrInput>::ensure_defined(res, this->defined_type_declaration_states);
 
     // OpVariable ...
     Utils::add(res, (4 << 16) | 59);
@@ -355,7 +356,7 @@ namespace spurv {
   template<typename tt, typename... NodeTypes>
   void SpurvShader<type, InputTypes...>::output_output_pointers(std::vector<uint32_t>& res, int n,
 								ValueNode<tt>& val, NodeTypes... args) {
-    SpurvPointer<SPURV_STORAGE_OUTPUT, tt>::ensure_defined(res, this->defined_type_ids);
+    SpurvPointer<SPURV_STORAGE_OUTPUT, tt>::ensure_defined(res, this->defined_type_declaration_states);
 
     // OpVariable...
     Utils::add(res, (4 << 16) | 59);
@@ -369,7 +370,7 @@ namespace spurv {
   template<SpurvShaderType type, typename... InputTypes>
   template<typename tt>
   void SpurvShader<type, InputTypes...>::output_output_pointers(std::vector<uint32_t>& res, int n, ValueNode<tt>& val) {
-    SpurvPointer<SPURV_STORAGE_OUTPUT, tt>::ensure_defined(res, this->defined_type_ids);
+    SpurvPointer<SPURV_STORAGE_OUTPUT, tt>::ensure_defined(res, this->defined_type_declaration_states);
 
     // OpVariable...
     Utils::add(res, (4 << 16) | 59);
@@ -381,14 +382,14 @@ namespace spurv {
   template<SpurvShaderType type, typename... InputTypes>
   void SpurvShader<type, InputTypes...>::output_uniform_pointers(std::vector<uint32_t>& res) {
     for(uint i = 0; i < this->uniform_bindings.size(); i++) {
-      this->uniform_bindings[i]->definePointer(res, this->defined_type_ids);
+      this->uniform_bindings[i]->definePointer(res, this->defined_type_declaration_states);
     }
   }
 
   template<SpurvShaderType type, typename... InputTypes>
   void SpurvShader<type, InputTypes...>::output_used_builtin_pointers(std::vector<uint32_t>& res){
     if(this->builtin_vec4_0) {
-      SpurvPointer<SPURV_STORAGE_OUTPUT, vec4_s>::ensure_defined(res, this->defined_type_ids);
+      SpurvPointer<SPURV_STORAGE_OUTPUT, vec4_s>::ensure_defined(res, this->defined_type_declaration_states);
       
       // OpVariable
       Utils::add(res, (4 << 16) | 59);
@@ -397,7 +398,7 @@ namespace spurv {
       Utils::add(res, SPURV_STORAGE_OUTPUT);
     }
     if(this->builtin_float_0) {
-      SpurvPointer<SPURV_STORAGE_OUTPUT, float_s>::ensure_defined(res, this->defined_type_ids);
+      SpurvPointer<SPURV_STORAGE_OUTPUT, float_s>::ensure_defined(res, this->defined_type_declaration_states);
       
       // OpVariable
       Utils::add(res, (4 << 16) | 59);
@@ -406,7 +407,7 @@ namespace spurv {
       Utils::add(res, SPURV_STORAGE_OUTPUT);
     }
     if(this->builtin_arr_1_float_0) {
-      SpurvPointer<SPURV_STORAGE_OUTPUT, arr_1_float_s>::ensure_defined(res, this->defined_type_ids);
+      SpurvPointer<SPURV_STORAGE_OUTPUT, arr_1_float_s>::ensure_defined(res, this->defined_type_declaration_states);
       
       // OpVariable
       Utils::add(res, (4 << 16) | 59);
@@ -415,7 +416,7 @@ namespace spurv {
       Utils::add(res, SPURV_STORAGE_OUTPUT);
     }
     if(this->builtin_arr_1_float_1) {
-      SpurvPointer<SPURV_STORAGE_OUTPUT, arr_1_float_s>::ensure_defined(res, this->defined_type_ids);
+      SpurvPointer<SPURV_STORAGE_OUTPUT, arr_1_float_s>::ensure_defined(res, this->defined_type_declaration_states);
       
       // OpVariable
       Utils::add(res, (4 << 16) | 59);
@@ -617,7 +618,7 @@ namespace spurv {
 
     res[this->id_max_bound_index] = Utils::getCurrentID();
 
-    this->cleanup_ids();
+    this->cleanup_declaration_states();
 
     Utils::resetID();
     ConstantRegistry::resetRegistry();

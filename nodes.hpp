@@ -51,8 +51,8 @@ namespace spurv {
   }
   
   template<typename tt>
-  void ValueNode<tt>::ensure_type_defined(std::vector<uint32_t>& res, std::vector<int32_t*>& ids) {
-    tt::ensure_defined(res, ids);
+  void ValueNode<tt>::ensure_type_defined(std::vector<uint32_t>& res, std::vector<TypeDeclarationState*>& declaration_states) {
+    tt::ensure_defined(res, declaration_states);
   }
 
 
@@ -136,15 +136,15 @@ namespace spurv {
 
   template<typename tt>
   void UniformVar<tt>::ensure_type_defined(std::vector<uint32_t>& res,
-					      std::vector<int*>& ids) {
-    tt::ensure_defined(res, ids);
+					      std::vector<TypeDeclarationState*>& declaration_states) {
+    tt::ensure_defined(res, declaration_states);
 
     // A little bit hacky, but at least it makes the job done
     // This ensures that the constant int we need to use when
     // accessing this variable within the uniformbinding, is
     // defined
     
-    SpurvInt<32, 1>::ensure_defined(res, ids);
+    SpurvInt<32, 1>::ensure_defined(res, declaration_states);
     ConstantRegistry::ensureDefinedConstant((int32_t)this->member_no, Utils::getNewID(), res);
   }
 
