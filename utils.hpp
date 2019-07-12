@@ -24,7 +24,7 @@ namespace spurv {
 
   template<typename FirstType, typename... InnerTypes>
   void Utils::addIDsRecursive(std::vector<uint32_t>& bin) {
-    Utils::add(bin, FirstType::id);
+    Utils::add(bin, FirstType::getID());
 
     if constexpr(sizeof...(InnerTypes) > 0) {
 	Utils::addIDsRecursive<InnerTypes...>(bin);

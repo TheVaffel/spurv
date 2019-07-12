@@ -122,7 +122,7 @@ namespace spurv {
     
     // OpAccessChain
     Utils::add(res, (5 << 16) | 65);
-    Utils::add(res, SpurvPointer<SPURV_STORAGE_UNIFORM, tt>::id);
+    Utils::add(res, SpurvPointer<SPURV_STORAGE_UNIFORM, tt>::getID());
     Utils::add(res, individual_pointer_id);
     Utils::add(res, this->parent_struct_id);
     Utils::add(res, ConstantRegistry::getIDInteger(32, 1, this->member_no)); 
@@ -138,6 +138,7 @@ namespace spurv {
   void UniformVar<tt>::ensure_type_defined(std::vector<uint32_t>& res,
 					      std::vector<TypeDeclarationState*>& declaration_states) {
     tt::ensure_defined(res, declaration_states);
+    SpurvPointer<SPURV_STORAGE_UNIFORM, tt>::ensure_defined(res, declaration_states);
 
     // A little bit hacky, but at least it makes the job done
     // This ensures that the constant int we need to use when

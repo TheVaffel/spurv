@@ -570,7 +570,7 @@ namespace spurv {
     for(uint i = 0; i < this->uniform_bindings.size(); i++) {
       if(this->uniform_bindings[i]->getSetNo() == set_no &&
 	 this->uniform_bindings[i]->getBindingNo() == binding_no) {
-	return (SpurvUniformBinding<InnerTypes...>*)uniform_bindings[i];
+	return *(SpurvUniformBinding<InnerTypes...>*)uniform_bindings[i];
       }
     }
 

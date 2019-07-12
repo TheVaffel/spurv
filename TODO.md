@@ -3,7 +3,6 @@
 Somewhat in order of priority
 
 ### Feature Implementations
-- Uniforms
 - Conditionals
 - Functions
 

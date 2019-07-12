@@ -293,6 +293,8 @@ namespace spurv {
       return;
     }
 
+    SpurvStruct<InnerTypes...>::ensureInitID();
+
     is_decorated = true;
 
     // OpDecorate <type id> Block

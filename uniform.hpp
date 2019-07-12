@@ -10,7 +10,9 @@ namespace spurv {
    */
 
   template<typename... InnerTypes>
-  SpurvUniformBinding<InnerTypes...>::SpurvUniformBinding(int sn, int bn) : SpurvUniformBindingBase(sn, bn), value_pointers(sizeof...(InnerTypes), nullptr) { }
+  SpurvUniformBinding<InnerTypes...>::SpurvUniformBinding(int sn, int bn) : SpurvUniformBindingBase(sn, bn), value_pointers(sizeof...(InnerTypes), nullptr) {
+    this->pointer_id = Utils::getNewID();
+  }
   
   template<typename... InnerTypes>
   template<int n>
@@ -23,9 +25,10 @@ namespace spurv {
       UniformVar< typename Utils::NthType<n, InnerTypes...>::type> *uniform =
 	new UniformVar< typename Utils::NthType<n, InnerTypes...>::type>(this->set_no, this->binding_no,
 									 n, pointer_id, this->pointer_id);
+      this->value_pointers.push_back((void*)uniform);
       return *uniform;
     } else {
-      return *value_pointers[n];
+      return *(ValueNode<typename Utils::NthType<n, InnerTypes...>::type>*)value_pointers[n];
     }
   }
 
@@ -34,11 +37,11 @@ namespace spurv {
 							 std::vector<TypeDeclarationState*>& declaration_states) {
     SpurvPointer<SPURV_STORAGE_UNIFORM, SpurvStruct<InnerTypes...> >::ensure_defined(bin, declaration_states);
 
-    this->pointer_id = Utils::getNewID();
+    // this->pointer_id = Utils::getNewID();
     
     // OpVariable...
     Utils::add(bin, (4 << 16) | 59);
-    Utils::add(bin, SpurvPointer<SPURV_STORAGE_UNIFORM, SpurvStruct<InnerTypes...> >::id);
+    Utils::add(bin, SpurvPointer<SPURV_STORAGE_UNIFORM, SpurvStruct<InnerTypes...> >::getID());
     Utils::add(bin, pointer_id);
     Utils::add(bin, SPURV_STORAGE_UNIFORM);
   }

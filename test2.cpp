@@ -45,12 +45,17 @@ int main(){
     spurv::SpurvShader<spurv::SPURV_SHADER_VERTEX, spurv::vec4_s, spurv::vec4_s> shader;
     spurv::ValueNode<spurv::vec4_s>& position = shader.getInputVariable<0>();
     spurv::ValueNode<spurv::vec4_s>& color = shader.getInputVariable<1>();
+
+    spurv::SpurvUniformBinding<spurv::float_s>& un1 = shader.getUniformBinding<spurv::float_s>(0, 0);
+    spurv::ValueNode<spurv::float_s>& oscil = un1.getBinding<0>();
+
+    spurv::ValueNode<spurv::vec4_s>& color_prod = oscil * color;
     
     shader.setBuiltinOutput<spurv::BUILTIN_POSITION>(position);
-    shader.compileToSpirv(spirv_vertex, color);
+    shader.compileToSpirv(spirv_vertex, color_prod);
 
     position.unref_tree();
-    color.unref_tree();
+    color_prod.unref_tree();
   }
   
   WingineShader vertexShader = wg.createShader(spirv_vertex, WG_SHADER_STAGE_VERTEX);
@@ -70,17 +75,32 @@ int main(){
 
   
   printf("Printing spirv vertex\n");
-  for(uint i = 0; i  < spirv_fragment.size(); i++) {
-    printf("%d\n", spirv_fragment[i]);
+  for(uint i = 0; i  < spirv_vertex.size(); i++) {
+    printf("%d\n", spirv_vertex[i]);
   }
 
   WingineShader fragmentShader = wg.createShader(spirv_fragment, WG_SHADER_STAGE_FRAGMENT);
-  
-  
-  WinginePipeline colorPipeline = wg.createPipeline({},
+
+  float color = 0.2;
+  float dc = 0.01;
+
+  WingineResourceSetLayout layout = wg.createResourceSetLayout({WG_RESOURCE_TYPE_UNIFORM},
+							       {WG_SHADER_STAGE_VERTEX});
+
+  WgUniform colorUniform = wg.createUniform(sizeof(float));
+
+  WingineResourceSet colorSet = wg.createResourceSet(layout);
+  wg.updateResourceSet(colorSet, {&colorUniform});
+
+  WinginePipeline colorPipeline = wg.createPipeline({layout},
 						    {vertexShader, fragmentShader},
 						    {WG_ATTRIB_FORMAT_4, WG_ATTRIB_FORMAT_4},
 						    true);
+  
+  // WinginePipeline colorPipeline = wg.createPipeline({},
+  // {vertexShader, fragmentShader},
+  // {WG_ATTRIB_FORMAT_4, WG_ATTRIB_FORMAT_4},
+  // true);
 
   
   WingineObjectGroup colorGroup(wg, colorPipeline);
@@ -93,9 +113,17 @@ int main(){
 
   while(win.isOpen()){
     count++;
+
+    color += dc;
+    if(color > 1 || color < 0) {
+      dc *= -1;
+    }
+
+    wg.setUniform(colorUniform, &color, sizeof(float));
     
     colorGroup.startRecording();
-    colorGroup.recordRendering(object1, {});
+    // colorGroup.recordRendering(object1, {});
+    colorGroup.recordRendering(object1, {colorSet});
     colorGroup.endRecording();
 
 
@@ -123,6 +151,10 @@ int main(){
   wg.destroyBuffer(colorBuffer);
   wg.destroyBuffer(indexBuffer);
 
+  wg.destroyUniform(colorUniform);
+  wg.destroyResourceSet(colorSet);
+  wg.destroyResourceSetLayout(layout);
+  
   spirv_vertex.clear();
   spirv_fragment.clear();
   

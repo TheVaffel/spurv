@@ -93,6 +93,15 @@ namespace spurv {
 
   class SpurvUniformBindingBase;
 
+  template<typename... InnerTypes>
+  class SpurvUniformBinding;
+
+  template<typename tt>
+  class UniformVar;
+
+  template<typename... InnerTypes>
+  class SpurvStruct;
+  
   class ConstantRegistry;
   
   
@@ -177,6 +186,15 @@ namespace spurv {
     friend class SpurvUniformBindingBase;
 
     friend class ConstantRegistry;
+
+    template<typename... InnerTypes>
+    friend class SpurvUniformBinding;
+
+    template<typename tt>
+    friend class UniformVar;
+
+    template<typename... InnerTypes>
+    friend class SpurvStruct;
     
   };
 
