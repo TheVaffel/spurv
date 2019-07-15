@@ -145,6 +145,9 @@ namespace spurv {
     
     template<int n, typename...Types>
     struct NthType;
+
+    template<typename First, typename... Types>
+    constexpr int getSumSize();
     
     Utils() = delete;
     
@@ -293,6 +296,8 @@ namespace spurv {
     static constexpr SpurvTypeKind getKind();
     static constexpr int getArg0();
     static constexpr int getArg1();
+
+    static constexpr int getSize();
   };
 
     
@@ -305,6 +310,7 @@ namespace spurv {
   public:
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
+    static constexpr int getSize();
   };
   
 
@@ -317,6 +323,7 @@ namespace spurv {
   public:
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
+    static constexpr int getSize();
   };
   
 
@@ -331,6 +338,7 @@ namespace spurv {
 					    std::vector<TypeDeclarationState*>& declaration_states);
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
+    static constexpr int getSize();
   };
 
   
@@ -367,11 +375,14 @@ namespace spurv {
 					    std::vector<TypeDeclarationState*>& declaration_states);
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
+    static constexpr int getSize();
   };
+  
 
   /*
    * SpurvPointer - Representation of pointers
    */
+  
   template<SpurvStorageClass storage, typename tt>
   class SpurvPointer : public SpurvType<SPURV_TYPE_POINTER, (int)storage, 0, tt> {
   public:
@@ -397,8 +408,13 @@ namespace spurv {
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
     static void ensure_decorated(std::vector<uint32_t>& bin);
+    static void decorate_member_offsets(std::vector<uint32_t>& bin);
     
     static void getDSpurvType(DSpurvType* type);
+    static constexpr int getSize();
+
+    template<int member_no, int start_size, typename First, typename... Types>
+    static void decorate_member_offsets(std::vector<uint32_t>& bin);
   };
 
     

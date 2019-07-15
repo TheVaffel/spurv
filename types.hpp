@@ -108,6 +108,11 @@ namespace spurv {
     }
   }
 
+  template<int n, int signedness>
+  constexpr int SpurvInt<n, signedness>::getSize() {
+    return (n + 7) / 8; // Round up number of bytes
+  }
+
   
   /*
    * Float member functions
@@ -131,6 +136,11 @@ namespace spurv {
       define(bin);
       declaration_states.push_back(&(SpurvFloat<n>::declarationState));
     }
+  }
+
+  template<int n>
+  constexpr int SpurvFloat<n>::getSize() {
+    return (n + 7) / 8; // Round up number of bytes
   }
 
 
@@ -176,6 +186,12 @@ namespace spurv {
       Utils::add(bin, m);
     }
   }
+
+  template<int n, int m>
+  constexpr int SpurvMat<n, m>::getSize() {
+    // Assume perfectly aligned and with 32-bit components
+    return n * m * 4; 
+  }
   
 
   /*
@@ -208,6 +224,12 @@ namespace spurv {
     Utils::add(bin, n);
   }
 
+  template<int n, typename tt>
+  constexpr int SpurvArr<n, tt>::getSize() {
+    return n * tt::getSize(); // Assume perfectly aligned
+  }
+
+  
   /*
    * Pointer member functions
    */
@@ -239,7 +261,9 @@ namespace spurv {
 
   }
 
+  // No getSize function defined for pointers
 
+  
   /*
    * Struct member variables
    */ 
@@ -288,6 +312,30 @@ namespace spurv {
   }
 
   template<typename... InnerTypes>
+  constexpr int SpurvStruct<InnerTypes...>::getSize() {
+    return Utils::getSumSize<InnerTypes...>();
+  }
+  
+  template<typename... InnerTypes>
+  template<int member_no, int start_size, typename First, typename... Types>
+  void SpurvStruct<InnerTypes...>::decorate_member_offsets(std::vector<uint32_t>& bin) {
+
+    // Decorate <uniform_binding> Offset <member_no> <offset>
+    Utils::add(bin, (5 << 16) | 17);
+    Utils::add(bin, SpurvStruct<InnerTypes...>::getID());
+    Utils::add(bin, 35);
+    Utils::add(bin, member_no);
+    Utils::add(bin, start_size);
+
+    if constexpr( sizeof...(Types) > 0) {
+        decorate_member_offsets<member_no + 1,
+					     start_size + First::getSize(),
+					     Types...>(bin);
+      }	       
+  }
+
+  
+  template<typename... InnerTypes>
   void SpurvStruct<InnerTypes...>::ensure_decorated(std::vector<uint32_t>& bin) {
     if( is_decorated) {
       return;
@@ -301,6 +349,9 @@ namespace spurv {
     Utils::add(bin, (3 << 16) | 71);
     Utils::add(bin, SpurvStruct<InnerTypes...>::declarationState.id);
     Utils::add(bin, 2);
+
+    SpurvStruct<InnerTypes...>::
+      decorate_member_offsets<0, 0, InnerTypes...>(bin);
   }
   
   

@@ -269,6 +269,7 @@ namespace spurv {
       Utils::add(bin, uniform_bindings[i]->getPointerID());
       Utils::add(bin, 33);
       Utils::add(bin, uniform_bindings[i]->getBindingNo());
+
     }
   }
 

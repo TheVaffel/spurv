@@ -37,8 +37,6 @@ namespace spurv {
 							 std::vector<TypeDeclarationState*>& declaration_states) {
     SpurvPointer<SPURV_STORAGE_UNIFORM, SpurvStruct<InnerTypes...> >::ensure_defined(bin, declaration_states);
 
-    // this->pointer_id = Utils::getNewID();
-    
     // OpVariable...
     Utils::add(bin, (4 << 16) | 59);
     Utils::add(bin, SpurvPointer<SPURV_STORAGE_UNIFORM, SpurvStruct<InnerTypes...> >::getID());
@@ -52,4 +50,5 @@ namespace spurv {
   }
 
 };
+
 #endif // __SPURV_UTIFORM

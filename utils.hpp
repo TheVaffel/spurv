@@ -51,6 +51,15 @@ namespace spurv {
 	Utils::getDSpurvTypesRecursive<InnerTypes...>(pp + 1);
       }
   }
+
+  template<typename T, typename... InnerTypes>
+  constexpr int Utils::getSumSize() {
+    if constexpr( sizeof...(InnerTypes) > 0) {
+	return T::getSize() + getSumSize<InnerTypes...>();
+      } else {
+      return T::getSize();
+    }
+  }
   
   int Utils::global_id_counter = 1;
 
