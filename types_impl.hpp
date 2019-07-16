@@ -26,7 +26,7 @@ namespace spurv {
 
   template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
   int SpurvType<kind, arg0, arg1, InnerTypes...>::getID() {
-    if(declarationState.id == -1 || !isDefined()) {
+    if(declarationState.id == -1) {
       printf("Kind = %d, arg0 = %d, arg1 = %d\n", kind, arg0, arg1);
       printf("Tried to use type declarationState.id before defined\n");
       // Fall through to catch errors other places..
@@ -319,11 +319,11 @@ namespace spurv {
   template<int member_no, int start_size, typename First, typename... Types>
   void SpurvStruct<InnerTypes...>::decorate_member_offsets(std::vector<uint32_t>& bin) {
 
-    // Decorate <uniform_binding> Offset <member_no> <offset>
-    Utils::add(bin, (5 << 16) | 17);
+    // MemberDecorate <struct_id> Offset <member_no> <offset>
+    Utils::add(bin, (5 << 16) | 72);
     Utils::add(bin, SpurvStruct<InnerTypes...>::getID());
-    Utils::add(bin, 35);
     Utils::add(bin, member_no);
+    Utils::add(bin, 35);
     Utils::add(bin, start_size);
 
     if constexpr( sizeof...(Types) > 0) {
