@@ -1,10 +1,10 @@
-#ifndef __SPURV_UNIFORM
-#define __SPURV_UNIfORM
+#ifndef __SPURV_UNIFORMS_IMPL
+#define __SPURV_UNIFORMS_IMPL
 
-#include <declarations.hpp>
+#include "uniforms.hpp"
 
-namespace spurv { 
-
+namespace spurv {
+    
   /*
    * SpurvUniformBinding member functions
    */
@@ -51,4 +51,4 @@ namespace spurv {
 
 };
 
-#endif // __SPURV_UTIFORM
+#endif // __SPURV_UNIFORMS_IMPL

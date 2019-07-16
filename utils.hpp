@@ -4,106 +4,89 @@
 namespace spurv {
 
   /*
-   * Global util functions
+   * Static util class for Spurv
    */
   
-  template<int n, typename...Types>
-  struct Utils::NthType {
-    using type = typename std::tuple_element<n, std::tuple<Types...> >::type;
+  class Utils {
+    
+    static int getNewID();
+    static int getCurrentID();
+    static void resetID();
+
+    static void add(std::vector<uint32_t>& res, int a);
+    static void add(std::vector<uint32_t>& binary, std::string str);
+    static int stringWordLength(std::string);
+
+    template<typename First, typename... Types>
+    static void ensureDefinedRecursive(std::vector<uint32_t>& bin,
+				       std::vector<TypeDeclarationState*>& declaration_states);
+    
+    template<typename First, typename... Types>
+    static void addIDsRecursive(std::vector<uint32_t>& bin);
+
+    template<typename First, typename... Types>
+    static constexpr bool isSpurvTypeRecursive();
+
+    template<typename First, typename... Types>
+    static void getDSpurvTypesRecursive(DSpurvType *pp);
+    
+    template<int n, typename...Types>
+    struct NthType;
+
+    template<typename First, typename... Types>
+    constexpr int getSumSize();
+    
+    Utils() = delete;
+    
+    static int global_id_counter;
+
+    template<SpurvTypeKind kind, int n, int m, typename... InnerTypes>
+    friend class SpurvType;
+    
+    template<SpurvShaderType type, typename... InputTypes>
+    friend class SpurvShader;
+
+    template<int n>
+    friend class SpurvFloat;
+
+    template<int n, int s>
+    friend class SpurvInt;
+
+    template<int n, int m>
+    friend class SpurvMat;
+
+    template<int n, typename inner>
+    friend class SpurvArr;
+
+    template<SpurvStorageClass n, typename inn>
+    friend class SpurvPointer;
+
+    template<typename tt>
+    friend class ValueNode;
+    
+    template<typename tt, ExpressionOperation ex, typename tt2, typename tt3>
+    friend class Expr;
+
+    template<typename tt>
+    friend class Constant;
+
+    template<typename tt>
+    friend class InputVar;
+
+    friend class SpurvUniformBindingBase;
+
+    friend class ConstantRegistry;
+
+    template<typename... InnerTypes>
+    friend class SpurvUniformBinding;
+
+    template<typename tt>
+    friend class UniformVar;
+
+    template<typename... InnerTypes>
+    friend class SpurvStruct;
+    
   };
 
-  template<typename FirstType, typename... InnerTypes>
-  void Utils::ensureDefinedRecursive(std::vector<uint32_t>& bin,
-				     std::vector<TypeDeclarationState*>& declaration_states) {
-    FirstType::ensure_defined(bin, declaration_states);
-
-    if constexpr(sizeof...(InnerTypes) > 0) {
-	Utils::ensureDefinedRecursive<InnerTypes...>(bin, declaration_states);
-      }
-  }
-
-  template<typename FirstType, typename... InnerTypes>
-  void Utils::addIDsRecursive(std::vector<uint32_t>& bin) {
-    Utils::add(bin, FirstType::getID());
-
-    if constexpr(sizeof...(InnerTypes) > 0) {
-	Utils::addIDsRecursive<InnerTypes...>(bin);
-      }
-  }
-
-  template<typename FirstType, typename... InnerTypes>
-  constexpr bool Utils::isSpurvTypeRecursive() {
-    if constexpr(is_spurv_type<FirstType>::value == false) {
-	return false;
-      }
-    
-    if constexpr(sizeof...(InnerTypes) > 0) {
-	return Utils::isSpurvTypeRecursive<InnerTypes...>();
-      }
-
-    return true;
-  }
-
-  template<typename FirstType, typename... InnerTypes>
-  void Utils::getDSpurvTypesRecursive(DSpurvType *pp) {
-    FirstType::getDSpurvType(pp);
-    if constexpr(sizeof...(InnerTypes) > 0) {
-	Utils::getDSpurvTypesRecursive<InnerTypes...>(pp + 1);
-      }
-  }
-
-  template<typename T, typename... InnerTypes>
-  constexpr int Utils::getSumSize() {
-    if constexpr( sizeof...(InnerTypes) > 0) {
-	return T::getSize() + getSumSize<InnerTypes...>();
-      } else {
-      return T::getSize();
-    }
-  }
-  
-  int Utils::global_id_counter = 1;
-
-  int Utils::getNewID() {
-    return Utils::global_id_counter++;
-  }
-
-  int Utils::getCurrentID() {
-    return Utils::global_id_counter;
-  }
-
-  void Utils::resetID() {
-    Utils::global_id_counter = 1;
-  }
-
-  int Utils::stringWordLength(const std::string str) {
-    return (str.length() + 1 + 3 ) / 4; // Make room for terminating zero, round up to 4-byte words
-  }
-
-  void Utils::add(std::vector<uint32_t>& binary, int a) {
-    binary.push_back(a);
-  }
-
-  void Utils::add(std::vector<uint32_t>& binary, std::string str) {
-    int len = str.length(); // Space for null terminator
-    int n = Utils::stringWordLength(str);
-
-    const char* pp = str.c_str();
-    for(int i = 0; i < n - 1; i++) {
-      Utils::add(binary, *((int32_t*)(pp + 4 * i)));
-    }
-
-    int left = len - (n - 1) * 4;
-    char last_int[4];
-    for(int i = 0; i < left; i++) {
-      last_int[i] = str[(n - 1) * 4 + i];
-    }
-  
-    for(int i = left; i < 4; i++) {
-      last_int[i] = 0; // Pad with zeros
-    }
-
-    Utils::add(binary, *(int32_t*)last_int);
-  }
-}
-
+};
 #endif // __SPURV_UTILS

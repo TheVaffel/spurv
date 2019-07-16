@@ -1,8 +1,11 @@
-#ifndef __SPURV_SHADER
-#define __SPURV_SHADER
+#ifndef __SPURV_SHADERS_IMPL
+#define __SPURV_SHADERS_IMPL
+
+#include "shaders.hpp"
 
 namespace spurv {
-
+  
+  
   /*
    * Constructor(s?)
    */
@@ -133,7 +136,6 @@ namespace spurv {
   template<typename tt>
   void SpurvShader<type, InputTypes...>::output_type_definitions(std::vector<uint32_t>& bin, ValueNode<tt>& val) {
     
-    printf("Ensuring type %s\n", typeid(tt).name());
     val.ensure_type_defined(bin, this->defined_type_declaration_states);
   }
 
@@ -141,7 +143,6 @@ namespace spurv {
   template<SpurvShaderType type, typename... InputTypes>
   template<typename tt, typename... NodeTypes>
   void SpurvShader<type, InputTypes...>::output_type_definitions(std::vector<uint32_t>& bin, ValueNode<tt>& val, NodeTypes... args) {
-    printf("Ensuring type %s\n", typeid(tt).name());
     val.ensure_type_defined(bin, this->defined_type_declaration_states);
 
     this->output_type_definitions(bin, args...);
@@ -625,5 +626,4 @@ namespace spurv {
     ConstantRegistry::resetRegistry();
   }
 };
-
-#endif // __SPURV_SHADER
+#endif // __SPURV_SHADERS_IMPL

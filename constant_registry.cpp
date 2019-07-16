@@ -1,7 +1,5 @@
-#ifndef __SPURV_CONSTANT_REGISTRY
-#define __SPURV_CONSTANT_REGISTRY
 
-#include <declarations.hpp>
+#include "constant_registry.hpp"
 
 #include <map>
 #include <algorithm> // pair
@@ -63,5 +61,3 @@ namespace spurv {
   }
   
 };
-
-#endif // __SPURV_CONSTANT_REGISTRY

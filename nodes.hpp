@@ -3,171 +3,138 @@
 
 #include "declarations.hpp"
 #include "constant_registry.hpp"
+#include "types.hpp"
 
 #include <cassert>
 
 namespace spurv {
   
   /*
-   * ValueNode member functions
+   * ValueNode - The mother of all nodes in the syntax trees
    */
   
   template<typename tt>
-  int ValueNode<tt>::getID() const {
-    return this->id;
-  }
-  
-  template<typename tt>
-  void ValueNode<tt>::declareDefined() {
-    this->defined = true;
-  }
+  struct ValueNode {
+    static_assert(is_spurv_type<tt>::value);
+  protected:
+    uint id;
+    bool defined;
+    uint ref_count;
+  public:
 
-  template<typename tt>
-  bool ValueNode<tt>::isDefined() const {
-    return this->defined;
-  }
-
-  template<typename tt>
-  void ValueNode<tt>::incrementRefCount() {
-    this->ref_count++;
-  }
-
-  template<typename tt>
-  void ValueNode<tt>::print_nodes_post_order(std::ostream& str) const {
-    str << this->id << std::endl;
-  }
-
-  template<typename tt>
-  ValueNode<tt>::ValueNode() { this->id = Utils::getNewID(); this->ref_count = 0; this->defined = false; }
-
-  template<typename tt>
-  void ValueNode<tt>::ensure_defined(std::vector<uint32_t>& res) {
-    if(this->isDefined()) {
-      return;
-    }
-
-    this->define(res);
-    this->declareDefined();
-  }
-  
-  template<typename tt>
-  void ValueNode<tt>::ensure_type_defined(std::vector<uint32_t>& res, std::vector<TypeDeclarationState*>& declaration_states) {
-    tt::ensure_defined(res, declaration_states);
-  }
-
-
-  /*
-   * Constant member functions
-   */
-
-  template<typename tt>
-  Constant<tt>::Constant(const tt& val) {
-    this->value = val;
-  }
-
-  template<typename tt>
-  void Constant<tt>::unref_tree() {
-    this->ref_count--;
-    if(this->ref_count <= 0) {
-      delete this;
-    }
-  }
-
-  template<typename tt>
-  void Constant<tt>::define(std::vector<uint32_t>& res) {
-
-    ConstantRegistry::ensureDefinedConstant<tt>(this->value, this->id,
-						res);
-  }
-
-
-  /*
-   * Var member functions
-   */
-
-  template<typename tt>
-  Var<tt>::Var() {}
-  
-  template<typename tt>
-  Var<tt>::Var(std::string _name) {
-    this->name = _name;
-  }
-  
-  template<typename tt>
-  void Var<tt>::unref_tree() {
-    this->ref_count--;
-    if (this->ref_count <= 0) {
-      delete this;
-    }
-  }
-
-  
-  /*
-   * UniformVar member functions
-   */
-  
-  template<typename tt>
-  UniformVar<tt>::UniformVar(int s, int b, int m, int pointer_id, int parent_struct_id) {
-    this->set_no = s;
-    this->bind_no = b;
-    this->member_no = m;
-    this->pointer_id = pointer_id;
-    this->parent_struct_id = parent_struct_id;
-  }
-
-  template<typename tt>
-  void UniformVar<tt>::define(std::vector<uint32_t>& res) {
-
-    int individual_pointer_id = Utils::getNewID();
+    ValueNode();
     
-    // OpAccessChain
-    Utils::add(res, (5 << 16) | 65);
-    Utils::add(res, SpurvPointer<SPURV_STORAGE_UNIFORM, tt>::getID());
-    Utils::add(res, individual_pointer_id);
-    Utils::add(res, this->parent_struct_id);
-    Utils::add(res, ConstantRegistry::getIDInteger(32, 1, this->member_no)); 
+    virtual void print_nodes_post_order(std::ostream& str) const;
+
+    int getID() const;
+    void declareDefined();
+    bool isDefined() const;
+    void incrementRefCount();
+
+    void ensure_defined(std::vector<uint32_t>& res);
     
-    // OpLoad
-    Utils::add(res, (4 << 16) | 61);
-    Utils::add(res, tt::getID());
-    Utils::add(res, this->id);
-    Utils::add(res, individual_pointer_id);
-  }
+    virtual void define(std::vector<uint32_t>& res) = 0;
+
+    virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<TypeDeclarationState*>& declaration_states);
+      
+    // Only deletes tree if ref_count reaches zero
+    virtual void unref_tree() = 0;
+  };
+
+
+  /*
+   * Constant - Represents nodes that have known value at shader compilation time
+   */
+  template<typename tt>
+  struct Constant : public ValueNode<typename MapSpurvType<tt>::type> {
+    Constant(const tt& val);
+
+    virtual void unref_tree();
+
+    virtual void define(std::vector<uint32_t>& res);
+    
+    tt value;
+  };
+
+
+  /*
+   * Var - Base class for input attributes and uniforms
+   */
 
   template<typename tt>
-  void UniformVar<tt>::ensure_type_defined(std::vector<uint32_t>& res,
-					      std::vector<TypeDeclarationState*>& declaration_states) {
-    tt::ensure_defined(res, declaration_states);
-    SpurvPointer<SPURV_STORAGE_UNIFORM, tt>::ensure_defined(res, declaration_states);
+  struct Var : public ValueNode<tt> {
+    std::string name;
+    Var();
+    Var(std::string _name);
+    virtual void unref_tree();
+  };
 
-    // A little bit hacky, but at least it makes the job done
-    // This ensures that the constant int we need to use when
-    // accessing this variable within the uniformbinding, is
-    // defined
-    
-    SpurvInt<32, 1>::ensure_defined(res, declaration_states);
-    ConstantRegistry::ensureDefinedConstant((int32_t)this->member_no, Utils::getNewID(), res);
-  }
 
-  
   /*
-   * InputVar member functions
+   * UniformVar - Represents uniforms (duh)
+   */
+  
+  template<typename tt> // n is element number within binding
+  struct UniformVar : public Var<tt> {
+    int set_no, bind_no, member_no;
+    int pointer_id, parent_struct_id;
+    
+    UniformVar(int s, int b, int m, int pointer_id, int parent_struct_id) ;
+    virtual void define(std::vector<uint32_t>& res);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res,
+				     std::vector<TypeDeclarationState*>& declaration_states);
+  };
+
+
+  /*
+   * InputVar - Represents input attributes
    */
   
   template<typename tt>
-  InputVar<tt>::InputVar(int n, int pointer_id) {
-    this->input_no = n;
-    this->pointer_id = pointer_id;
-  }
+  struct InputVar : public Var<tt> {
+    int input_no;
+    int pointer_id;
+    
+    InputVar(int n, int pointer_id);
 
-  template<typename tt>
-  void InputVar<tt>::define(std::vector<uint32_t>& res) {
-    // OpLoad
-    Utils::add(res, (4 << 16) | 61);
-    Utils::add(res, tt::getID());
-    Utils::add(res, this->id);
-    Utils::add(res, this->pointer_id);
-  }
+    virtual void define(std::vector<uint32_t>& res);
+  };
+
+  
+  /*
+   * Expr - Nodes that represent branches of the syntax tree
+   */
+  
+  template<typename tt, ExpressionOperation op, typename tt2 = void_s, typename tt3 = void_s>
+  struct Expr : public ValueNode<tt> {
+    static_assert(is_spurv_type<tt>::value);
+    static_assert(is_spurv_type<tt2>::value);
+    static_assert(is_spurv_type<tt3>::value);
+    
+    // Enforce Expr to be at most binary (surely, this won't come back and bite me later...)
+    ValueNode<tt2>* v1;
+    ValueNode<tt3>* v2;
+
+    Expr();
+
+    void register_left_node(ValueNode<tt2>& node);
+    void register_right_node(ValueNode<tt3>& node);
+
+    // Since expressions are returned as references from e.g.
+    // binary operations, if you assign a normal (non-reference) variable to an expression resulting
+    // from such an operation, it will (if I understand correctly) call the copy constructor, and thus
+    // we get a new object put on the stack, which we should not delete, although all its children are
+    // heap-allocated, so they should be deleted. Also, this means the top-most node gets no references
+    // and is lost in the void
+    // Thus, we avoid copies
+    Expr(const Expr<tt, op, tt2, tt3>& e) = delete;
+
+    virtual void print_nodes_post_order(std::ostream& str) const ;
+    virtual void unref_tree();
+    virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<TypeDeclarationState*>& declaration_states);
+    virtual void define(std::vector<uint32_t>& res);
+  };
+
 };
 
 #endif // __SPURV_NODES

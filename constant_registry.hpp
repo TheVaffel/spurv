@@ -5,49 +5,34 @@
 
 namespace spurv {
 
-  template<typename tt>
-  void ConstantRegistry::ensureDefinedConstant(const tt& val, int id,
-					       std::vector<uint32_t>& res) {
-    using st = typename MapSpurvType<tt>::type;
-
-    static_assert(st::getKind() == SPURV_TYPE_INT || st::getKind() == SPURV_TYPE_FLOAT,
-		  "Constant definitions only allowed for ints and floats for now");
-
-    static_assert(st::getArg0() == 32,
-		  "Constant definitions of float or integer type must have bit depth 32, for now");
-
-    
-    if constexpr(st::getKind() == SPURV_TYPE_INT) {
-	
-      if(isDefinedInt(st::getArg0(), st::getArg1(), val)) {
-	return;
-      } else {
-	registerInt(st::getArg0(), st::getArg1(), val, id);
-      }
-	
-    } else if constexpr(st::getKind() == SPURV_TYPE_FLOAT) {
-	
-      if(isDefinedFloat(st::getArg0(), val)) {
-        return;
-      } else {
-	registerFloat(st::getArg0(), val, id);
-      }
-	  
-    }
-    
-    if(st::getID() < 0) {
-      printf("Tried to define constant before its type was defined!\n");
-      exit(-1);
-    }
-
-    // OpConstant
-    Utils::add(res, (4 << 16) | 43);
-    Utils::add(res, st::getID());
-    Utils::add(res, id);
-    Utils::add(res, *(uint32_t*)&val);
-
-  }
+  /*
+   * ConstantRegistry - Class holding static data structures to ensure each scalar constant is only defined once
+   */
   
+  class ConstantRegistry {
+    // Tuples for ints contain <data type size, signedness, constant> maps to id
+    // Pairs for floats contain <data type size, constant>, maps to id
+    static std::map<std::tuple<int, int, int>, int> integer_registry;
+    static std::map<std::pair<int, float>, int > float_registry;
+
+    static void registerInt(int n, int s, int m, int id);
+    static void registerFloat(int n, float f, int id);
+    
+  public:
+
+    static bool isDefinedInt(int n, int s, int m);
+    static bool isDefinedFloat(int n, float f);
+
+    static int getIDInteger(int n, int s, int m);
+    static int getIDFloat(int n, float f);
+
+    template<typename nt>
+    static void ensureDefinedConstant(const nt& val, int id,
+				      std::vector<uint32_t>& res);
+    
+    static void resetRegistry();
+  };
+
 };
 
 #endif // __SPURV_CONSTANT_REGISTRY

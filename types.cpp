@@ -1,4 +1,5 @@
-#include "types.hpp"
+
+#include "types_impl.hpp"
 
 namespace spurv {
 

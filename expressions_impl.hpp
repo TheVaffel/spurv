@@ -1,5 +1,5 @@
-#ifndef __SPURV_EXPRESSIONS
-#define __SPURV_EXPRESSIONS
+#ifndef __SPURV_EXPRESSIONS_IMPL
+#define __SPURV_EXPRESSIONS_IMPL
 
 #include "declarations.hpp"
 #include "types.hpp"
@@ -301,4 +301,4 @@ namespace spurv {
   
 };
 
-#endif // __SPURV_EXPRESSIONS
+#endif // __SPURV_EXPRESSIONS_IMPL

@@ -1,4 +1,4 @@
-#include "uniform.hpp"
+#include "uniforms.hpp"
 
 namespace spurv {
 

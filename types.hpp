@@ -2,363 +2,265 @@
 #define __SPURV_TYPES
 
 #include "declarations.hpp"
+#include "utils.hpp"
 
 #include <FlatAlg.hpp>
+
 namespace spurv {
   
-  /* 
-   * Static methods
+  /*
+   * Utility struct for SpurvType
+   */
+
+  struct TypeDeclarationState {
+    TypeDeclarationState();
+    int id;
+    bool is_defined;
+  };
+
+  
+  /*
+   * NullType
    */
   
-  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  void SpurvType<kind, arg0, arg1, InnerTypes...>::getDSpurvType(DSpurvType* type) {
-      type->kind = kind;
-      type->a0 = arg0;
-      type->a1 = arg1;
-
-      constexpr int n = sizeof...(InnerTypes);
-      
-      if constexpr (n > 0) {
-	type->inner_types = new DSpurvType[n];
-	Utils::getDSpurvTypesRecursive<InnerTypes...>(type->inner_types);
-      }
-    }
-
-  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  int SpurvType<kind, arg0, arg1, InnerTypes...>::getID() {
-    if(declarationState.id == -1 || !isDefined()) {
-      printf("Kind = %d, arg0 = %d, arg1 = %d\n", kind, arg0, arg1);
-      printf("Tried to use type declarationState.id before defined\n");
-      // Fall through to catch errors other places..
-    }
-    return declarationState.id;
-  }
-
-  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  int SpurvType<kind, arg0, arg1, InnerTypes...>::ensureInitID() {
-    if(declarationState.id == -1) {
-      declarationState.id = Utils::getNewID();
-    }
-    return declarationState.id;
-  }
-
-  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  bool SpurvType<kind, arg0, arg1, InnerTypes...>::isDefined() {
-    return declarationState.is_defined;
-  }
-
-  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  void SpurvType<kind, arg0, arg1, InnerTypes...>::declareDefined() {
-    declarationState.is_defined = true;
-  }
-
-  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  constexpr SpurvTypeKind SpurvType<kind, arg0, arg1, InnerTypes...>::getKind() {
-    return kind;
-  }
-
-  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  constexpr int SpurvType<kind, arg0, arg1, InnerTypes...>::getArg0() {
-    return arg0;
-  }
-
-  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  constexpr int SpurvType<kind, arg0, arg1, InnerTypes...>::getArg1() {
-    return arg1;
-  }
+  class NullType {
+  public:
+    static void ensure_defined(std::vector<uint32_t>&,
+			       std::vector<int32_t*>&);
+    static void define(std::vector<uint32_t>&);
+  };
   
   
   /*
-   * Static variables
+   * DSpurvType - Dynamic (runtime) representation of a SpurvType
    */
   
-  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  TypeDeclarationState SpurvType<kind, arg0, arg1, InnerTypes...>::declarationState;
-  
-  
-  /*
-   * Default Member functions
-   */
-
-  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  void SpurvType<kind, arg0, arg1, InnerTypes...>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
-									       std::vector<TypeDeclarationState*>& declaration_states) { }
-  
-  /*
-   * Int member functions
-   */
-  
-  template<int n, int signedness>
-  void SpurvInt<n, signedness>::define(std::vector<uint32_t>& bin) {
-    SpurvInt<n, signedness>::ensureInitID();
-    SpurvInt<n, signedness>::declareDefined();
+  struct DSpurvType {
+    // NB: If adding more parameters, remember to add more arguments to SpurvType and
+    // is_spurv_type below as well
+    SpurvTypeKind kind;
+    int a0, a1;
     
-    Utils::add(bin, (4 << 16) | 21);
-    Utils::add(bin, SpurvInt<n, signedness>::declarationState.id);
-    Utils::add(bin, n); // Width
-    Utils::add(bin, signedness); // 0 = unsigned, 1 = signed
+    // NB: This will be a list if kind == SPURV_TYPE_STRUCT
+    DSpurvType* inner_types;
+    int num_inner_types;
+    
+    constexpr DSpurvType() : kind(SPURV_TYPE_INVALID),
+      a0(0), a1(0), inner_types(nullptr), num_inner_types(0) { }
 
-  }
-
-  template<int n, int signedness>
-  void SpurvInt<n, signedness>::ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states) {
-    if( !SpurvInt<n, signedness>::isDefined()) {
-      define(bin);
-      declaration_states.push_back(&(SpurvInt<n, signedness>::declarationState));
-    }
-  }
-
-  template<int n, int signedness>
-  constexpr int SpurvInt<n, signedness>::getSize() {
-    return (n + 7) / 8; // Round up number of bytes
-  }
-
+    ~DSpurvType() ;
+    
+    bool operator==(const DSpurvType& ds) const;
+  };
   
+
   /*
-   * Float member functions
+   * SpurvType - The mother of them all
+   */
+  
+  template<SpurvTypeKind kind, int arg0 = 0, int arg1 = 0, typename... InnerTypes >
+  class SpurvType {
+    
+  protected:
+    
+    static TypeDeclarationState declarationState;
+    static void declareDefined();
+  public:
+  
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
+    static void ensure_defined_dependencies(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
+    static void define(std::vector<uint32_t>& bin);
+    
+    static void getDSpurvType(DSpurvType* type);
+
+    static int getID();
+    static bool isDefined();
+    static int ensureInitID();
+    
+    static constexpr SpurvTypeKind getKind();
+    static constexpr int getArg0();
+    static constexpr int getArg1();
+
+    static constexpr int getSize();
+  };
+
+    
+  /*
+   * SpurvInt - Representation of integers
+   */
+
+  template<int n, int signedness>
+  class SpurvInt : public SpurvType<SPURV_TYPE_INT, n, signedness> {
+  public:
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
+    static void define(std::vector<uint32_t>& bin);
+    static constexpr int getSize();
+  };
+  
+
+  /*
+   * SpurvFloat - Representation of floats
    */
   
   template<int n>
-  void SpurvFloat<n>::define(std::vector<uint32_t>& bin) {
-    SpurvFloat<n>::ensureInitID();
-    SpurvFloat<n>::declareDefined();
-    
-    Utils::add(bin, (3 << 16) | 22);
-    Utils::add(bin, SpurvFloat<n>::declarationState.id);
-    Utils::add(bin, n);
+  class SpurvFloat : public SpurvType<SPURV_TYPE_FLOAT, n> {
+  public:
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
+    static void define(std::vector<uint32_t>& bin);
+    static constexpr int getSize();
+  };
+  
 
-  }
+  /*
+   * SpurvMat - Representation of vectors and matrices
+   */
+  
+  template<int n, int m>
+  class SpurvMat : public SpurvType<SPURV_TYPE_MAT, n, m> {
+  public:
+    static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
+					    std::vector<TypeDeclarationState*>& declaration_states);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
+    static void define(std::vector<uint32_t>& bin);
+    static constexpr int getSize();
+  };
+
+  
+  /*
+   * Static explicit type checks - more general (more checks below)
+   */
+  
+  template<typename>
+  struct is_spurv_type : std::false_type {};
+
+  template<int n, int s>
+  struct is_spurv_type<SpurvInt<n, s> > : std::true_type {};
+
+  template<int n>
+  struct is_spurv_type<SpurvFloat<n> > : std::true_type {};
+
+  template<int n, int m>
+  struct is_spurv_type<SpurvMat<n, m> > : std::true_type {};
+
+  template<>
+  struct is_spurv_type<NullType> : std::true_type {};
+
+
+  /*
+   * SpurvArr - Representation of arrays
+   */
+  
+  template<int n, typename tt>
+  class SpurvArr : public SpurvType<SPURV_TYPE_ARR, n, 0, tt >  {
+    constexpr SpurvArr() {
+      static_assert(is_spurv_type<tt>::value, "Inner type of SpurvArr must be a spurv type");
+    }
+
+  public:    
+    static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
+					    std::vector<TypeDeclarationState*>& declaration_states);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
+    static void define(std::vector<uint32_t>& bin);
+    static constexpr int getSize();
+  };
+  
+
+  /*
+   * SpurvPointer - Representation of pointers
+   */
+  
+  template<SpurvStorageClass storage, typename tt>
+  class SpurvPointer : public SpurvType<SPURV_TYPE_POINTER, (int)storage, 0, tt> {
+  public:
+    static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
+					    std::vector<TypeDeclarationState*>& declaration_states);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
+    static void define(std::vector<uint32_t>& bin);
+  };
+
+
+  /*
+   * SpurvStruct - Representation of structs
+   */
+  
+  template<typename... InnerTypes>
+  class SpurvStruct : public SpurvType<SPURV_TYPE_STRUCT, 0, 0, InnerTypes...> {
+    static bool is_decorated;
+    
+  public:
+    
+    static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
+					    std::vector<TypeDeclarationState*>& declaration_states);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states);
+    static void define(std::vector<uint32_t>& bin);
+    static void ensure_decorated(std::vector<uint32_t>& bin);
+    static void decorate_member_offsets(std::vector<uint32_t>& bin);
+    
+    static void getDSpurvType(DSpurvType* type);
+    static constexpr int getSize();
+
+    template<int member_no, int start_size, typename First, typename... Types>
+    static void decorate_member_offsets(std::vector<uint32_t>& bin);
+  };
+
+    
+  /*
+   * More specialized type checks
+   */
+  
+  template<typename>
+  struct is_spurv_mat_type : std::false_type {};
+  
+  template<int n, typename tt>
+  struct is_spurv_type<SpurvArr<n, tt> > : std::true_type { static_assert(is_spurv_type<tt>::value); };
+
+  template<SpurvStorageClass storage, typename tt>
+  struct is_spurv_type<SpurvPointer<storage, tt> > : std::true_type { static_assert(is_spurv_type<tt>::value); };
+
+  template<typename... InnerTypes>
+  struct is_spurv_type<SpurvStruct<InnerTypes...> > : std::true_type{ static_assert(Utils::isSpurvTypeRecursive<InnerTypes...>); };
+
+  template<int n, int m>
+  struct is_spurv_mat_type<SpurvMat<n, m> > : std::true_type {};
+
+  
+  template<typename>
+  struct is_spurv_float_type : std::false_type {};
   
   template<int n>
-  void SpurvFloat<n>::ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states) {
+  struct is_spurv_float_type<SpurvFloat<n> > : std::true_type {};
 
-    if( !SpurvFloat<n>::isDefined()) {
-      define(bin);
-      declaration_states.push_back(&(SpurvFloat<n>::declarationState));
-    }
-  }
+  template<typename>
+  struct is_spurv_int_type : std::false_type {};
 
-  template<int n>
-  constexpr int SpurvFloat<n>::getSize() {
-    return (n + 7) / 8; // Round up number of bytes
-  }
-
+  template<int n, int s>
+  struct is_spurv_int_type<SpurvInt<n, s> > : std::true_type {};
+  
 
   /*
-   * Mat member functions
+   * Types defined by default
    */
   
-  template<int n, int m>
-  void SpurvMat<n, m>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
-						   std::vector<TypeDeclarationState*>& declaration_states) {
-    if constexpr(m == 1) {
-	SpurvFloat<32>::ensure_defined(bin, declaration_states);
-      } else {
-      SpurvMat<n, 1>::ensure_defined(bin, declaration_states);
-    }
-  }
+  typedef SpurvType<SPURV_TYPE_VOID> void_s;
+  typedef SpurvInt<32, 1> int_s;
+  typedef SpurvInt<32, 0> uint_s;
+  typedef SpurvFloat<32> float_s;
+  typedef SpurvMat<2, 2> mat2_s;
+  typedef SpurvMat<3, 3> mat3_s;
+  typedef SpurvMat<4, 4> mat4_s;
+  typedef SpurvMat<2, 1> vec2_s;
+  typedef SpurvMat<3, 1> vec3_s;
+  typedef SpurvMat<4, 1> vec4_s;
+  typedef SpurvArr<1, float_s> arr_1_float_s;
 
-  template<int n, int m>
-  void SpurvMat<n, m>::ensure_defined(std::vector<uint32_t>& bin,
-				      std::vector<TypeDeclarationState*>& declaration_states) {
-    if( !SpurvMat<n, m>::isDefined()) {
-      ensure_defined_dependencies(bin, declaration_states);
-      define(bin);
-      declaration_states.push_back(&(SpurvMat<n, m>::declarationState));
-    }
-  }
   
-  template<int n, int m>
-  void SpurvMat<n, m>::define(std::vector<uint32_t>& bin) {
-
-    SpurvMat<n, m>::ensureInitID();
-    SpurvMat<n, m>::declareDefined();
-    
-    if constexpr(m == 1) {
-	Utils::add(bin, (4 << 16) | 23);
-	Utils::add(bin, SpurvMat<n, 1>::getID());
-	Utils::add(bin, SpurvFloat<32>::getID());
-	Utils::add(bin, n);
-      } else {
-      Utils::add(bin, (4 << 16) | 24);
-      Utils::add(bin, SpurvMat<n, m>::getID());
-      Utils::add(bin, SpurvMat<n, 1>::getID());
-      Utils::add(bin, m);
-    }
-  }
-
-  template<int n, int m>
-  constexpr int SpurvMat<n, m>::getSize() {
-    // Assume perfectly aligned and with 32-bit components
-    return n * m * 4; 
-  }
-  
-
   /*
-   * Arr member functions
+   * Small type mapper
    */
   
-  template<int n, typename tt>
-  void SpurvArr<n, tt>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
-						    std::vector<TypeDeclarationState*>& declaration_states) {
-    tt::ensure_defined(bin, declaration_states);
-  }
+  template<typename tt>
+  struct MapSpurvType;
 
-  template<int n, typename tt>
-  void SpurvArr<n, tt>::ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states) {
-    if( !SpurvArr<n, tt>::isDefined()) {
-	ensure_defined_dependencies(bin, declaration_states);
-	define(bin);
-	declaration_states.push_back(&(SpurvArr<n, tt>::declarationState));
-      }
-    }
-  
-  template<int n, typename tt>
-  void SpurvArr<n, tt>::define(std::vector<uint32_t>& bin) {
-    SpurvArr<n, tt>::ensureInitID();
-    SpurvArr<n, tt>::declareDefined();
-    
-    Utils::add(bin, (4 << 16) | 28);
-    Utils::add(bin, SpurvArr<n, tt>::declarationState.id);
-    Utils::add(bin, tt::getID());
-    Utils::add(bin, n);
-  }
-
-  template<int n, typename tt>
-  constexpr int SpurvArr<n, tt>::getSize() {
-    return n * tt::getSize(); // Assume perfectly aligned
-  }
-
-  
-  /*
-   * Pointer member functions
-   */
-
-  template<SpurvStorageClass storage, typename tt>
-  void SpurvPointer<storage, tt>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
-							      std::vector<TypeDeclarationState*>& declaration_states) {
-    tt::ensure_defined(bin, declaration_states);
-  }
-
-  template<SpurvStorageClass storage, typename tt>
-  void SpurvPointer<storage, tt>::ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states) {
-    if( !SpurvPointer<storage, tt>::isDefined()) {
-      ensure_defined_dependencies(bin, declaration_states);
-      define(bin);
-      declaration_states.push_back(&(SpurvPointer<storage, tt>::declarationState));
-    }
-  }
-
-  template<SpurvStorageClass storage, typename tt>
-  void SpurvPointer<storage, tt>::define(std::vector<uint32_t>& bin) {
-    SpurvPointer<storage, tt>::ensureInitID();
-    SpurvPointer<storage, tt>::declareDefined();
-    
-    Utils::add(bin, (4 << 16) | 32);
-    Utils::add(bin, SpurvPointer<storage, tt>::declarationState.id);
-    Utils::add(bin, (int)storage);
-    Utils::add(bin, tt::getID());
-
-  }
-
-  // No getSize function defined for pointers
-
-  
-  /*
-   * Struct member variables
-   */ 
-
-  template<typename... InnerTypes>
-  bool SpurvStruct<InnerTypes...>::is_decorated = false;
-  
-  
-  /*
-   * Struct member functions
-   */
-  
-  template<typename... InnerTypes>
-  void SpurvStruct<InnerTypes...>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
-							       std::vector<TypeDeclarationState*>& declaration_states) {
-    Utils::ensureDefinedRecursive<InnerTypes...>(bin, declaration_states);
-  }
-
-  template<typename... InnerTypes>
-  void SpurvStruct<InnerTypes...>::ensure_defined(std::vector<uint32_t>& bin,
-						   std::vector<TypeDeclarationState*>& declaration_states) {
-    if( !SpurvStruct<InnerTypes...>::isDefined()) {
-      ensure_defined_dependencies(bin, declaration_states);
-      define(bin);
-      declaration_states.push_back(&(SpurvStruct<InnerTypes...>::declarationState));
-    }
-  }
-
-  template<typename... InnerTypes>
-  void SpurvStruct<InnerTypes...>::define(std::vector<uint32_t>& bin) {
-    SpurvStruct<InnerTypes...>::ensureInitID();
-    SpurvStruct<InnerTypes...>::declareDefined();
-    
-    Utils::add(bin, ((2 + sizeof...(InnerTypes)) << 16) | 30);
-    Utils::add(bin, SpurvStruct<InnerTypes...>::declarationState.id);
-    Utils::addIDsRecursive<InnerTypes...>(bin);
-
-  }
-
-  template<typename... InnerTypes>
-  void SpurvStruct<InnerTypes...>::getDSpurvType(DSpurvType* type) {
-    constexpr int n = sizeof...(InnerTypes);
-    type->kind = SPURV_TYPE_STRUCT;
-    type->inner_types = new DSpurvType[sizeof...(InnerTypes)];
-    Utils::getDSpurvTypesRecursive<InnerTypes...>(type);
-  }
-
-  template<typename... InnerTypes>
-  constexpr int SpurvStruct<InnerTypes...>::getSize() {
-    return Utils::getSumSize<InnerTypes...>();
-  }
-  
-  template<typename... InnerTypes>
-  template<int member_no, int start_size, typename First, typename... Types>
-  void SpurvStruct<InnerTypes...>::decorate_member_offsets(std::vector<uint32_t>& bin) {
-
-    // Decorate <uniform_binding> Offset <member_no> <offset>
-    Utils::add(bin, (5 << 16) | 17);
-    Utils::add(bin, SpurvStruct<InnerTypes...>::getID());
-    Utils::add(bin, 35);
-    Utils::add(bin, member_no);
-    Utils::add(bin, start_size);
-
-    if constexpr( sizeof...(Types) > 0) {
-        decorate_member_offsets<member_no + 1,
-					     start_size + First::getSize(),
-					     Types...>(bin);
-      }	       
-  }
-
-  
-  template<typename... InnerTypes>
-  void SpurvStruct<InnerTypes...>::ensure_decorated(std::vector<uint32_t>& bin) {
-    if( is_decorated) {
-      return;
-    }
-
-    SpurvStruct<InnerTypes...>::ensureInitID();
-
-    is_decorated = true;
-
-    // OpDecorate <type id> Block
-    Utils::add(bin, (3 << 16) | 71);
-    Utils::add(bin, SpurvStruct<InnerTypes...>::declarationState.id);
-    Utils::add(bin, 2);
-
-    SpurvStruct<InnerTypes...>::
-      decorate_member_offsets<0, 0, InnerTypes...>(bin);
-  }
-  
-  
-  /*
-   * Type mapper
-   */
-  
   template<>
   struct MapSpurvType<void> {
     typedef void_s type;
@@ -384,8 +286,6 @@ namespace spurv {
     typedef SpurvType<SPURV_TYPE_MAT, n, m> type;
   };
 
-
-  
 };
 
 #endif // __SPURV_TYPES
