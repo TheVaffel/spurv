@@ -3,22 +3,22 @@
 namespace spurv {
 
   /*
-   * SpurvUniformBindingBase member functions
+   * SUniformBindingBase member functions
    */
   
-  SpurvUniformBindingBase::SpurvUniformBindingBase(int ns, int nb) : set_no(ns), binding_no(nb) {
-    pointer_id = Utils::getNewID();
+  SUniformBindingBase::SUniformBindingBase(int ns, int nb) : set_no(ns), binding_no(nb) {
+    pointer_id = SUtils::getNewID();
   }
 
-  int SpurvUniformBindingBase::getSetNo() {
+  int SUniformBindingBase::getSetNo() {
     return this->set_no;
   }
 
-  int SpurvUniformBindingBase::getBindingNo() {
+  int SUniformBindingBase::getBindingNo() {
     return this->binding_no;
   }
 
-  int SpurvUniformBindingBase::getPointerID() {
+  int SUniformBindingBase::getPointerID() {
     return this->pointer_id;
   }
   

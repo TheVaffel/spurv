@@ -7,46 +7,46 @@
 namespace spurv { 
 
   /*
-   * SpurvUniformBindingBase - base class to make it possible for SpurvShader to keep track of uniforms
+   * SUniformBindingBase - base class to make it possible for SShader to keep track of uniforms
    */
 
-  class SpurvUniformBindingBase {
+  class SUniformBindingBase {
 
   protected:
     int set_no, binding_no;
     int pointer_id;
     
   public:
-    SpurvUniformBindingBase(int s, int b);
+    SUniformBindingBase(int s, int b);
 
     int getSetNo();
     int getBindingNo();
     int getPointerID();
 
     virtual void definePointer(std::vector<uint32_t>& bin,
-			       std::vector<TypeDeclarationState*>& declaration_states) = 0;
+			       std::vector<SDeclarationState*>& declaration_states) = 0;
     virtual void decorateType(std::vector<uint32_t>& bin) = 0;
   };
 
 
   /*
-   * SpurvUniformBinding - represents a single uniform binding of a descriptor set
+   * SUniformBinding - represents a single uniform binding of a descriptor set
    */
   
   template<typename... InnerTypes>
-  class SpurvUniformBinding : public SpurvUniformBindingBase {
+  class SUniformBinding : public SUniformBindingBase {
     
   private:
     std::vector<void*> value_pointers;
     
   public:  
-    SpurvUniformBinding(int sn, int bn);
+    SUniformBinding(int sn, int bn);
     
     template<int n>
-    ValueNode<typename Utils::NthType<n, InnerTypes...>::type >& getBinding();
+    SValue<typename SUtils::NthType<n, InnerTypes...>::type >& member();
 
     virtual void definePointer(std::vector<uint32_t>& bin,
-			       std::vector<TypeDeclarationState*>& declaration_states);
+			       std::vector<SDeclarationState*>& declaration_states);
     virtual void decorateType(std::vector<uint32_t>& bin);
   };
 

@@ -4,16 +4,16 @@
 namespace spurv {
 
   /*
-   * SpurvShader - The object responsible for IO and compilation of the shader
+   * SShader - The object responsible for IO and compilation of the shader
    */
   
-  template<SpurvShaderType type, typename... InputTypes>
-  class SpurvShader {
+  template<SShaderType type, typename... InputTypes>
+  class SShader {
 
 
     struct InputVariableEntry {
       int id;
-      DSpurvType ds;
+      DSType ds;
       int pointer_id;
 
       void* value_node;
@@ -23,16 +23,16 @@ namespace spurv {
 
     template<typename s_type>
     struct BuiltinEntry {
-      ValueNode<s_type>* value_node;
+      SValue<s_type>* value_node;
       int pointer_id;
     };
     
     // We use this to reset the type declaration_states (stored for each type) after compilation
-    std::vector<TypeDeclarationState*> defined_type_declaration_states;
+    std::vector<SDeclarationState*> defined_type_declaration_states;
     
     std::vector<InputVariableEntry> input_entries;
     std::vector<uint32_t> output_pointer_ids;
-    std::vector<SpurvUniformBindingBase*> uniform_bindings;
+    std::vector<SUniformBindingBase*> uniform_bindings;
 
     int glsl_id;
     int entry_point_id;
@@ -48,33 +48,33 @@ namespace spurv {
 
     template<typename tt>
     void output_shader_header_output_variables(std::vector<uint32_t>& binary,
-					       int n, ValueNode<tt>& val);
+					       int n, SValue<tt>& val);
     template<typename tt, typename... NodeTypes>
     void output_shader_header_output_variables(std::vector<uint32_t>& binary, int n,
-					       ValueNode<tt>& val, NodeTypes... args);
+					       SValue<tt>& val, NodeTypes... args);
 
     template<typename tt>
     void output_shader_header_decorate_output_variables(std::vector<uint32_t>& binary, int n,
-							ValueNode<tt>& val);
+							SValue<tt>& val);
     template<typename tt, typename... NodeTypes>
     void output_shader_header_decorate_output_variables(std::vector<uint32_t>& binary, int n,
-							ValueNode<tt>& val, NodeTypes... args);
+							SValue<tt>& val, NodeTypes... args);
 
     template<typename tt>
-    void output_type_definitions(std::vector<uint32_t>& binary, ValueNode<tt>& val);
+    void output_type_definitions(std::vector<uint32_t>& binary, SValue<tt>& val);
 
     template<typename tt, typename... NodeTypes>
-    void output_type_definitions(std::vector<uint32_t>& binary, ValueNode<tt>& val,
+    void output_type_definitions(std::vector<uint32_t>& binary, SValue<tt>& val,
 				 NodeTypes... args);
 
     void output_main_function_begin(std::vector<uint32_t>& res);
     void output_main_function_end(std::vector<uint32_t>& res);
     
     template<typename tt>
-    void output_output_definitions(std::vector<uint32_t>& res, int n, ValueNode<tt>& node);
+    void output_output_definitions(std::vector<uint32_t>& res, int n, SValue<tt>& node);
 
     template<typename tt, typename... NodeType>
-    void output_output_definitions(std::vector<uint32_t>& res, int n, ValueNode<tt>& node,
+    void output_output_definitions(std::vector<uint32_t>& res, int n, SValue<tt>& node,
 				   NodeType... args);
 
     template<int n>
@@ -84,10 +84,10 @@ namespace spurv {
     void output_input_pointers(std::vector<uint32_t>& res);
 
     template<typename tt, typename... NodeTypes>
-    void output_output_pointers(std::vector<uint32_t>& res, int n, ValueNode<tt>& val, NodeTypes... args);
+    void output_output_pointers(std::vector<uint32_t>& res, int n, SValue<tt>& val, NodeTypes... args);
 
     template<typename tt>
-    void output_output_pointers(std::vector<uint32_t>& res, int n, ValueNode<tt>& val);
+    void output_output_pointers(std::vector<uint32_t>& res, int n, SValue<tt>& val);
 
     void output_uniform_pointers(std::vector<uint32_t>& res);
     
@@ -106,31 +106,25 @@ namespace spurv {
     void cleanup_declaration_states();
     
   public:
-    SpurvShader();
+    SShader();
 
-    template<BuiltinVariableIndex ind, typename tt>
-    void setBuiltinOutput(ValueNode<tt>& val);
-
-    // In SPIR-V, most bindings must (excluding more complex datatypes like images)
-    // be given in a struct, thus we let the developer specify which member of the
-    // struct that is desirable
-    template<typename tt>
-    ValueNode<tt>& getUniform(int set_no, int bind_no, int member_no);
-
+    template<SBuiltinVariable ind, typename tt>
+    void setBuiltin(SValue<tt>& val);
+    
     template<int n, typename First>
-    auto& getInputVariable();
+    auto& input();
     
     template<int n, int c, typename First, typename... Rest>
-    auto& getInputVariable();
+    auto& input();
     
     template<int n>
-    auto& getInputVariable();
+    auto& input();
 
     template<typename... InnerTypes>
-    SpurvUniformBinding<InnerTypes...>& getUniformBinding(int set_no, int binding_no);
+    SUniformBinding<InnerTypes...>& uniformBinding(int set_no, int binding_no);
     
     template<typename... NodeTypes>
-    void compileToSpirv(std::vector<uint32_t>& res, NodeTypes&... args);
+    void compile(std::vector<uint32_t>& res, NodeTypes&... args);
   };
   
 };

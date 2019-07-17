@@ -9,52 +9,52 @@ namespace spurv {
    */
   
   template<int n, typename...Types>
-  struct Utils::NthType {
+  struct SUtils::NthType {
     using type = typename std::tuple_element<n, std::tuple<Types...> >::type;
   };
 
   template<typename FirstType, typename... InnerTypes>
-  void Utils::ensureDefinedRecursive(std::vector<uint32_t>& bin,
-				     std::vector<TypeDeclarationState*>& declaration_states) {
+  void SUtils::ensureDefinedRecursive(std::vector<uint32_t>& bin,
+				     std::vector<SDeclarationState*>& declaration_states) {
     FirstType::ensure_defined(bin, declaration_states);
 
     if constexpr(sizeof...(InnerTypes) > 0) {
-	Utils::ensureDefinedRecursive<InnerTypes...>(bin, declaration_states);
+	SUtils::ensureDefinedRecursive<InnerTypes...>(bin, declaration_states);
       }
   }
 
   template<typename FirstType, typename... InnerTypes>
-  void Utils::addIDsRecursive(std::vector<uint32_t>& bin) {
-    Utils::add(bin, FirstType::getID());
+  void SUtils::addIDsRecursive(std::vector<uint32_t>& bin) {
+    SUtils::add(bin, FirstType::getID());
 
     if constexpr(sizeof...(InnerTypes) > 0) {
-	Utils::addIDsRecursive<InnerTypes...>(bin);
+	SUtils::addIDsRecursive<InnerTypes...>(bin);
       }
   }
 
   template<typename FirstType, typename... InnerTypes>
-  constexpr bool Utils::isSpurvTypeRecursive() {
+  constexpr bool SUtils::isSTypeRecursive() {
     if constexpr(is_spurv_type<FirstType>::value == false) {
 	return false;
       }
     
     if constexpr(sizeof...(InnerTypes) > 0) {
-	return Utils::isSpurvTypeRecursive<InnerTypes...>();
+	return SUtils::isSTypeRecursive<InnerTypes...>();
       }
 
     return true;
   }
 
   template<typename FirstType, typename... InnerTypes>
-  void Utils::getDSpurvTypesRecursive(DSpurvType *pp) {
-    FirstType::getDSpurvType(pp);
+  void SUtils::getDSTypesRecursive(DSType *pp) {
+    FirstType::getDSType(pp);
     if constexpr(sizeof...(InnerTypes) > 0) {
-	Utils::getDSpurvTypesRecursive<InnerTypes...>(pp + 1);
+	SUtils::getDSTypesRecursive<InnerTypes...>(pp + 1);
       }
   }
 
   template<typename T, typename... InnerTypes>
-  constexpr int Utils::getSumSize() {
+  constexpr int SUtils::getSumSize() {
     if constexpr( sizeof...(InnerTypes) > 0) {
 	return T::getSize() + getSumSize<InnerTypes...>();
       } else {
@@ -62,35 +62,35 @@ namespace spurv {
     }
   }
   
-  int Utils::global_id_counter = 1;
+  int SUtils::global_id_counter = 1;
 
-  int Utils::getNewID() {
-    return Utils::global_id_counter++;
+  int SUtils::getNewID() {
+    return SUtils::global_id_counter++;
   }
 
-  int Utils::getCurrentID() {
-    return Utils::global_id_counter;
+  int SUtils::getCurrentID() {
+    return SUtils::global_id_counter;
   }
 
-  void Utils::resetID() {
-    Utils::global_id_counter = 1;
+  void SUtils::resetID() {
+    SUtils::global_id_counter = 1;
   }
 
-  int Utils::stringWordLength(const std::string str) {
+  int SUtils::stringWordLength(const std::string str) {
     return (str.length() + 1 + 3 ) / 4; // Make room for terminating zero, round up to 4-byte words
   }
 
-  void Utils::add(std::vector<uint32_t>& binary, int a) {
+  void SUtils::add(std::vector<uint32_t>& binary, int a) {
     binary.push_back(a);
   }
 
-  void Utils::add(std::vector<uint32_t>& binary, std::string str) {
+  void SUtils::add(std::vector<uint32_t>& binary, std::string str) {
     int len = str.length(); // Space for null terminator
-    int n = Utils::stringWordLength(str);
+    int n = SUtils::stringWordLength(str);
 
     const char* pp = str.c_str();
     for(int i = 0; i < n - 1; i++) {
-      Utils::add(binary, *((int32_t*)(pp + 4 * i)));
+      SUtils::add(binary, *((int32_t*)(pp + 4 * i)));
     }
 
     int left = len - (n - 1) * 4;
@@ -103,7 +103,7 @@ namespace spurv {
       last_int[i] = 0; // Pad with zeros
     }
 
-    Utils::add(binary, *(int32_t*)last_int);
+    SUtils::add(binary, *(int32_t*)last_int);
   }
 
 };

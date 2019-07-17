@@ -43,17 +43,18 @@ int main(){
   
   {
     using namespace spurv;
-    SpurvShader<SPURV_SHADER_VERTEX, vec4_s, vec4_s> shader;
-    vec4_v position = shader.getInputVariable<0>();
-    vec4_v color = shader.getInputVariable<1>();
+    
+    SShader<SHADER_VERTEX, vec4_s, vec4_s> shader;
+    vec4_v position = shader.input<0>();
+    vec4_v color = shader.input<1>();
 
-    SpurvUniformBinding<float_s> un1 = shader.getUniformBinding<float_s>(0, 0);
-    float_v oscil = un1.getBinding<0>();
+    SUniformBinding<float_s> un1 = shader.uniformBinding<float_s>(0, 0);
+    float_v oscil = un1.member<0>();
 
     vec4_v color_prod = oscil * color;
     
-    shader.setBuiltinOutput<BUILTIN_POSITION>(position);
-    shader.compileToSpirv(spirv_vertex, color_prod);
+    shader.setBuiltin<BUILTIN_POSITION>(position);
+    shader.compile(spirv_vertex, color_prod);
 
     position.unref_tree();
     color_prod.unref_tree();
@@ -66,11 +67,13 @@ int main(){
   printf("Done with vertex shader\n");
 
   {
-    spurv::SpurvShader<spurv::SPURV_SHADER_FRAGMENT, spurv::vec4_s> shader;
+    using namespace spurv;
+    
+    SShader<SHADER_FRAGMENT, vec4_s> shader;
 
-    spurv::vec4_v color = shader.getInputVariable<0>();
+    vec4_v color = shader.input<0>();
 
-    shader.compileToSpirv(spirv_fragment, color);
+    shader.compile(spirv_fragment, color);
 
     color.unref_tree();
   }

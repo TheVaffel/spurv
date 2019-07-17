@@ -6,10 +6,10 @@
 namespace spurv {
 
   /*
-   * ConstantRegistry - Class holding static data structures to ensure each scalar constant is only defined once
+   * SConstantRegistry - Class holding static data structures to ensure each scalar constant is only defined once
    */
   
-  class ConstantRegistry {
+  class SConstantRegistry {
     // Tuples for ints contain <data type size, signedness, constant> maps to id
     // Pairs for floats contain <data type size, constant>, maps to id
     static std::map<std::tuple<int, int, int>, int> integer_registry;

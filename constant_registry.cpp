@@ -7,19 +7,19 @@
 
 namespace spurv {
 
-  std::map<std::tuple<int, int, int>, int> ConstantRegistry::integer_registry;
-  std::map<std::pair<int, float>, int > ConstantRegistry::float_registry;
+  std::map<std::tuple<int, int, int>, int> SConstantRegistry::integer_registry;
+  std::map<std::pair<int, float>, int > SConstantRegistry::float_registry;
 
   
-  bool ConstantRegistry::isDefinedInt(int n, int s, int m) {
+  bool SConstantRegistry::isDefinedInt(int n, int s, int m) {
     return integer_registry.find(std::make_tuple(n, s, m)) != integer_registry.end();
   }
 
-  bool ConstantRegistry::isDefinedFloat(int n, float f) {
+  bool SConstantRegistry::isDefinedFloat(int n, float f) {
     return float_registry.find(std::make_pair(n, f)) != float_registry.end();
   }
 
-  void ConstantRegistry::registerInt(int n, int s, int m, int id) {
+  void SConstantRegistry::registerInt(int n, int s, int m, int id) {
     if(isDefinedInt(n, s, m) ) {
       printf("Tried to redefine int\n");
       exit(-1);
@@ -28,7 +28,7 @@ namespace spurv {
     }
   }
 
-  void ConstantRegistry::registerFloat(int n, float f, int id) {
+  void SConstantRegistry::registerFloat(int n, float f, int id) {
     if(isDefinedFloat(n, f) ) {
       printf("Tried to redefine float\n");
       exit(-1);
@@ -37,7 +37,7 @@ namespace spurv {
     }
   } 
 
-  int ConstantRegistry::getIDInteger(int n, int s, int m) {
+  int SConstantRegistry::getIDInteger(int n, int s, int m) {
     if(!isDefinedInt(n, s, m) ) {
       printf("Tried to get id of unregistered int\n");
       exit(-1);
@@ -46,7 +46,7 @@ namespace spurv {
     return integer_registry[std::make_tuple(n, s, m)];
   }
 
-  int ConstantRegistry::getIDFloat(int n, float f) {
+  int SConstantRegistry::getIDFloat(int n, float f) {
     if(!isDefinedFloat(n, f) ) {
       printf("Tried to get id of unregistered float\n");
       exit(-1);
@@ -55,7 +55,7 @@ namespace spurv {
     return float_registry[std::make_pair(n, f)];
   }
 
-  void ConstantRegistry::resetRegistry() {
+  void SConstantRegistry::resetRegistry() {
     integer_registry.clear();
     float_registry.clear();
   }

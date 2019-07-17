@@ -7,7 +7,7 @@ namespace spurv {
    * Static util class for Spurv
    */
   
-  class Utils {
+  class SUtils {
     
     static int getNewID();
     static int getCurrentID();
@@ -19,16 +19,16 @@ namespace spurv {
 
     template<typename First, typename... Types>
     static void ensureDefinedRecursive(std::vector<uint32_t>& bin,
-				       std::vector<TypeDeclarationState*>& declaration_states);
+				       std::vector<SDeclarationState*>& declaration_states);
     
     template<typename First, typename... Types>
     static void addIDsRecursive(std::vector<uint32_t>& bin);
 
     template<typename First, typename... Types>
-    static constexpr bool isSpurvTypeRecursive();
+    static constexpr bool isSTypeRecursive();
 
     template<typename First, typename... Types>
-    static void getDSpurvTypesRecursive(DSpurvType *pp);
+    static void getDSTypesRecursive(DSType *pp);
     
     template<int n, typename...Types>
     struct NthType;
@@ -36,36 +36,36 @@ namespace spurv {
     template<typename First, typename... Types>
     constexpr int getSumSize();
     
-    Utils() = delete;
+    SUtils() = delete;
     
     static int global_id_counter;
 
-    template<SpurvTypeKind kind, int n, int m, typename... InnerTypes>
-    friend class SpurvType;
+    template<STypeKind kind, int n, int m, typename... InnerTypes>
+    friend class SType;
     
-    template<SpurvShaderType type, typename... InputTypes>
-    friend class SpurvShader;
+    template<SShaderType type, typename... InputTypes>
+    friend class SShader;
 
     template<int n>
-    friend class SpurvFloat;
+    friend class SFloat;
 
     template<int n, int s>
-    friend class SpurvInt;
+    friend class SInt;
 
     template<int n, int m>
-    friend class SpurvMat;
+    friend class SMat;
 
     template<int n, typename inner>
-    friend class SpurvArr;
+    friend class SArr;
 
-    template<SpurvStorageClass n, typename inn>
-    friend class SpurvPointer;
+    template<SStorageClass n, typename inn>
+    friend class SPointer;
 
     template<typename tt>
-    friend class ValueNode;
+    friend class SValue;
     
-    template<typename tt, ExpressionOperation ex, typename tt2, typename tt3>
-    friend class Expr;
+    template<typename tt, SExprOp ex, typename tt2, typename tt3>
+    friend class SExpr;
 
     template<typename tt>
     friend class Constant;
@@ -73,18 +73,18 @@ namespace spurv {
     template<typename tt>
     friend class InputVar;
 
-    friend class SpurvUniformBindingBase;
+    friend class SUniformBindingBase;
 
-    friend class ConstantRegistry;
+    friend class SConstantRegistry;
 
     template<typename... InnerTypes>
-    friend class SpurvUniformBinding;
+    friend class SUniformBinding;
 
     template<typename tt>
-    friend class UniformVar;
+    friend class SUniformVar;
 
     template<typename... InnerTypes>
-    friend class SpurvStruct;
+    friend class SStruct;
     
   };
 

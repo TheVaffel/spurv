@@ -4,11 +4,11 @@
 namespace spurv {
 
   /*
-   * TypeDeclarationState constructor
+   * SDeclarationState constructor
    */
   
   
-  TypeDeclarationState::TypeDeclarationState() : id(-1), is_defined(false) {}
+  SDeclarationState::SDeclarationState() : id(-1), is_defined(false) {}
   
   /*
    * NullType member functions
@@ -20,16 +20,16 @@ namespace spurv {
 
   
   /*
-   * DSpurvType member functions
+   * DSType member functions
    */
   
-  DSpurvType::~DSpurvType() {
+  DSType::~DSType() {
     if (this->inner_types) {
       delete[] this->inner_types;
     }
   }
   
-  bool DSpurvType::operator==(const DSpurvType& ds) const {
+  bool DSType::operator==(const DSType& ds) const {
     bool a = true;
     a = a && this->kind == ds.kind;
     a = a && this->a0 == ds.a0;
@@ -54,20 +54,20 @@ namespace spurv {
    */
   
   template<>
-  void SpurvType<SPURV_TYPE_VOID>::define(std::vector<uint32_t>& bin) {
-    SpurvType<SPURV_TYPE_VOID>::ensureInitID();
-    SpurvType<SPURV_TYPE_VOID>::declareDefined();
+  void SType<KIND_VOID>::define(std::vector<uint32_t>& bin) {
+    SType<KIND_VOID>::ensureInitID();
+    SType<KIND_VOID>::declareDefined();
     
-    Utils::add(bin, (2 << 16) | 19);
-    Utils::add(bin, SpurvType<SPURV_TYPE_VOID>::getID());
+    SUtils::add(bin, (2 << 16) | 19);
+    SUtils::add(bin, SType<KIND_VOID>::getID());
     
   }
 
   template<>
-  void SpurvType<SPURV_TYPE_VOID>::ensure_defined(std::vector<uint32_t>& bin, std::vector<TypeDeclarationState*>& declaration_states) {
-    if( !SpurvType<SPURV_TYPE_VOID>::isDefined()) {
+  void SType<KIND_VOID>::ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states) {
+    if( !SType<KIND_VOID>::isDefined()) {
       define(bin);
-      declaration_states.push_back(&(SpurvType<SPURV_TYPE_VOID>::declarationState));
+      declaration_states.push_back(&(SType<KIND_VOID>::declarationState));
     }
   }
 };

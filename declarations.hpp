@@ -12,31 +12,31 @@ namespace spurv {
    * Enums
    */
   
-   enum SpurvTypeKind {
-    SPURV_TYPE_INVALID,
-    SPURV_TYPE_VOID,
-    SPURV_TYPE_INT,
-    SPURV_TYPE_FLOAT,
-    SPURV_TYPE_MAT,
-    SPURV_TYPE_ARR,
-    SPURV_TYPE_POINTER,
-    SPURV_TYPE_STRUCT
+   enum STypeKind {
+    KIND_INVALID,
+    KIND_VOID,
+    KIND_INT,
+    KIND_FLOAT,
+    KIND_MAT,
+    KIND_ARR,
+    KIND_POINTER,
+    KIND_STRUCT
   };
   
-  enum SpurvShaderType {
-    SPURV_SHADER_VERTEX,
-    SPURV_SHADER_FRAGMENT,
+  enum SShaderType {
+    SHADER_VERTEX,
+    SHADER_FRAGMENT,
   };
 
-  enum SpurvStorageClass {
-    SPURV_STORAGE_UNIFORM_CONSTANT = 0,
-    SPURV_STORAGE_INPUT = 1,
-    SPURV_STORAGE_UNIFORM = 2,
-    SPURV_STORAGE_OUTPUT = 3
+  enum SStorageClass {
+    STORAGE_UNIFORM_CONSTANT = 0,
+    STORAGE_INPUT = 1,
+    STORAGE_UNIFORM = 2,
+    STORAGE_OUTPUT = 3
     // ... There are more, but perhaps not needed just now
   };
   
-  enum ExpressionOperation {
+  enum SExprOp {
     EXPR_NEGATIVE,
     EXPR_ADDITION,
     EXPR_SUBTRACTION,
@@ -49,7 +49,7 @@ namespace spurv {
     EXPR_POW
   };
 
-   enum BuiltinVariableIndex {
+   enum SBuiltinVariable {
     BUILTIN_POSITION,
     BUILTIN_POINT_SIZE,
     BUILTIN_CLIP_DISTANCE,
@@ -61,52 +61,52 @@ namespace spurv {
    * Classes - declared to ease dependency graph
    */
 
-  struct DSpurvType;
+  struct DSType;
   
-  template<SpurvTypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  class SpurvType;
+  template<STypeKind kind, int arg0, int arg1, typename... InnerTypes>
+  class SType;
 
-  template<SpurvShaderType type, typename... InputTypes>
-  class SpurvShader;
+  template<SShaderType type, typename... InputTypes>
+  class SShader;
 
   template<int n>
-  class SpurvFloat;
+  class SFloat;
 
   template<int n, int s>
-  class SpurvInt;
+  class SInt;
 
   template<int n, int m>
-  class SpurvMat;
+  class SMat;
 
   template<int n, typename inner>
-  class SpurvArr;
+  class SArr;
 
-  template<SpurvStorageClass n, typename inn>
-  class SpurvPointer;
+  template<SStorageClass n, typename inn>
+  class SPointer;
   
   template<typename tt>
-  struct ValueNode;
+  struct SValue;
 
-  template<typename tt, ExpressionOperation op,
+  template<typename tt, SExprOp op,
 	   typename t1, typename t2>
-  struct Expr;
+  struct SExpr;
 
-  class SpurvUniformBindingBase;
+  class SUniformBindingBase;
 
   template<typename... InnerTypes>
-  class SpurvUniformBinding;
+  class SUniformBinding;
 
   template<typename tt>
-  class UniformVar;
+  class SUniformVar;
 
   template<typename... InnerTypes>
-  class SpurvStruct;
+  class SStruct;
 
-  struct TypeDeclarationState;
+  struct SDeclarationState;
   
-  class ConstantRegistry;
+  class SConstantRegistry;
   
-  class Utils;
+  class SUtils;
   
 };
 #endif // __SPURV_DECLARATIONS
