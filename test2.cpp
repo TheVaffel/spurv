@@ -42,21 +42,23 @@ int main(){
   std::vector<uint32_t> spirv_fragment;
   
   {
-    spurv::SpurvShader<spurv::SPURV_SHADER_VERTEX, spurv::vec4_s, spurv::vec4_s> shader;
-    spurv::ValueNode<spurv::vec4_s>& position = shader.getInputVariable<0>();
-    spurv::ValueNode<spurv::vec4_s>& color = shader.getInputVariable<1>();
+    using namespace spurv;
+    SpurvShader<SPURV_SHADER_VERTEX, vec4_s, vec4_s> shader;
+    vec4_v position = shader.getInputVariable<0>();
+    vec4_v color = shader.getInputVariable<1>();
 
-    spurv::SpurvUniformBinding<spurv::float_s>& un1 = shader.getUniformBinding<spurv::float_s>(0, 0);
-    spurv::ValueNode<spurv::float_s>& oscil = un1.getBinding<0>();
+    SpurvUniformBinding<float_s> un1 = shader.getUniformBinding<float_s>(0, 0);
+    float_v oscil = un1.getBinding<0>();
 
-    spurv::ValueNode<spurv::vec4_s>& color_prod = oscil * color;
+    vec4_v color_prod = oscil * color;
     
-    shader.setBuiltinOutput<spurv::BUILTIN_POSITION>(position);
+    shader.setBuiltinOutput<BUILTIN_POSITION>(position);
     shader.compileToSpirv(spirv_vertex, color_prod);
 
     position.unref_tree();
     color_prod.unref_tree();
   }
+ 
   
   WingineShader vertexShader = wg.createShader(spirv_vertex, WG_SHADER_STAGE_VERTEX);
 
@@ -66,7 +68,7 @@ int main(){
   {
     spurv::SpurvShader<spurv::SPURV_SHADER_FRAGMENT, spurv::vec4_s> shader;
 
-    spurv::ValueNode<spurv::vec4_s>& color = shader.getInputVariable<0>();
+    spurv::vec4_v color = shader.getInputVariable<0>();
 
     shader.compileToSpirv(spirv_fragment, color);
 

@@ -135,6 +135,21 @@ namespace spurv {
     virtual void define(std::vector<uint32_t>& res);
   };
 
+
+  /*
+   * Value node types defined by default
+   */
+
+  typedef ValueNode<int_s>&         int_v;
+  typedef ValueNode<uint_s>&        uint_v;
+  typedef ValueNode<float_s>&       float_v;
+  typedef ValueNode<mat2_s>&        mat2_v;
+  typedef ValueNode<mat3_s>&        mat3_v;
+  typedef ValueNode<mat4_s>&        mat4_v;
+  typedef ValueNode<vec2_s>&        vec2_v;
+  typedef ValueNode<vec3_s>&        vec3_v;
+  typedef ValueNode<vec4_s>&        vec4_v;
+  typedef ValueNode<arr_1_float_s>& arr_1_float_v;
 };
 
 #endif // __SPURV_NODES
