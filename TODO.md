@@ -4,7 +4,7 @@ Somewhat in order of priority
 
 ### Datatype Features
 - [x] Structs
-- [ ] Texture2D
+- [ ] 2D Texture
 - [ ] Functions for (re)composing vectors and matrices
 
 ### Structural Features
@@ -22,7 +22,7 @@ Somewhat in order of priority
 - [ ] Int `mod` and `rem`
 - [ ] Floating point `mod` and `rem`
 
-### Minor Refactorizations
-- [ ] Simplify datatype names
-- [ ] Simplify exposed user functions
-- [ ] Make shortcuts for types of value nodes
+### "Minor" Refactorizations
+- [x] Simplify datatype names
+- [x] Simplify exposed user functions
+- [x] Make shortcuts for types of value nodes
