@@ -56,8 +56,6 @@ int main(){
     shader.setBuiltin<BUILTIN_POSITION>(position);
     shader.compile(spirv_vertex, color_prod);
 
-    position.unref_tree();
-    color_prod.unref_tree();
   }
  
   
@@ -75,7 +73,6 @@ int main(){
 
     shader.compile(spirv_fragment, color);
 
-    color.unref_tree();
   }
 
   

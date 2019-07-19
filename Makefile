@@ -12,7 +12,7 @@ ANTI_WARNINGS=-Wno-delete-non-virtual-dtor
 HDRS=declarations.hpp types.hpp nodes.hpp shaders.hpp spurv.hpp uniforms.hpp constant_registry.hpp
 IMPL_HDRS= utils_impl.hpp expressions_impl.hpp uniforms_impl.hpp types_impl.hpp nodes_impl.hpp shaders_impl.hpp
 
-SRCS=types.cpp uniforms.cpp constant_registry.cpp
+SRCS=types.cpp uniforms.cpp constant_registry.cpp utils.cpp
 
 all: test test2
 

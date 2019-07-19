@@ -481,7 +481,7 @@ namespace spurv {
 	      printf("Cannot set builtin multiple times");
 	      exit(-1);
 	    }
-	    this->builtin_vec4_0 = new BuiltinEntry<vec4_s>;
+	    this->builtin_vec4_0 = SUtils::allocate<BuiltinEntry<vec4_s> >();
 	    this->builtin_vec4_0->value_node = &val;
 	    this->builtin_vec4_0->pointer_id = SUtils::getNewID();
 	  } else if constexpr(ind == BUILTIN_POINT_SIZE) {
@@ -491,7 +491,7 @@ namespace spurv {
 	      printf("Cannot set builtin multiple times");
 	      exit(-1);
 	    }
-	    this->builtin_float_0 = new BuiltinEntry<float_s>;
+	    this->builtin_float_0 = SUtils::allocate< BuiltinEntry<float_s> >();
 	    this->builtin_float_0->value_node = &val;
 	    this->builtin_float_0->pointer_id = SUtils::getNewID();
 	  } else if constexpr(ind == BUILTIN_CLIP_DISTANCE) {
@@ -501,7 +501,7 @@ namespace spurv {
 	      printf("Cannot set builtin multiple times");
 	      exit(-1);
 	    }
-	    this->builtin_arr_1_float_0 = new BuiltinEntry<arr_1_float_s>;
+	    this->builtin_arr_1_float_0 = SUtils::allocate<BuiltinEntry<arr_1_float_s> >();
 	    this->builtin_arr_1_float_0->value_node = &val;
 	    this->builtin_arr_1_float_0->pointer_id = SUtils::getNewID();
 	  } else if constexpr(ind == BUILTIN_CULL_DISTANCE) {
@@ -511,7 +511,7 @@ namespace spurv {
 	      printf("Cannot set builtin multiple times");
 	      exit(-1);
 	    }
-	    this->builtin_arr_1_float_1 = new BuiltinEntry<arr_1_float_s>;
+	    this->builtin_arr_1_float_1 = SUtils::allocate<BuiltinEntry<arr_1_float_s> >();
 	    this->builtin_arr_1_float_1->value_node = &val;
 	    this->builtin_arr_1_float_1->pointer_id = SUtils::getNewID();
 	  } else {
@@ -542,7 +542,7 @@ namespace spurv {
       input_entries[n].pointer_id = SUtils::getNewID();
 	
 	
-      InputVar<input_type> *iv = new InputVar<input_type>(n, input_entries[n].pointer_id);
+      InputVar<input_type> *iv = SUtils::allocate<InputVar<input_type> >(n, input_entries[n].pointer_id);
 	
       input_entries[n].id = iv->getID();
       input_entries[n].value_node = (void*)iv;
@@ -576,7 +576,7 @@ namespace spurv {
       }
     }
 
-    SUniformBinding<InnerTypes...>* pp = new SUniformBinding<InnerTypes...>(set_no, binding_no);
+    SUniformBinding<InnerTypes...>* pp = SUtils::allocate<SUniformBinding<InnerTypes...> >(set_no, binding_no);
     this->uniform_bindings.push_back((SUniformBindingBase*)pp);
     return *pp;
   }
@@ -623,6 +623,7 @@ namespace spurv {
     this->cleanup_declaration_states();
 
     SUtils::resetID();
+    SUtils::clearAllocations();
     SConstantRegistry::resetRegistry();
   }
 };

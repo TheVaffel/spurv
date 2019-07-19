@@ -220,7 +220,7 @@ namespace spurv {
 
   template<typename tt>
   SExpr<tt, EXPR_NEGATIVE, tt, void_s>& operator-(SValue<tt>& v1) {
-    SExpr<tt, EXPR_NEGATIVE, tt, void_s>* ex = new SExpr<tt, EXPR_NEGATIVE, tt, void_s>;
+    SExpr<tt, EXPR_NEGATIVE, tt, void_s>* ex = SUtils::allocate<SExpr<tt, EXPR_NEGATIVE, tt, void_s> >();
     ex->v1 = (&v1);
     ex->v2 = nullptr;
     return *ex;
@@ -228,7 +228,7 @@ namespace spurv {
   
   template<typename tt>
   SExpr<tt, EXPR_ADDITION, tt, tt>& operator+(SValue<tt>& v1, SValue<tt>& v2) {
-    SExpr<tt, EXPR_ADDITION, tt, tt>* ex = new SExpr<tt, EXPR_ADDITION, tt, tt>;
+    SExpr<tt, EXPR_ADDITION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_ADDITION, tt, tt> >();
     ex->register_left_node(v1);
     ex->register_right_node(v2);
     return *ex;
@@ -236,7 +236,7 @@ namespace spurv {
 
   template<typename tt>
   SExpr<tt, EXPR_SUBTRACTION, tt, tt>& operator-(SValue<tt>& v1, SValue<tt>& v2) {
-    SExpr<tt, EXPR_SUBTRACTION, tt, tt>* ex = new SExpr<tt, EXPR_SUBTRACTION, tt, tt>;
+    SExpr<tt, EXPR_SUBTRACTION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_SUBTRACTION, tt, tt> >();
     ex->register_left_node(v1);
     ex->register_right_node(v2);
     return *ex;
@@ -253,7 +253,7 @@ namespace spurv {
 		  (is_spurv_mat_type<tt1>::value && is_spurv_float_type<tt2>::value));
     
     typedef typename multiplication_res_type<tt1, tt2>::type res_type;
-    SExpr<res_type, EXPR_MULTIPLICATION, tt1, tt2>* ex = new SExpr<res_type, EXPR_MULTIPLICATION, tt1, tt2>;
+    SExpr<res_type, EXPR_MULTIPLICATION, tt1, tt2>* ex = SUtils::allocate<SExpr<res_type, EXPR_MULTIPLICATION, tt1, tt2> >();
     ex->register_left_node(v1);
     ex->register_right_node(v2);
     return *ex;
@@ -263,8 +263,7 @@ namespace spurv {
   SExpr<SMat<n, b>, EXPR_DOT, SMat<n, m>, SMat<a, b> >&
   operator*(SValue<SMat<n, m> >& v1, SValue<SMat<a, b> >& v2) {
     static_assert(m == a || (m == 1 && b == 1));
-    SExpr<SMat<n, b>, EXPR_DOT, SMat<n, m>, SMat<a, b> >* ex =
-      new SExpr<SMat<n, b>, EXPR_DOT, SMat<n, m>, SMat<a, b> >;
+    SExpr<SMat<n, b>, EXPR_DOT, SMat<n, m>, SMat<a, b> >* ex = SUtils::allocate<SExpr<SMat<n, b>, EXPR_DOT, SMat<n, m>, SMat<a, b> > >();
     ex->register_left_node(v1);
     ex->register_right_node(v2);
     return *ex;
@@ -274,8 +273,8 @@ namespace spurv {
   SExpr<tt1, EXPR_MULTIPLICATION, tt1, float_s>& operator*(SValue<tt1>& v1, const float& f) {
     static_assert(is_spurv_mat_type<tt1>::value || is_spurv_float_type<tt1>::value);
     
-    Constant<float>* c = new Constant<float>(f);
-    SExpr<tt1, EXPR_MULTIPLICATION, tt1, float_s>* ex = new SExpr<tt1, EXPR_MULTIPLICATION, tt1, float_s>;
+    Constant<float>* c = SUtils::allocate<Constant<float> >(f);
+    SExpr<tt1, EXPR_MULTIPLICATION, tt1, float_s>* ex = SUtils::allocate< SExpr<tt1, EXPR_MULTIPLICATION, tt1, float_s> >();
 
     ex->register_left_node(v1);
     ex->register_right_node(*c);

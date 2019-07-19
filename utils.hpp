@@ -1,6 +1,12 @@
 #ifndef __SPURV_UTILS
 #define __SPURV_UTILS
 
+#include "declarations.hpp"
+
+#include <vector>
+#include <cstdint>
+#include <string>
+
 namespace spurv {
 
   /*
@@ -29,6 +35,20 @@ namespace spurv {
 
     template<typename First, typename... Types>
     static void getDSTypesRecursive(DSType *pp);
+
+    struct PWrapperBase {
+      virtual void exterminate() = 0;
+    };
+
+    template<typename tt>
+    struct PWrapper : public PWrapperBase {
+      tt* pp;
+      virtual void exterminate();
+    };
+    
+    static std::vector<PWrapperBase*> allocated_values;
+    
+    static void clearAllocations();
     
     template<int n, typename...Types>
     struct NthType;
@@ -85,6 +105,13 @@ namespace spurv {
 
     template<typename... InnerTypes>
     friend class SStruct;
+
+  public:
+
+    // So that it can be accessed by global operaters
+    template<typename tt, typename... Types>
+    static tt* allocate(Types... args);
+  
     
   };
 

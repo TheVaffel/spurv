@@ -61,51 +61,21 @@ namespace spurv {
       return T::getSize();
     }
   }
+
+  template<typename tt, typename... Types>
+  tt* SUtils::allocate(Types... args) {
+    PWrapper<tt>* p = new PWrapper<tt>;
+    p->pp = new tt(args...);
+    SUtils::allocated_values.push_back(p);
+    return p->pp; 
+  }
+
+
+  template<typename tt>
+  void SUtils::PWrapper<tt>::exterminate() {
+    delete this->pp;
+  }
   
-  int SUtils::global_id_counter = 1;
-
-  int SUtils::getNewID() {
-    return SUtils::global_id_counter++;
-  }
-
-  int SUtils::getCurrentID() {
-    return SUtils::global_id_counter;
-  }
-
-  void SUtils::resetID() {
-    SUtils::global_id_counter = 1;
-  }
-
-  int SUtils::stringWordLength(const std::string str) {
-    return (str.length() + 1 + 3 ) / 4; // Make room for terminating zero, round up to 4-byte words
-  }
-
-  void SUtils::add(std::vector<uint32_t>& binary, int a) {
-    binary.push_back(a);
-  }
-
-  void SUtils::add(std::vector<uint32_t>& binary, std::string str) {
-    int len = str.length(); // Space for null terminator
-    int n = SUtils::stringWordLength(str);
-
-    const char* pp = str.c_str();
-    for(int i = 0; i < n - 1; i++) {
-      SUtils::add(binary, *((int32_t*)(pp + 4 * i)));
-    }
-
-    int left = len - (n - 1) * 4;
-    char last_int[4];
-    for(int i = 0; i < left; i++) {
-      last_int[i] = str[(n - 1) * 4 + i];
-    }
-  
-    for(int i = left; i < 4; i++) {
-      last_int[i] = 0; // Pad with zeros
-    }
-
-    SUtils::add(binary, *(int32_t*)last_int);
-  }
-
 };
 
 #endif // __SPURV_UTILS_IMPL

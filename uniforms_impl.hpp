@@ -23,8 +23,8 @@ namespace spurv {
     if (value_pointers[n] == nullptr) {
       int pointer_id = SUtils::getNewID();
       SUniformVar< typename SUtils::NthType<n, InnerTypes...>::type> *uniform =
-	new SUniformVar< typename SUtils::NthType<n, InnerTypes...>::type>(this->set_no, this->binding_no,
-									 n, pointer_id, this->pointer_id);
+	SUtils::allocate<SUniformVar<typename SUtils::NthType<n, InnerTypes...>::type> >(this->set_no, this->binding_no, n, pointer_id, this->pointer_id);
+
       this->value_pointers.push_back((void*)uniform);
       return *uniform;
     } else {
