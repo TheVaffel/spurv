@@ -304,14 +304,6 @@ namespace spurv {
   }
 
   template<typename... InnerTypes>
-  void SStruct<InnerTypes...>::getDSType(DSType* type) {
-    constexpr int n = sizeof...(InnerTypes);
-    type->kind = KIND_STRUCT;
-    type->inner_types = new DSType[sizeof...(InnerTypes)];
-    SUtils::getDSTypesRecursive<InnerTypes...>(type);
-  }
-
-  template<typename... InnerTypes>
   constexpr int SStruct<InnerTypes...>::getSize() {
     return SUtils::getSumSize<InnerTypes...>();
   }

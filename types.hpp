@@ -199,7 +199,6 @@ namespace spurv {
     static void ensure_decorated(std::vector<uint32_t>& bin);
     static void decorate_member_offsets(std::vector<uint32_t>& bin);
     
-    static void getDSType(DSType* type);
     static constexpr int getSize();
 
     template<int member_no, int start_size, typename First, typename... Types>
