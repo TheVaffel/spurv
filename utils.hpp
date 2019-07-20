@@ -60,7 +60,7 @@ namespace spurv {
     
     static int global_id_counter;
 
-    template<STypeKind kind, int n, int m, typename... InnerTypes>
+    template<STypeKind kind, int n, int m, int l, int k, int j, typename... InnerTypes>
     friend class SType;
     
     template<SShaderType type, typename... InputTypes>

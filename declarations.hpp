@@ -62,8 +62,10 @@ namespace spurv {
    */
 
   struct DSType;
-  
-  template<STypeKind kind, int arg0, int arg1, typename... InnerTypes>
+
+  // I am really sorry for this. Do tell if you know a better way
+  template<STypeKind kind, int arg0 = 0, int arg1 = 0,
+	   int arg2 = 0, int arg3 = 0, int arg4 = 0, typename... InnerTypes>
   class SType;
 
   template<SShaderType type, typename... InputTypes>

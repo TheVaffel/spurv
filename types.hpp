@@ -39,14 +39,16 @@ namespace spurv {
     // NB: If adding more parameters, remember to add more arguments to SType and
     // is_spurv_type below as well
     STypeKind kind;
-    int a0, a1;
+    int a0, a1, a2, a3, a4;
     
     // NB: This will be a list if kind == KIND_STRUCT
     DSType* inner_types;
     int num_inner_types;
     
     constexpr DSType() : kind(KIND_INVALID),
-      a0(0), a1(0), inner_types(nullptr), num_inner_types(0) { }
+      a0(0), a1(0), a2(0), a3(0), a4(0),
+      inner_types(nullptr),  
+      num_inner_types(0){ };
 
     ~DSType() ;
     
@@ -58,7 +60,8 @@ namespace spurv {
    * SType - The mother of them all
    */
   
-  template<STypeKind kind, int arg0 = 0, int arg1 = 0, typename... InnerTypes >
+  template<STypeKind kind, int arg0, int arg1, int arg2,
+	   int arg3, int arg4, typename... InnerTypes >
   class SType {
     
   protected:
@@ -151,7 +154,7 @@ namespace spurv {
    */
   
   template<int n, typename tt>
-  class SArr : public SType<KIND_ARR, n, 0, tt >  {
+  class SArr : public SType<KIND_ARR, n, 0, 0, 0, 0, tt >  {
     constexpr SArr() {
       static_assert(is_spurv_type<tt>::value, "Inner type of SArr must be a spurv type");
     }
@@ -170,7 +173,7 @@ namespace spurv {
    */
   
   template<SStorageClass storage, typename tt>
-  class SPointer : public SType<KIND_POINTER, (int)storage, 0, tt> {
+  class SPointer : public SType<KIND_POINTER, (int)storage, 0, 0, 0, 0, tt> {
   public:
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
 					    std::vector<SDeclarationState*>& declaration_states);
@@ -184,7 +187,7 @@ namespace spurv {
    */
   
   template<typename... InnerTypes>
-  class SStruct : public SType<KIND_STRUCT, 0, 0, InnerTypes...> {
+  class SStruct : public SType<KIND_STRUCT, 0, 0, 0, 0, 0, InnerTypes...> {
     static bool is_decorated;
     
   public:

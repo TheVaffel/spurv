@@ -10,8 +10,8 @@ namespace spurv {
    * Static methods
    */
   
-  template<STypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  void SType<kind, arg0, arg1, InnerTypes...>::getDSType(DSType* type) {
+  template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
+  void SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::getDSType(DSType* type) {
       type->kind = kind;
       type->a0 = arg0;
       type->a1 = arg1;
@@ -19,13 +19,14 @@ namespace spurv {
       constexpr int n = sizeof...(InnerTypes);
       
       if constexpr (n > 0) {
+	  type->num_inner_types = n;
 	type->inner_types = new DSType[n];
 	SUtils::getDSTypesRecursive<InnerTypes...>(type->inner_types);
       }
     }
 
-  template<STypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  int SType<kind, arg0, arg1, InnerTypes...>::getID() {
+  template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
+  int SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::getID() {
     if(declarationState.id == -1) {
       printf("Kind = %d, arg0 = %d, arg1 = %d\n", kind, arg0, arg1);
       printf("Tried to use type declarationState.id before defined\n");
@@ -34,36 +35,36 @@ namespace spurv {
     return declarationState.id;
   }
 
-  template<STypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  int SType<kind, arg0, arg1, InnerTypes...>::ensureInitID() {
+  template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
+  int SType<kind, arg0, arg1,arg2, arg3, arg4,  InnerTypes...>::ensureInitID() {
     if(declarationState.id == -1) {
       declarationState.id = SUtils::getNewID();
     }
     return declarationState.id;
   }
 
-  template<STypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  bool SType<kind, arg0, arg1, InnerTypes...>::isDefined() {
+  template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
+  bool SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::isDefined() {
     return declarationState.is_defined;
   }
 
-  template<STypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  void SType<kind, arg0, arg1, InnerTypes...>::declareDefined() {
+  template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
+  void SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::declareDefined() {
     declarationState.is_defined = true;
   }
 
-  template<STypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  constexpr STypeKind SType<kind, arg0, arg1, InnerTypes...>::getKind() {
+  template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
+  constexpr STypeKind SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::getKind() {
     return kind;
   }
 
-  template<STypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  constexpr int SType<kind, arg0, arg1, InnerTypes...>::getArg0() {
+  template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
+  constexpr int SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::getArg0() {
     return arg0;
   }
 
-  template<STypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  constexpr int SType<kind, arg0, arg1, InnerTypes...>::getArg1() {
+  template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
+  constexpr int SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::getArg1() {
     return arg1;
   }
   
@@ -72,16 +73,16 @@ namespace spurv {
    * Static variables
    */
   
-  template<STypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  SDeclarationState SType<kind, arg0, arg1, InnerTypes...>::declarationState;
+  template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
+  SDeclarationState SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::declarationState;
   
   
   /*
    * Default Member functions
    */
 
-  template<STypeKind kind, int arg0, int arg1, typename... InnerTypes>
-  void SType<kind, arg0, arg1, InnerTypes...>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
+  template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
+  void SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
 									       std::vector<SDeclarationState*>& declaration_states) { }
   
   /*
