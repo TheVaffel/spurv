@@ -265,6 +265,12 @@ namespace spurv {
 
   template<int n, int s>
   struct is_spurv_int_type<SInt<n, s> > : std::true_type {};
+
+  template<typename>
+  struct is_spurv_texture_type : std::false_type {};
+
+  template<int n>
+  struct is_spurv_texture_type<STexture<n> > : std::true_type {};
   
 
   /*
@@ -282,6 +288,7 @@ namespace spurv {
   typedef SMat<3, 1> vec3_s;
   typedef SMat<4, 1> vec4_s;
   typedef SArr<1, float_s> arr_1_float_s;
+  typedef STexture<2> texture2D_s;
 
   
   /*

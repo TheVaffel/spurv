@@ -196,9 +196,25 @@ namespace spurv {
 	    SUtils::add(res, this->v1->getID());
 	    SUtils::add(res, this->v2->getID());
 	  }
-	}
+	} else if constexpr(op == EXPR_LOOKUP) {
+	  if(d2.kind == KIND_TEXTURE) {
+	    // OpImageSampleExplicitLod
+	    SUtils::add(res, (7 << 16) | 88);
+	    SUtils::add(res, vec4_s::getID());
+	    SUtils::add(res, this->getID());
+	    SUtils::add(res, this->v1->getID());
+	    SUtils::add(res, this->v2->getID());
+	    SUtils::add(res, 2); // LoD
+	    SUtils::add(res, SConstantRegistry::getIDFloat(32, 0.0f));
+	  } else {
+	    printf("Expression lookup operation not yet implemented\n");
+	    exit(-1);
+	  }
+	} else {
+	printf("Expression operation not yet implemented\n");
+	exit(-1);
+      }
     }
-    
   }
 
 
@@ -284,6 +300,23 @@ namespace spurv {
   template<typename tt1>
   SExpr<tt1, EXPR_MULTIPLICATION, tt1, float_s>& operator*(const float& f, SValue<tt1>& v1) {
     return v1 * f;
+  }
+
+  template<typename comp>
+  template<typename res, typename ind>
+  SExpr<res, EXPR_LOOKUP, comp, ind>& SValue<comp>::operator[](SValue<ind>& index) {
+    if constexpr(is_spurv_texture_type<comp>::value &&
+		 is_spurv_mat_type<ind>::value) {
+	static_assert(ind::getArg1() == 1 &&
+		      ind::getArg0() == comp::getArg0(),
+		      "Dimensions of texture and vector  does not match"); // Is index a vector, and does dimensions match?
+	SExpr<res, EXPR_LOOKUP, comp, ind>* ex =
+	  SUtils::allocate<SExpr<res, EXPR_LOOKUP, comp, ind> >();
+
+	ex->register_left_node(*this);
+	ex->register_right_node(index);
+	return *ex;
+      }
   }
 
   

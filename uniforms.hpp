@@ -3,6 +3,7 @@
 
 #include "declarations.hpp"
 #include "utils.hpp"
+#include "types.hpp"
 
 namespace spurv { 
 
@@ -25,7 +26,7 @@ namespace spurv {
 
     virtual void definePointer(std::vector<uint32_t>& bin,
 			       std::vector<SDeclarationState*>& declaration_states) = 0;
-    virtual void decorateType(std::vector<uint32_t>& bin) = 0;
+    virtual void decorateType(std::vector<uint32_t>& bin);
   };
 
 
@@ -50,6 +51,24 @@ namespace spurv {
     virtual void decorateType(std::vector<uint32_t>& bin);
   };
 
+  
+  /*
+   * SUniformConstant - for uniforms that don't need structs - like textures
+   */
+
+  template<typename type>
+  struct SUniformConstant : public SUniformBindingBase {
+  public:
+    SUniformConstant(int sn, int bn);
+
+    virtual void definePointer(std::vector<uint32_t>& bin,
+			       std::vector<SDeclarationState*>& declaration_states);
+
+    virtual void define(std::vector<uint32_t>& res);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res,
+				     std::vector<SDeclarationState*>& declaration_states);
+  };
+  
 
 };
 

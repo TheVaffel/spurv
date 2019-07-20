@@ -11,7 +11,6 @@ namespace spurv {
 
   template<typename... InnerTypes>
   SUniformBinding<InnerTypes...>::SUniformBinding(int sn, int bn) : SUniformBindingBase(sn, bn), value_pointers(sizeof...(InnerTypes), nullptr) {
-    this->pointer_id = SUtils::getNewID();
   }
   
   template<typename... InnerTypes>
@@ -49,6 +48,39 @@ namespace spurv {
     SStruct<InnerTypes...>::ensure_decorated(bin);
   }
 
+  /*
+   * SUniformConstant member functions
+   */
+
+  template<typename type>
+  SUniformConstant<type>::SUniformConstant(int sn, int bn) : SUniformBindingBase(sn, bn) { }
+
+  template<typename type>
+  void SUniformConstant<type>::definePointer(std::vector<uint32_t>& bin,
+					     std::vector<SDeclarationState*>& declaration_states) {
+    SPointer<STORAGE_UNIFORM_CONSTANT, type>::ensure_defined(bin, declaration_states);
+    
+    // OpVariable
+    SUtils::add(bin, (4 << 16) | 59);
+    SUtils::add(bin, SPointer<STORAGE_UNIFORM_CONSTANT, type>::getID());
+    SUtils::add(bin, pointer_id);
+    SUtils::add(bin, STORAGE_UNIFORM_CONSTANT);
+  }
+
+  template<typename type>
+  void SUniformConstant<type>::ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states) {
+    type::ensure_defined(res, declaration_states);
+    SPointer<STORAGE_UNIFORM_CONSTANT, type>::ensure_defined(res, declaration_states);
+  }
+
+  template<typename type>
+  void SUniformConstant<type>::define(std::vector<uint32_t>& res) {
+    // OpLoad
+    SUtils::add(res, (4 << 16) | 61);
+    SUtils::add(res, type::getID());
+    SUtils::add(res, this->getID());
+    SUtils::add(res, this->pointer_id);
+  }
 };
 
 #endif // __SPURV_UNIFORMS_IMPL

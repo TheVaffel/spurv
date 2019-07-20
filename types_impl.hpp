@@ -2,6 +2,7 @@
 #define __SPURV_TYPES_IMPL
 
 #include "types.hpp"
+#include "constant_registry.hpp"
 
 namespace spurv {
   
@@ -350,23 +351,24 @@ namespace spurv {
    * SImage functions
    */
 
-  template<typename... Ints>
-  void SImage<Ints... args>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
+  template<int dim, int depth, int arrayed, int multisamp, int sampled>
+  void SImage<dim, depth, arrayed, multisamp, sampled>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
 							std::vector<SDeclarationState*>& declaration_states) {
     SFloat<32>::ensure_defined(bin, declaration_states);
   }
 
-  template<typename... Ints>
-  void SImage<Ints... args>::ensure_defined(std::vector<uint32_t>& bin,
-					   std::vector<SDeclarationState*>& declaration_states) {
-    if(!SImage<args...>::isDefined()) {
+  template<int dim, int depth, int arrayed, int multisamp, int sampled>
+  void SImage<dim, depth, arrayed, multisamp, sampled>::ensure_defined(std::vector<uint32_t>& bin,
+								       std::vector<SDeclarationState*>& declaration_states) {
+    if(!SImage<dim, depth, arrayed, multisamp, sampled>::isDefined()) {
       ensure_defined_dependencies(bin, declaration_states);
       define(bin);
-      declaration_states.push_back(&(SImage<args...>::declarationState));
+      declaration_states.push_back(&(SImage<dim, depth, arrayed, multisamp, sampled>::declarationState));
     }
   }
 
-  template<int dims, int depth, int arrayed, int multisamp, int sampled> {
+  template<int dims, int depth, int arrayed, int multisamp, int sampled>
+  void SImage<dims, depth, arrayed, multisamp, sampled>::define(std::vector<uint32_t>& bin) {
     using ThisType = SImage<dims, depth, arrayed, multisamp, sampled>;
     ThisType::ensureInitID();
     ThisType::declareDefined();
@@ -395,6 +397,13 @@ namespace spurv {
 
     // 2D is 1, etc..
     SImage<n - 1, 0, 0, 0, 0>::ensure_defined();
+
+    // Explicitly define 0 to be default Lod when sampling
+    SFloat<32>::ensure_defined(bin, declaration_states);
+    SConstantRegistry::ensureDefinedConstant<float>(0.0f, SUtils::getNewID(), bin);
+
+    // Result will always be 4-component vector (according to specs, for some reason)
+    vec4_s::ensure_defined(bin, declaration_states); 
   }
   
   template<int n>

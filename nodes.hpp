@@ -36,7 +36,10 @@ namespace spurv {
     virtual void define(std::vector<uint32_t>& res) = 0;
 
     virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
-      
+
+    template<typename res, typename ind>
+    SExpr<res, EXPR_LOOKUP, tt, ind>& operator[](SValue<ind>& index);
+    
     // Only deletes tree if ref_count reaches zero
     virtual void unref_tree() = 0;
   };
@@ -58,7 +61,7 @@ namespace spurv {
 
 
   /*
-   * SIOValue - Base class for input attributes and uniforms
+   * SIOVar - Base class for input attributes and uniforms
    */
 
   template<typename tt>
@@ -150,6 +153,7 @@ namespace spurv {
   typedef SValue<vec3_s>&        vec3_v;
   typedef SValue<vec4_s>&        vec4_v;
   typedef SValue<arr_1_float_s>& arr_1_float_v;
+  typedef SValue<texture2D_s>&   texture2D_v;
 };
 
 #endif // __SPURV_NODES

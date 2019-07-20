@@ -48,7 +48,8 @@ namespace spurv {
     EXPR_CROSS,
     EXPR_EXP,
     EXPR_SQRT,
-    EXPR_POW
+    EXPR_POW,
+    EXPR_LOOKUP // Sampling, indexing etc..
   };
 
    enum SBuiltinVariable {

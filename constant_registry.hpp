@@ -26,7 +26,7 @@ namespace spurv {
     static int getIDInteger(int n, int s, int m);
     static int getIDFloat(int n, float f);
 
-    template<typename nt>
+    template<typename nt> 
     static void ensureDefinedConstant(const nt& val, int id,
 				      std::vector<uint32_t>& res);
     

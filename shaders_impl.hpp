@@ -565,20 +565,52 @@ namespace spurv {
     }
   }
 
+  template<typename... InnerTypes>
+  constexpr bool isUniformConstantType() {
+    return sizeof...(InnerTypes) == 1 &&
+      is_spurv_texture_type<typename SUtils::NthType<0, InnerTypes...>::type>::value;
+  }
+
   template<SShaderType type, typename... InputTypes>
   template<typename... InnerTypes>
-  SUniformBinding<InnerTypes...>& SShader<type, InputTypes...>::uniformBinding(int set_no, int binding_no) {
-    // O(n^2).. But hopefully nobody cares
-    for(uint i = 0; i < this->uniform_bindings.size(); i++) {
-      if(this->uniform_bindings[i]->getSetNo() == set_no &&
-	 this->uniform_bindings[i]->getBindingNo() == binding_no) {
-	return *(SUniformBinding<InnerTypes...>*)uniform_bindings[i];
-      }
-    }
+  typename std::conditional<isUniformConstantType<InnerTypes...>(),
+			    SUniformConstant<typename SUtils::NthType<0, InnerTypes...>::type>,
+			    SUniformBinding<InnerTypes...> >::type&
+  SShader<type, InputTypes...>::uniformBinding(int set_no, int binding_no) {
 
-    SUniformBinding<InnerTypes...>* pp = SUtils::allocate<SUniformBinding<InnerTypes...> >(set_no, binding_no);
-    this->uniform_bindings.push_back((SUniformBindingBase*)pp);
-    return *pp;
+    // Check if this is just a uniform constant, not a struct
+    if constexpr(isUniformConstantType<InnerTypes...>()) {
+
+	using Type = typename SUtils::NthType<0, InnerTypes...>::type;
+	
+	for(uint i = 0; i < this->uniform_bindings.size(); i++) {
+	  if(this->uniform_bindings[i]->getSetNo() == set_no &&
+	     this->uniform_bindings[i]->getBindingNo() == binding_no) {
+	    return *(SUniformConstant<Type>*)uniform_bindings[i];
+	  }
+	}
+
+	SUniformConstant<Type>* pp = SUtils::allocate<SUniformConstant<Type> >(set_no, binding_no);
+
+	this->uniform_bindings.push_back((SUniformBindingBase*)pp);
+	return *pp;
+	
+      } else {
+    
+      // O(n^2).. But hopefully nobody cares
+      for(uint i = 0; i < this->uniform_bindings.size(); i++) {
+	if(this->uniform_bindings[i]->getSetNo() == set_no &&
+	   this->uniform_bindings[i]->getBindingNo() == binding_no) {
+	  return *(SUniformBinding<InnerTypes...>*)uniform_bindings[i];
+	}
+      }
+
+      SUniformBinding<InnerTypes...>* pp = SUtils::allocate<SUniformBinding<InnerTypes...> >(set_no, binding_no);
+
+      this->uniform_bindings.push_back((SUniformBindingBase*)pp);
+      return *pp;
+    }
+    
   }
 
   template<SShaderType type, typename... InputTypes>

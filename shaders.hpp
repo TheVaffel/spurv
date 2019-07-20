@@ -4,12 +4,19 @@
 namespace spurv {
 
   /*
+   * Utility functions for use in SShaders
+   */
+
+  template<typename... InnerTypes>
+  constexpr bool isUniformConstantType();
+  
+  /*
    * SShader - The object responsible for IO and compilation of the shader
    */
   
   template<SShaderType type, typename... InputTypes>
   class SShader {
-
+    
 
     struct InputVariableEntry {
       int id;
@@ -120,8 +127,11 @@ namespace spurv {
     template<int n>
     auto& input();
 
+    // Return an SUniformConstant if applicable, otherwise an SUniformBinding
     template<typename... InnerTypes>
-    SUniformBinding<InnerTypes...>& uniformBinding(int set_no, int binding_no);
+    typename std::conditional<isUniformConstantType<InnerTypes...>(),
+			      SUniformConstant<typename SUtils::NthType<0, InnerTypes...>::type>,
+			      SUniformBinding<InnerTypes...> >::type& uniformBinding(int set_no, int binding_no);
     
     template<typename... NodeTypes>
     void compile(std::vector<uint32_t>& res, NodeTypes&... args);

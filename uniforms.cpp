@@ -21,5 +21,6 @@ namespace spurv {
   int SUniformBindingBase::getPointerID() {
     return this->pointer_id;
   }
-  
+
+  void SUniformBindingBase::decorateType(std::vector<uint32_t>& bin) { }
 };
