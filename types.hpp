@@ -205,7 +205,35 @@ namespace spurv {
     static void decorate_member_offsets(std::vector<uint32_t>& bin);
   };
 
+
+  /*
+   * SImage - Representation of abstract image
+   */
+
+  template<int dims, int depth, int arrayed, int multisamp, int sampled>
+  class SImage : public SType<KIND_IMAGE, dims, depth, arrayed, multisamp, sampled > {
+    static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
+					    std::vector<SDeclarationState*>& declaration_states);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
+    static void define(std::vector<uint32_t>& bin);
+  };
+
     
+  /*
+   * STexture - Representation of textures of n dimensions
+   */
+
+  template<int n>
+  class STexture : public SType<KIND_TEXTURE, n> {
+
+  public:
+    static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
+					    std::vector<SDeclarationState*>& declaration_states);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
+    static void define(std::vector<uint32_t>& bin);
+  };
+
+  
   /*
    * More specialized type checks
    */

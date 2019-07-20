@@ -326,7 +326,6 @@ namespace spurv {
       }	       
   }
 
-  
   template<typename... InnerTypes>
   void SStruct<InnerTypes...>::ensure_decorated(std::vector<uint32_t>& bin) {
     if( is_decorated) {
@@ -345,6 +344,78 @@ namespace spurv {
     SStruct<InnerTypes...>::
       decorate_member_offsets<0, 0, InnerTypes...>(bin);
   }
+
   
+  /*
+   * SImage functions
+   */
+
+  template<typename... Ints>
+  void SImage<Ints... args>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
+							std::vector<SDeclarationState*>& declaration_states) {
+    SFloat<32>::ensure_defined(bin, declaration_states);
+  }
+
+  template<typename... Ints>
+  void SImage<Ints... args>::ensure_defined(std::vector<uint32_t>& bin,
+					   std::vector<SDeclarationState*>& declaration_states) {
+    if(!SImage<args...>::isDefined()) {
+      ensure_defined_dependencies(bin, declaration_states);
+      define(bin);
+      declaration_states.push_back(&(SImage<args...>::declarationState));
+    }
+  }
+
+  template<int dims, int depth, int arrayed, int multisamp, int sampled> {
+    using ThisType = SImage<dims, depth, arrayed, multisamp, sampled>;
+    ThisType::ensureInitID();
+    ThisType::declareDefined();
+
+    // OpTypeImage
+    SUtils::add(bin, (9 << 16) | 25);
+    SUtils::add(bin, ThisType::getID());
+    SUtils::add(bin, SFloat<32>::getID());
+    SUtils::add(bin, dims);
+    SUtils::add(bin, depth);
+    SUtils::add(bin, arrayed);
+    SUtils::add(bin, multisamp);
+    SUtils::add(bin, sampled);
+    SUtils::add(bin, 0); // Unknown
+  }
+  
+
+  /*
+   * STexture functions
+   */
+
+  template<int n>
+  void STexture<n>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
+						std::vector<SDeclarationState*>& declaration_states) {
+    static_assert(n > 0 && n <= 3, "Texture dimension must be positive and at most 3");
+
+    // 2D is 1, etc..
+    SImage<n - 1, 0, 0, 0, 0>::ensure_defined();
+  }
+  
+  template<int n>
+  void STexture<n>::ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states) {
+    if(!STexture<n>::isDefined()) {
+      ensure_defined_dependencies(bin, declaration_states);
+      define(bin);
+      declaration_states.push_back(&(STexture<n>::declarationState));
+    }
+  }
+
+  template<int n>
+  void STexture<n>::define(std::vector<uint32_t>& bin) {
+
+    STexture<n>::ensureInitID();
+    STexture<n>::declareDefined();
+
+    // OpTypeSampledImage
+    SUtils::add(bin, (3 << 16) | 27);
+    SUtils::add(bin, STexture<n>::getID());
+    SUtils::add(bin, SImage<n - 1, 0, 0, 0, 0>::getID());
+  }
 };
 #endif // __SPURV_TYPES_IMPL

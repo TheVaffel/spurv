@@ -20,7 +20,9 @@ namespace spurv {
     KIND_MAT,
     KIND_ARR,
     KIND_POINTER,
-    KIND_STRUCT
+    KIND_STRUCT,
+    KIND_IMAGE,
+    KIND_TEXTURE
   };
   
   enum SShaderType {
