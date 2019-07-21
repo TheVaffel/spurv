@@ -212,6 +212,7 @@ namespace spurv {
 
   template<int dims, int depth, int arrayed, int multisamp, int sampled>
   class SImage : public SType<KIND_IMAGE, dims, depth, arrayed, multisamp, sampled > {
+  public: 
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
 					    std::vector<SDeclarationState*>& declaration_states);
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
@@ -249,6 +250,9 @@ namespace spurv {
 
   template<typename... InnerTypes>
   struct is_spurv_type<SStruct<InnerTypes...> > : std::true_type{ static_assert(SUtils::isSTypeRecursive<InnerTypes...>); };
+  
+  template<int d>
+  struct is_spurv_type<STexture<d> > : std::true_type {} ;
 
   template<int n, int m>
   struct is_spurv_mat_type<SMat<n, m> > : std::true_type {};

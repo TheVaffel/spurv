@@ -396,7 +396,7 @@ namespace spurv {
     static_assert(n > 0 && n <= 3, "Texture dimension must be positive and at most 3");
 
     // 2D is 1, etc..
-    SImage<n - 1, 0, 0, 0, 0>::ensure_defined();
+    SImage<n - 1, 0, 0, 0, 0>::ensure_defined(bin, declaration_states);
 
     // Explicitly define 0 to be default Lod when sampling
     SFloat<32>::ensure_defined(bin, declaration_states);

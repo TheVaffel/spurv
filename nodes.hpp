@@ -38,7 +38,7 @@ namespace spurv {
     virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
 
     template<typename res, typename ind>
-    SExpr<res, EXPR_LOOKUP, tt, ind>& operator[](SValue<ind>& index);
+    SValue<res>& lookup(SValue<ind>& index);
     
     // Only deletes tree if ref_count reaches zero
     virtual void unref_tree() = 0;

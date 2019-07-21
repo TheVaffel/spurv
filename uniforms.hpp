@@ -3,7 +3,7 @@
 
 #include "declarations.hpp"
 #include "utils.hpp"
-#include "types.hpp"
+#include "nodes.hpp"
 
 namespace spurv { 
 
@@ -57,10 +57,10 @@ namespace spurv {
    */
 
   template<typename type>
-  struct SUniformConstant : public SUniformBindingBase {
+  struct SUniformConstant : public SUniformBindingBase, public SIOVar<type> {
   public:
     SUniformConstant(int sn, int bn);
-
+    
     virtual void definePointer(std::vector<uint32_t>& bin,
 			       std::vector<SDeclarationState*>& declaration_states);
 

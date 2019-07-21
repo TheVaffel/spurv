@@ -304,7 +304,7 @@ namespace spurv {
 
   template<typename comp>
   template<typename res, typename ind>
-  SExpr<res, EXPR_LOOKUP, comp, ind>& SValue<comp>::operator[](SValue<ind>& index) {
+  SValue<res>& SValue<comp>::lookup(SValue<ind>& index) {
     if constexpr(is_spurv_texture_type<comp>::value &&
 		 is_spurv_mat_type<ind>::value) {
 	static_assert(ind::getArg1() == 1 &&

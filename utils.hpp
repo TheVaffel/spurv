@@ -101,11 +101,20 @@ namespace spurv {
     friend class SUniformBinding;
 
     template<typename tt>
+    friend class SUniformConstant;
+
+    template<typename tt>
     friend class SUniformVar;
 
     template<typename... InnerTypes>
     friend class SStruct;
 
+    template<int dims, int depth, int arrayed, int multisamp, int sampled>
+    friend class SImage;
+    
+    template<int d>
+    friend class STexture;
+    
   public:
 
     // So that it can be accessed by global operaters

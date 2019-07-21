@@ -14,7 +14,7 @@ IMPL_HDRS= utils_impl.hpp expressions_impl.hpp uniforms_impl.hpp types_impl.hpp 
 
 SRCS=types.cpp uniforms.cpp constant_registry.cpp utils.cpp
 
-all: test test2
+all: test test2 texture_test
 
 test: test.cpp $(SRCS) $(HDRS) $(IMPL_HDRS)
 	g++ $< $(SRCS) -o $@ $(INCLUDE_DIRS) $(LIB_DIRS) $(LIBS) $(CFLAGS) $(ANTI_WARNINGS)
@@ -22,5 +22,8 @@ test: test.cpp $(SRCS) $(HDRS) $(IMPL_HDRS)
 test2:	test2.cpp $(SRCS) $(HDRS) $(IMPL_HDRS)
 	g++ $< $(SRCS) -o $@ $(INCLUDE_DIRS) $(LIB_DIRS) $(LIBS) $(CFLAGS) $(ANTI_WARNINGS)
 
+texture_test:	texture_test.cpp $(SRCS) $(HDRS) $(IMPL_HDRS)
+	g++ $< $(SRCS) -o $@ $(INCLUDE_DIRS) $(LIB_DIRS) $(LIBS) $(CFLAGS) $(ANTI_WARNINGS)
+
 clean:  
-	rm test2 test
+	rm texture_test test2 test
