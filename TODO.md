@@ -4,7 +4,7 @@ Somewhat in order of priority
 
 ### Datatype Features
 - [x] Structs
-- [ ] 2D Texture
+- [x] 2D Texture
 - [ ] Functions for (re)composing vectors and matrices
 
 ### Structural Features
