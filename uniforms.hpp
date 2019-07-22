@@ -3,7 +3,7 @@
 
 #include "declarations.hpp"
 #include "utils.hpp"
-#include "nodes.hpp"
+#include "values.hpp"
 
 namespace spurv { 
 

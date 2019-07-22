@@ -6,14 +6,14 @@
 #include "utils.hpp"
 #include "uniforms.hpp"
 #include "types.hpp"
-#include "nodes.hpp"
+#include "values.hpp"
 #include "shaders.hpp"
 
 #include "utils_impl.hpp"
 #include "expressions_impl.hpp"
 #include "uniforms_impl.hpp"
 #include "types_impl.hpp"
-#include "nodes_impl.hpp"
+#include "values_impl.hpp"
 #include "shaders_impl.hpp"
 
 #endif // ndef __SPURV_SPURV

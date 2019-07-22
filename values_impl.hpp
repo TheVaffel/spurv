@@ -1,7 +1,7 @@
 #ifndef __SPURV_NODES_IMPL
 #define __SPURV_NODES_IMPL
 
-#include "nodes.hpp"
+#include "values.hpp"
 #include "constant_registry_impl.hpp"
 
 namespace spurv {
