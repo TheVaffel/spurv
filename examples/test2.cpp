@@ -6,7 +6,7 @@
 #include <Wingine.hpp>
 #include <iostream>
 
-#include <spurv.hpp>
+#include <../include/spurv.hpp>
 
 using namespace std;
 

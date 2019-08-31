@@ -176,13 +176,13 @@ namespace spurv {
 	      exit(-1);
 	    }
 	    SUtils::add(res, (5 << 16) | 148);
-	    SUtils::add(res, tt::id);
+	    SUtils::add(res, tt::getID());
 	    SUtils::add(res, this->getID());
 	    SUtils::add(res, this->v1->getID());
 	    SUtils::add(res, this->v2->getID());
 	  } else if (d3.a1 == 1) {
 	    SUtils::add(res, (5 << 16) | 145); // Vector times Matrix
-	    SUtils::add(res, tt::id);
+	    SUtils::add(res, tt::getID());
 	    SUtils::add(res, this->getID());
 	    SUtils::add(res, this->v1->getID());
 	    SUtils::add(res, this->v2->getID());
@@ -191,7 +191,7 @@ namespace spurv {
 	    exit(-1);
 	  } else {
 	    SUtils::add(res, (5 << 16) | 146);
-	    SUtils::add(res, tt::id);
+	    SUtils::add(res, tt::getID());
 	    SUtils::add(res, this->getID());
 	    SUtils::add(res, this->v1->getID());
 	    SUtils::add(res, this->v2->getID());

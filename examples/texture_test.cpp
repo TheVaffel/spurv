@@ -2,7 +2,7 @@
 #include <Wingine.hpp>
 #include <iostream>
 
-#include <spurv.hpp>
+#include "../include/spurv.hpp"
 
 using namespace std;
 
@@ -64,7 +64,6 @@ int main(){
   WingineShader vertexShader = wg.createShader(spirv_vertex, WG_SHADER_STAGE_VERTEX);
 
   
-  printf("Done with vertex shader\n");
 
   {
     using namespace spurv;

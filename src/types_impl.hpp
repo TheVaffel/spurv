@@ -32,6 +32,7 @@ namespace spurv {
       printf("Kind = %d, arg0 = %d, arg1 = %d\n", kind, arg0, arg1);
       printf("Tried to use type declarationState.id before defined\n");
       // Fall through to catch errors other places..
+
     }
     return declarationState.id;
   }
@@ -313,7 +314,23 @@ namespace spurv {
   template<int member_no, int start_size, typename First, typename... Types>
   void SStruct<InnerTypes...>::decorate_member_offsets(std::vector<uint32_t>& bin) {
 
-    // MemberDecorate <struct_id> Offset <member_no> <offset>
+    
+    if constexpr( is_spurv_mat_type<First>::value ) {
+	// MemberDecorate <struct_id> <member_no> ColMajor
+	SUtils::add(bin, (4 << 16) | 72);
+	SUtils::add(bin, SStruct<InnerTypes...>::getID());
+	SUtils::add(bin, member_no);
+	SUtils::add(bin, 5);
+
+	// MemberDecorate <struct_id> <member_no> MatrixStride <stride>
+	SUtils::add(bin, (5 << 16) | 72);
+	SUtils::add(bin, SStruct<InnerTypes...>::getID());
+	SUtils::add(bin, member_no);
+	SUtils::add(bin, 7);
+	SUtils::add(bin, First::getSize() / First::getArg1());
+      }
+    
+    // MemberDecorate <struct_id> <member_no> Offset <offset>
     SUtils::add(bin, (5 << 16) | 72);
     SUtils::add(bin, SStruct<InnerTypes...>::getID());
     SUtils::add(bin, member_no);

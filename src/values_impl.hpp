@@ -135,6 +135,7 @@ namespace spurv {
   template<typename tt>
   void SUniformVar<tt>::ensure_type_defined(std::vector<uint32_t>& res,
 					      std::vector<SDeclarationState*>& declaration_states) {
+
     tt::ensure_defined(res, declaration_states);
     SPointer<STORAGE_UNIFORM, tt>::ensure_defined(res, declaration_states);
 

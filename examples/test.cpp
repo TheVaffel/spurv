@@ -1,4 +1,4 @@
-#include "spurv.hpp"
+#include "../include/spurv.hpp"
 
 #include <iostream>
 

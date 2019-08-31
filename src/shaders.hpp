@@ -68,11 +68,13 @@ namespace spurv {
 							SValue<tt>& val, NodeTypes... args);
 
     template<typename tt>
-    void output_type_definitions(std::vector<uint32_t>& binary, SValue<tt>& val);
+    void output_output_tree_type_definitions(std::vector<uint32_t>& binary, SValue<tt>& val);
 
     template<typename tt, typename... NodeTypes>
-    void output_type_definitions(std::vector<uint32_t>& binary, SValue<tt>& val,
-				 NodeTypes... args);
+    void output_output_tree_type_definitions(std::vector<uint32_t>& binary, SValue<tt>& val,
+					     NodeTypes... args);
+
+    void output_builtin_tree_type_definitions(std::vector<uint32_t>& binary);
 
     void output_main_function_begin(std::vector<uint32_t>& res);
     void output_main_function_end(std::vector<uint32_t>& res);

@@ -122,6 +122,24 @@ namespace spurv {
     }
   }
 
+  
+
+  template<SShaderType type, typename... InputTypes>
+  void SShader<type, InputTypes...>::output_builtin_tree_type_definitions(std::vector<uint32_t>& bin) {
+    if(this->builtin_vec4_0) {
+      this->builtin_vec4_0->value_node->ensure_type_defined(bin, this->defined_type_declaration_states);
+    }
+    if(this->builtin_float_0) {
+      this->builtin_float_0->value_node->ensure_type_defined(bin, this->defined_type_declaration_states);
+    }
+    if(this->builtin_arr_1_float_0) {
+      this->builtin_arr_1_float_0->value_node->ensure_type_defined(bin, this->defined_type_declaration_states);
+    }
+    if(this->builtin_arr_1_float_1) {
+      this->builtin_arr_1_float_1->value_node->ensure_type_defined(bin, this->defined_type_declaration_states);
+    }
+  }
+
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_preamble(std::vector<uint32_t>& binary) {
     binary.push_back(0x07230203); // Magic number
@@ -134,7 +152,8 @@ namespace spurv {
 
   template<SShaderType type, typename... InputTypes>
   template<typename tt>
-  void SShader<type, InputTypes...>::output_type_definitions(std::vector<uint32_t>& bin, SValue<tt>& val) {
+  void SShader<type, InputTypes...>::output_output_tree_type_definitions(std::vector<uint32_t>& bin,
+									 SValue<tt>& val) {
     
     val.ensure_type_defined(bin, this->defined_type_declaration_states);
   }
@@ -142,7 +161,9 @@ namespace spurv {
   
   template<SShaderType type, typename... InputTypes>
   template<typename tt, typename... NodeTypes>
-  void SShader<type, InputTypes...>::output_type_definitions(std::vector<uint32_t>& bin, SValue<tt>& val, NodeTypes... args) {
+  void SShader<type, InputTypes...>::output_output_tree_type_definitions(std::vector<uint32_t>& bin,
+									 SValue<tt>& val,
+									 NodeTypes... args) {
     val.ensure_type_defined(bin, this->defined_type_declaration_states);
 
     this->output_type_definitions(bin, args...);
@@ -636,8 +657,9 @@ namespace spurv {
     this->output_shader_header_decorate_begin(res);
     this->output_shader_header_decorate_output_variables(res, 0, args...);
 
-    this->output_type_definitions(res, args...);
-
+    this->output_output_tree_type_definitions(res, args...);
+    this->output_builtin_tree_type_definitions(res);
+    
     this->output_input_pointers<0, InputTypes...>(res);
     this->output_output_pointers(res, 0, args...);
     this->output_uniform_pointers(res);
@@ -653,7 +675,7 @@ namespace spurv {
     res[this->id_max_bound_index] = SUtils::getCurrentID();
 
     this->cleanup_declaration_states();
-
+    
     SUtils::resetID();
     SUtils::clearAllocations();
     SConstantRegistry::resetRegistry();

@@ -1,5 +1,6 @@
 
 HCONLIB_ROOT = /home/haakon/Documents/Code/C++/HConLib
+SROOT = ..
 
 CFLAGS=-Wall -std=c++1z -g
 
@@ -9,10 +10,25 @@ INCLUDE_DIRS=-I$(HCONLIB_ROOT)/include -I.
 
 ANTI_WARNINGS=-Wno-delete-non-virtual-dtor
 
-HDRS=declarations.hpp types.hpp values.hpp shaders.hpp spurv.hpp uniforms.hpp constant_registry.hpp
-IMPL_HDRS= utils_impl.hpp expressions_impl.hpp uniforms_impl.hpp types_impl.hpp values_impl.hpp shaders_impl.hpp
+HDRS=$(SROOT)/src/declarations.hpp \
+    $(SROOT)/src/types.hpp \
+    $(SROOT)/src/values.hpp \
+    $(SROOT)/src/shaders.hpp \
+    $(SROOT)/include/spurv.hpp \
+    $(SROOT)/src/uniforms.hpp \
+    $(SROOT)/src/constant_registry.hpp
 
-SRCS=types.cpp uniforms.cpp constant_registry.cpp utils.cpp
+IMPL_HDRS= $(SROOT)/src/utils_impl.hpp \
+    $(SROOT)/src/expressions_impl.hpp \
+    $(SROOT)/src/uniforms_impl.hpp \
+    $(SROOT)/src/types_impl.hpp \
+    $(SROOT)/src/values_impl.hpp \
+    $(SROOT)/src/shaders_impl.hpp
+
+SRCS=$(SROOT)/src/types.cpp \
+    $(SROOT)/src/uniforms.cpp \
+    $(SROOT)/src/constant_registry.cpp \
+    $(SROOT)/src/utils.cpp
 
 all: test test2 texture_test
 
