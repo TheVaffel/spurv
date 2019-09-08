@@ -5,7 +5,8 @@ Somewhat in order of priority
 ### Datatype Features
 - [x] Structs
 - [x] 2D Texture
-- [ ] Functions for (re)composing vectors and matrices
+- [x] Functions for composing vectors and matrices
+- [ ] Functions for reordering vector components
 
 ### Structural Features
 - [ ] Conditionals
