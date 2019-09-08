@@ -77,7 +77,9 @@ int main(){
 
     vec2_v coord = shader.input<0>();
 
-    vec4_v color = tex.lookup<vec4_s, vec2_s>(coord);
+    vec2_v displacement = ConstructMatrix<2, 1>::get(0.5f, 0.5f);
+
+    vec4_v color = tex.lookup<vec4_s, vec2_s>(coord + displacement);
     
     
     shader.compile(spirv_fragment, oscil * color);
