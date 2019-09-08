@@ -52,7 +52,7 @@ namespace spurv {
   
   template<int n, int m>
   struct ConstructMatrix : public SValue<SMat<n, m> > {
-
+  protected:
     template<typename... Types>
     ConstructMatrix(const Types&... args);
     
@@ -63,12 +63,14 @@ namespace spurv {
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
 
+    SValue<float_s>* components[n * m]; // Values in row-major order
+    bool is_constant[n * m]; // #feelsbadman, but oh well
+
+  public:
     template<typename... Types>
     static ConstructMatrix<n, m>& get(const Types&... args);
     
-    SValue<float_s>* components[n * m]; // Values in row-major order
-    bool is_constant[n * m]; // #feelsbadman, but oh well
-    
+    friend class SUtils;
   };
 
 
@@ -165,6 +167,18 @@ namespace spurv {
     virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
     virtual void define(std::vector<uint32_t>& res);
   };
+
+
+  /*
+   * Shorthands for the matrix construction
+   */
+
+  typedef ConstructMatrix<2, 1> vec2_c;
+  typedef ConstructMatrix<3, 1> vec3_c;
+  typedef ConstructMatrix<4, 1> vec4_c;
+  typedef ConstructMatrix<2, 2> mat2_c;
+  typedef ConstructMatrix<3, 3> mat3_c;
+  typedef ConstructMatrix<4, 4> mat4_c;
   
   /*
    * SValue node types defined by default

@@ -63,8 +63,6 @@ int main(){
   
   WingineShader vertexShader = wg.createShader(spirv_vertex, WG_SHADER_STAGE_VERTEX);
 
-  
-
   {
     using namespace spurv;
     
@@ -77,7 +75,7 @@ int main(){
 
     vec2_v coord = shader.input<0>();
 
-    vec2_v displacement = ConstructMatrix<2, 1>::get(0.5f, 0.5f);
+    vec2_v displacement = vec2_c::get(0.5f, 0.5f);
 
     vec4_v color = tex.lookup<vec4_s, vec2_s>(coord + displacement);
     
