@@ -6,6 +6,7 @@
 #include "types.hpp"
 
 #include <cassert>
+#include <vector>
 
 namespace spurv {
   
@@ -36,7 +37,7 @@ namespace spurv {
     virtual void define(std::vector<uint32_t>& res) = 0;
 
     virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
-
+    
     template<typename res, typename ind>
     SValue<res>& lookup(SValue<ind>& index);
     
@@ -44,10 +45,37 @@ namespace spurv {
     virtual void unref_tree() = 0;
   };
 
+  
+  /*
+   * ConstructMatrix - Represents a matrix/vector that is constructed from several other members in shader
+   */
+  
+  template<int n, int m>
+  struct ConstructMatrix : public SValue<SMat<n, m> > {
+
+    template<typename... Types>
+    ConstructMatrix(const Types&... args);
+    
+    template<typename First, typename... Types>
+    void insertComponents(int u, const First& first, const Types&... args);
+
+    virtual void unref_tree();
+    virtual void define(std::vector<uint32_t>& res);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
+
+    template<typename... Types>
+    static ConstructMatrix<n, m>& get(const Types&... args);
+    
+    SValue<float_s>* components[n * m]; // Values in row-major order
+    bool is_constant[n * m]; // #feelsbadman, but oh well
+    
+  };
+
 
   /*
    * Constant - Represents nodes that have known value at shader compilation time
    */
+    
   template<typename tt>
   struct Constant : public SValue<typename MapSType<tt>::type> {
     Constant(const tt& val);
@@ -137,8 +165,7 @@ namespace spurv {
     virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
     virtual void define(std::vector<uint32_t>& res);
   };
-
-
+  
   /*
    * SValue node types defined by default
    */

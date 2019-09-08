@@ -129,8 +129,14 @@ namespace spurv {
 	  printf("Tried to output expression with float type and operation = %d\n", op);
 	  exit(-1);
 	}
+      } else if(d1.kind == KIND_MAT) {
+	if constexpr(op == EXPR_ADDITION) {
+	    opcode = 129;
+	  } else if(op == EXPR_SUBTRACTION) {
+	  opcode = 131;
+	}
       } else {
-	printf("Tried to output expression where types were equal, but not int or float (feature yet to be implemented, probably\n");
+	printf("Tried to output expression where types were equal, but not int or float (feature yet to be implemented, probably)\n");
 	exit(-1);
       }
       

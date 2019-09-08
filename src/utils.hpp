@@ -114,6 +114,9 @@ namespace spurv {
     
     template<int d>
     friend class STexture;
+
+    template<int n, int m>
+    friend struct ConstructMatrix;
     
   public:
 

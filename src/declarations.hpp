@@ -107,6 +107,9 @@ namespace spurv {
   template<typename... InnerTypes>
   class SStruct;
 
+  template<int n, int m>
+  struct ConstructMatrix;
+
   struct SDeclarationState;
   
   class SConstantRegistry;
