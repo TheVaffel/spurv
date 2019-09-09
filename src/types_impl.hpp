@@ -195,6 +195,13 @@ namespace spurv {
     // Assume perfectly aligned and with 32-bit components
     return n * m * 4; 
   }
+
+  
+  template<int n, int m>
+  template<typename... Types>
+  ConstructMatrix<n, m>& SMat<n, m>::cons(const Types&... args) {
+    return *(SUtils::allocate<ConstructMatrix<n, m> >(args...));
+  }
   
 
   /*

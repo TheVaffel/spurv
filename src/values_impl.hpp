@@ -55,92 +55,6 @@ namespace spurv {
 
 
   /*
-   * ConstructMatrix member functions
-   */
-
-  template<int n, int m>
-  template<typename... Types>
-  ConstructMatrix<n, m>::ConstructMatrix(const Types&... args) {
-    static_assert(sizeof...(args) == n * m,
-		  "Number of arguments to matrix construction does not match number of components in matrix");
-    insertComponents(0, args...);
-  }
-
-  template<int n, int m>
-  template<typename... Types>
-  ConstructMatrix<n, m>& ConstructMatrix<n, m>::get(const Types&... args) {
-    return *(SUtils::allocate<ConstructMatrix<n, m> >(args...));
-  }
-
-  template<int n, int m>
-  template<typename First, typename... Types>
-  void ConstructMatrix<n, m>::insertComponents(int u, const First& first, const Types&... args) {
-
-    if constexpr(std::is_same<First, float_s>::value) {
-	this->components[u] = &first;
-
-	this->is_constant[u] = false;
-	
-      } else if(std::is_convertible<First, float>::value) {
-
-      Constant<float>* constant = SUtils::allocate<Constant<float> >(static_cast<float>(first));
-      
-      this->components[u] = constant;
-      this->is_constant[u] = true;
-      
-    } else {
-      // static_assert(false, "Datatypes given to ConstructMatrix must be convertible to float");
-      std::cout << "Datatypes given to ConstructMatrix must be convertible to float" << std::endl;
-    }
-
-    this->components[u]->incrementRefCount();
-
-    if constexpr(sizeof...(args) > 0) {
-	insertComponents(u + 1, args...);
-      }
-  }
-
-  template<int n, int m>
-  void ConstructMatrix<n, m>::unref_tree() {
-    this->ref_count--;
-    if(this->ref_count <= 0) {
-      for(int i = 0; i < n * m; i++) {
-	this->components[i]->unref_tree();
-      }
-      delete this;
-    }
-  }
-
-  template<int n, int m>
-  void ConstructMatrix<n, m>::define(std::vector<uint32_t>& res) {
-    for(int i = 0; i < n * m; i++) {
-      this->components[i]->ensure_defined(res);
-    }
-
-    // OpCompositeConstruct <result type> <resul id> <components...>
-    SUtils::add(res, ((3 + n * m) << 16) | 80);
-    SUtils::add(res, SMat<n, m>::getID());
-    SUtils::add(res, this->id);
-
-    for(int i = 0; i < m; i++) { // Output in col-major order
-      for(int j = 0; j < n; j++) {
-	SUtils::add(res, this->components[j * m + i]->getID()); // Think this is right?
-      }
-    }
-  }
-
-  template<int n, int m>
-  void ConstructMatrix<n, m>::ensure_type_defined(std::vector<uint32_t>& res,
-						  std::vector<SDeclarationState*>& declaration_states) {
-    SMat<n, m>::ensure_defined(res, declaration_states);
-    for(int i = 0; i < n * m; i++) {
-      if(this->is_constant[i]) {
-	this->components[i]->define(res);
-      }
-    }
-  }
-
-  /*
    * Constant member functions
    */
 
@@ -263,6 +177,88 @@ namespace spurv {
     SUtils::add(res, this->id);
     SUtils::add(res, this->pointer_id);
   }
+
+  
+  /*
+   * ConstructMatrix member functions
+   */
+
+  template<int n, int m>
+  template<typename... Types>
+  ConstructMatrix<n, m>::ConstructMatrix(const Types&... args) {
+    static_assert(sizeof...(args) == n * m,
+		  "Number of arguments to matrix construction does not match number of components in matrix");
+    insertComponents(0, args...);
+  }
+
+  template<int n, int m>
+  template<typename First, typename... Types>
+  void ConstructMatrix<n, m>::insertComponents(int u, const First& first, const Types&... args) {
+
+    if constexpr(std::is_same<First, float_s>::value) {
+	this->components[u] = &first;
+
+	this->is_constant[u] = false;
+	
+      } else if(std::is_convertible<First, float>::value) {
+
+      Constant<float>* constant = SUtils::allocate<Constant<float> >(static_cast<float>(first));
+      
+      this->components[u] = constant;
+      this->is_constant[u] = true;
+      
+    } else {
+      // static_assert(false, "Datatypes given to ConstructMatrix must be convertible to float");
+      std::cout << "Datatypes given to ConstructMatrix must be convertible to float" << std::endl;
+    }
+
+    this->components[u]->incrementRefCount();
+
+    if constexpr(sizeof...(args) > 0) {
+	insertComponents(u + 1, args...);
+      }
+  }
+
+  template<int n, int m>
+  void ConstructMatrix<n, m>::unref_tree() {
+    this->ref_count--;
+    if(this->ref_count <= 0) {
+      for(int i = 0; i < n * m; i++) {
+	this->components[i]->unref_tree();
+      }
+      delete this;
+    }
+  }
+
+  template<int n, int m>
+  void ConstructMatrix<n, m>::define(std::vector<uint32_t>& res) {
+    for(int i = 0; i < n * m; i++) {
+      this->components[i]->ensure_defined(res);
+    }
+
+    // OpCompositeConstruct <result type> <resul id> <components...>
+    SUtils::add(res, ((3 + n * m) << 16) | 80);
+    SUtils::add(res, SMat<n, m>::getID());
+    SUtils::add(res, this->id);
+
+    for(int i = 0; i < m; i++) { // Output in col-major order
+      for(int j = 0; j < n; j++) {
+	SUtils::add(res, this->components[j * m + i]->getID()); // Think this is right?
+      }
+    }
+  }
+
+  template<int n, int m>
+  void ConstructMatrix<n, m>::ensure_type_defined(std::vector<uint32_t>& res,
+						  std::vector<SDeclarationState*>& declaration_states) {
+    SMat<n, m>::ensure_defined(res, declaration_states);
+    for(int i = 0; i < n * m; i++) {
+      if(this->is_constant[i]) {
+	this->components[i]->define(res);
+      }
+    }
+  }
+
 };
 
 #endif // __SPURV_NODES_IMPL

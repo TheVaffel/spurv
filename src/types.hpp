@@ -126,6 +126,9 @@ namespace spurv {
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
     static constexpr int getSize();
+
+    template<typename... Types>
+    static ConstructMatrix<n, m>& cons(const Types&... args);
   };
 
   

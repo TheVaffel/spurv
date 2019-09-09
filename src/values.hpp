@@ -45,34 +45,6 @@ namespace spurv {
     virtual void unref_tree() = 0;
   };
 
-  
-  /*
-   * ConstructMatrix - Represents a matrix/vector that is constructed from several other members in shader
-   */
-  
-  template<int n, int m>
-  struct ConstructMatrix : public SValue<SMat<n, m> > {
-  protected:
-    template<typename... Types>
-    ConstructMatrix(const Types&... args);
-    
-    template<typename First, typename... Types>
-    void insertComponents(int u, const First& first, const Types&... args);
-
-    virtual void unref_tree();
-    virtual void define(std::vector<uint32_t>& res);
-    virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
-
-    SValue<float_s>* components[n * m]; // Values in row-major order
-    bool is_constant[n * m]; // #feelsbadman, but oh well
-
-  public:
-    template<typename... Types>
-    static ConstructMatrix<n, m>& get(const Types&... args);
-    
-    friend class SUtils;
-  };
-
 
   /*
    * Constant - Represents nodes that have known value at shader compilation time
@@ -168,17 +140,30 @@ namespace spurv {
     virtual void define(std::vector<uint32_t>& res);
   };
 
-
+  
   /*
-   * Shorthands for the matrix construction
+   * ConstructMatrix - Represents a matrix/vector that is constructed from several other members in shader
    */
+  
+  template<int n, int m>
+  struct ConstructMatrix : public SValue<SMat<n, m> > {
+  protected:
+    template<typename... Types>
+    ConstructMatrix(const Types&... args);
+    
+    template<typename First, typename... Types>
+    void insertComponents(int u, const First& first, const Types&... args);
 
-  typedef ConstructMatrix<2, 1> vec2_c;
-  typedef ConstructMatrix<3, 1> vec3_c;
-  typedef ConstructMatrix<4, 1> vec4_c;
-  typedef ConstructMatrix<2, 2> mat2_c;
-  typedef ConstructMatrix<3, 3> mat3_c;
-  typedef ConstructMatrix<4, 4> mat4_c;
+    virtual void unref_tree();
+    virtual void define(std::vector<uint32_t>& res);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
+
+    SValue<float_s>* components[n * m]; // Values in row-major order
+    bool is_constant[n * m]; // #feelsbadman, but oh well
+    
+    friend class SUtils;
+  };
+  
   
   /*
    * SValue node types defined by default
