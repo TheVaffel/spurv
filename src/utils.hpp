@@ -66,6 +66,8 @@ namespace spurv {
     template<SShaderType type, typename... InputTypes>
     friend class SShader;
 
+    friend struct SBool;
+    
     template<int n>
     friend class SFloat;
 
@@ -117,12 +119,15 @@ namespace spurv {
 
     template<int n, int m>
     friend struct ConstructMatrix;
+
+    template<typename tt>
+    friend class SelectConstruct;
     
   public:
 
     // So that it can be accessed by global operaters
     template<typename tt, typename... Types>
-    static tt* allocate(Types... args);
+    static tt* allocate(Types&... args);
   
     
   };

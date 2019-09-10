@@ -77,6 +77,8 @@ namespace spurv {
     void output_builtin_tree_type_definitions(std::vector<uint32_t>& binary);
 
     void output_main_function_begin(std::vector<uint32_t>& res);
+    void output_main_function_variables(std::vector<uint32_t>& res);
+    
     void output_main_function_end(std::vector<uint32_t>& res);
     
     template<typename tt>

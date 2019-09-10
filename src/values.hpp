@@ -156,7 +156,8 @@ namespace spurv {
 
     virtual void unref_tree();
     virtual void define(std::vector<uint32_t>& res);
-    virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res,
+				     std::vector<SDeclarationState*>& declaration_states);
 
     SValue<float_s>* components[n * m]; // Values in row-major order
     bool is_constant[n * m]; // #feelsbadman, but oh well
@@ -164,11 +165,42 @@ namespace spurv {
     friend class SUtils;
   };
   
+
+  /*
+   * SelectConstruct - Represents a conditional choice between two values
+   */
+
+  template<typename tt>
+  struct SelectConstruct : public SValue<tt> {
+    
+    SValue<tt> *val_true, *val_false;
+    SValue<SBool >* condition;
+
+    SelectConstruct(SValue<SBool>& cond,
+		    SValue<tt>& tru_val,
+		    SValue<tt>& fal_val);
+    
+    virtual void unref_tree();
+    virtual void define(std::vector<uint32_t>& res);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res,
+				     std::vector<SDeclarationState*>& declaration_states);
+  };
+
+
+  /*
+   * Selection method
+   */
+  
+  template<typename tt>
+  SelectConstruct<tt>& select(SValue<SBool>& cond,
+			      SValue<tt>& true_val,
+			      SValue<tt>& false_val);
   
   /*
    * SValue node types defined by default
    */
 
+  typedef SValue<bool_s>&        bool_v;
   typedef SValue<int_s>&         int_v;
   typedef SValue<uint_s>&        uint_v;
   typedef SValue<float_s>&       float_v;
@@ -180,6 +212,7 @@ namespace spurv {
   typedef SValue<vec4_s>&        vec4_v;
   typedef SValue<arr_1_float_s>& arr_1_float_v;
   typedef SValue<texture2D_s>&   texture2D_v;
+
 };
 
 #endif // __SPURV_NODES

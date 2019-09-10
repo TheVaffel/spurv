@@ -71,6 +71,9 @@ int main(){
     SUniformBinding<float_s> b0 = shader.uniformBinding<float_s>(0, 0);
     float_v oscil = b0.member<0>();
 
+    float_v coo = float_s::cons(0.5f);
+    float_v factor = select(coo < oscil, coo, oscil);
+    
     texture2D_v tex = shader.uniformBinding<texture2D_s>(0, 1);
 
     vec2_v coord = shader.input<0>();
@@ -80,7 +83,7 @@ int main(){
     vec4_v color = tex.lookup<vec4_s, vec2_s>(coord + displacement);
     
     
-    shader.compile(spirv_fragment, oscil * color);
+    shader.compile(spirv_fragment, factor * color);
 
   }
 

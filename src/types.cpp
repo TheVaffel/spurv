@@ -64,10 +64,37 @@ namespace spurv {
   }
 
   template<>
-  void SType<KIND_VOID>::ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states) {
+  void SType<KIND_VOID>::ensure_defined(std::vector<uint32_t>& bin,
+					std::vector<SDeclarationState*>& declaration_states) {
     if( !SType<KIND_VOID>::isDefined()) {
       define(bin);
       declaration_states.push_back(&(SType<KIND_VOID>::declarationState));
     }
   }
+
+
+  /*
+   * Bool member functions
+   */
+
+  void SBool::define(std::vector<uint32_t>& bin) {
+    SType<KIND_BOOL>::ensureInitID();
+    SType<KIND_BOOL>::declareDefined();
+
+    SUtils::add(bin, (2 << 16) | 20);
+    SUtils::add(bin, SType<KIND_BOOL>::getID());
+  }
+
+  void SBool::ensure_defined(std::vector<uint32_t>& bin,
+					std::vector<SDeclarationState*>& declaration_states) {
+    if(!SType<KIND_BOOL>::isDefined()) {
+      define(bin);
+      declaration_states.push_back(&(SType<KIND_BOOL>::declarationState));
+    }
+  }
+
+  constexpr int SBool::getSize() {
+    return 32; // For maximum portability (maybe). Specs don't say how large this is
+  }
+				
 };

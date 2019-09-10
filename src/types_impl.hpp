@@ -86,6 +86,7 @@ namespace spurv {
   template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
   void SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
 									       std::vector<SDeclarationState*>& declaration_states) { }
+
   
   /*
    * Int member functions
@@ -116,6 +117,12 @@ namespace spurv {
     return (n + 7) / 8; // Round up number of bytes
   }
 
+  template<int n, int signedness>
+  SValue<SInt<n, signedness> >& SInt<n, signedness>::cons(int64_t arg) {
+    SValue<SInt<n, signedness> >* value = SUtils::allocate<Constant<int64_t> >(arg);
+    return *value;
+  }
+
   
   /*
    * Float member functions
@@ -133,7 +140,8 @@ namespace spurv {
   }
   
   template<int n>
-  void SFloat<n>::ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states) {
+  void SFloat<n>::ensure_defined(std::vector<uint32_t>& bin,
+				 std::vector<SDeclarationState*>& declaration_states) {
 
     if( !SFloat<n>::isDefined()) {
       define(bin);
@@ -146,6 +154,12 @@ namespace spurv {
     return (n + 7) / 8; // Round up number of bytes
   }
 
+  template<int n>
+  SValue<SFloat<n> >& SFloat<n>::cons(double arg) {
+    SValue<SFloat<n> >* value = SUtils::allocate<Constant<float> >(arg);
+    return *value;
+  }
+
 
   /*
    * Mat member functions
@@ -153,7 +167,7 @@ namespace spurv {
   
   template<int n, int m>
   void SMat<n, m>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
-						   std::vector<SDeclarationState*>& declaration_states) {
+					       std::vector<SDeclarationState*>& declaration_states) {
     if constexpr(m == 1) {
 	SFloat<32>::ensure_defined(bin, declaration_states);
       } else {
@@ -163,7 +177,7 @@ namespace spurv {
 
   template<int n, int m>
   void SMat<n, m>::ensure_defined(std::vector<uint32_t>& bin,
-				      std::vector<SDeclarationState*>& declaration_states) {
+				  std::vector<SDeclarationState*>& declaration_states) {
     if( !SMat<n, m>::isDefined()) {
       ensure_defined_dependencies(bin, declaration_states);
       define(bin);

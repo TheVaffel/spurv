@@ -2,6 +2,7 @@
 #define __SPURV_NODES_IMPL
 
 #include "values.hpp"
+#include "variable_registry.hpp"
 #include "constant_registry_impl.hpp"
 
 namespace spurv {
@@ -202,7 +203,8 @@ namespace spurv {
 	
       } else if(std::is_convertible<First, float>::value) {
 
-      Constant<float>* constant = SUtils::allocate<Constant<float> >(static_cast<float>(first));
+      float ff = static_cast<float>(first);
+      Constant<float>* constant = SUtils::allocate<Constant<float> >(ff);
       
       this->components[u] = constant;
       this->is_constant[u] = true;
@@ -251,6 +253,7 @@ namespace spurv {
   template<int n, int m>
   void ConstructMatrix<n, m>::ensure_type_defined(std::vector<uint32_t>& res,
 						  std::vector<SDeclarationState*>& declaration_states) {
+    // A bit hacky but oh well
     SMat<n, m>::ensure_defined(res, declaration_states);
     for(int i = 0; i < n * m; i++) {
       if(this->is_constant[i]) {
@@ -259,6 +262,113 @@ namespace spurv {
     }
   }
 
+
+  /*
+   * SelectConstruct member functions
+   */
+
+  template<typename tt>
+  SelectConstruct<tt>::SelectConstruct(SValue<SBool>& cond,
+				       SValue<tt>& tru_val,
+				       SValue<tt>& fal_val) {
+    this->condition = &cond;
+    this->val_true = &tru_val;
+    this->val_false = &fal_val;
+
+    this->condition->incrementRefCount();
+    this->val_true->incrementRefCount();
+    this->val_false->incrementRefCount();
+
+  }
+
+  template<typename tt>
+  void SelectConstruct<tt>::define(std::vector<uint32_t>& res) {
+
+    this->condition->ensure_defined(res);
+    
+    uint32_t final_label = SUtils::getNewID();
+    uint32_t true_label = SUtils::getNewID();
+    uint32_t false_label = SUtils::getNewID();
+    
+    // OpSelectionMerge <label> <selection control>
+    SUtils::add(res, (3 << 16) | 247);
+    SUtils::add(res, final_label);
+    SUtils::add(res, 0); // None
+
+    // OpBranchConditional <condition> <true_branch> <false_branch>
+    SUtils::add(res, (4 << 16) | 250);
+    SUtils::add(res, this->condition->getID());
+    SUtils::add(res, true_label);
+    SUtils::add(res, false_label);
+
+    // OpLabel <label>
+    SUtils::add(res, (2 << 16) | 248);
+    SUtils::add(res, true_label);
+
+    // Optimally, we can define this value inside this branch only
+    this->val_true->ensure_defined(res);
+
+    // OpBranch <final_label>
+    SUtils::add(res, (2 << 16) | 249);
+    SUtils::add(res, final_label);
+    
+    // OpLabel <false_label>
+    SUtils::add(res, (2 << 16) | 248);
+    SUtils::add(res, false_label);
+
+    this->val_false->ensure_defined(res);
+
+    // OpBranch <final_label>
+    SUtils::add(res, (2 << 16) | 249);
+    SUtils::add(res, final_label);
+
+    // OpLabel <final_label>
+    SUtils::add(res, (2 << 16) | 248);
+    SUtils::add(res, final_label);
+
+    // OpPhi <result_type> <result_id> <variable_true> <parent_true> <variable_false> <parent_false>
+    SUtils::add(res, (7 << 16) | 245);
+    SUtils::add(res, tt::getID());
+    SUtils::add(res, this->getID());
+    SUtils::add(res, this->val_true->getID());
+    SUtils::add(res, true_label);
+    SUtils::add(res, this->val_false->getID());
+    SUtils::add(res, false_label);
+    
+  }
+
+  template<typename tt>
+  void SelectConstruct<tt>::ensure_type_defined(std::vector<uint32_t>& res,
+						std::vector<SDeclarationState*>& declaration_states) {
+    tt::ensure_defined(res, declaration_states);
+    SPointer<STORAGE_FUNCTION, tt>::ensure_defined(res, declaration_states);
+    this->condition->ensure_type_defined(res, declaration_states);
+    this->val_true->ensure_type_defined(res, declaration_states);
+    this->val_false->ensure_type_defined(res, declaration_states);
+  }
+  
+  template<typename tt>
+  void SelectConstruct<tt>::unref_tree() {
+    this->ref_count--;
+    if(this->ref_count <= 0) {
+      this->val_true->unref_tree();
+      this->val_false->unref_tree();
+      this->condition->unref_tree();
+
+      delete this;
+    }
+  }
+
+  template<typename tt>
+  SelectConstruct<tt>& select(SValue<SBool>& cond,
+			      SValue<tt>& true_val,
+			      SValue<tt>& false_val) {
+    SelectConstruct<tt>* v = SUtils::allocate<SelectConstruct<tt> >(cond,
+								    true_val,
+								    false_val);
+    return *v;
+  }
+  
 };
 
 #endif // __SPURV_NODES_IMPL

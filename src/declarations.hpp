@@ -14,6 +14,7 @@ namespace spurv {
   
    enum STypeKind {
     KIND_INVALID,
+    KIND_BOOL,
     KIND_VOID,
     KIND_INT,
     KIND_FLOAT,
@@ -34,7 +35,8 @@ namespace spurv {
     STORAGE_UNIFORM_CONSTANT = 0,
     STORAGE_INPUT = 1,
     STORAGE_UNIFORM = 2,
-    STORAGE_OUTPUT = 3
+    STORAGE_OUTPUT = 3,
+    STORAGE_FUNCTION = 7,
     // ... There are more, but perhaps not needed just now
   };
   
@@ -49,7 +51,13 @@ namespace spurv {
     EXPR_EXP,
     EXPR_SQRT,
     EXPR_POW,
-    EXPR_LOOKUP // Sampling, indexing etc..
+    EXPR_LOOKUP, // Sampling, indexing etc..
+    EXPR_EQUAL,
+    EXPR_NOTEQUAL,
+    EXPR_LESSTHAN,
+    EXPR_GREATERTHAN,
+    EXPR_LESSOREQUAL,
+    EXPR_GREATEROREQUAL
   };
 
    enum SBuiltinVariable {
@@ -107,9 +115,15 @@ namespace spurv {
   template<typename... InnerTypes>
   class SStruct;
 
+  template<typename tt>
+  class Constant;
+  
   template<int n, int m>
   struct ConstructMatrix;
 
+  template<typename tt>
+  struct SelectConstruct;
+  
   struct SDeclarationState;
   
   class SConstantRegistry;

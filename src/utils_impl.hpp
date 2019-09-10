@@ -63,7 +63,7 @@ namespace spurv {
   }
 
   template<typename tt, typename... Types>
-  tt* SUtils::allocate(Types... args) {
+  tt* SUtils::allocate(Types&... args) {
     PWrapper<tt>* p = new PWrapper<tt>;
     p->pp = new tt(args...);
     SUtils::allocated_values.push_back(p);

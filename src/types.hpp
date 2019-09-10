@@ -87,6 +87,18 @@ namespace spurv {
     static constexpr int getSize();
   };
 
+
+  /*
+   * SBool - Representation of boolean values
+   */
+
+  class SBool : public SType<KIND_BOOL> {
+  public:
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
+    static void define(std::vector<uint32_t>& bin);
+    static constexpr int getSize();
+  };
+  
     
   /*
    * SInt - Representation of integers
@@ -98,6 +110,8 @@ namespace spurv {
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
     static constexpr int getSize();
+
+    static SValue<SInt<n, signedness> >& cons(int64_t arg);
   };
   
 
@@ -111,6 +125,8 @@ namespace spurv {
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
     static constexpr int getSize();
+
+    static SValue<SFloat<n> >& cons(double arg);
   };
   
 
@@ -138,6 +154,9 @@ namespace spurv {
   
   template<typename>
   struct is_spurv_type : std::false_type {};
+
+  template<>
+  struct is_spurv_type<SBool> : std::true_type {};
 
   template<int n, int s>
   struct is_spurv_type<SInt<n, s> > : std::true_type {};
@@ -285,6 +304,7 @@ namespace spurv {
    */
   
   typedef SType<KIND_VOID> void_s;
+  typedef SBool bool_s;
   typedef SInt<32, 1> int_s;
   typedef SInt<32, 0> uint_s;
   typedef SFloat<32> float_s;

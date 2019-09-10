@@ -101,8 +101,74 @@ namespace spurv {
     
     
     int opcode = 0;
-    
-    if(d1 == d2 && d2 == d3) {
+    if(d1.kind == KIND_BOOL) {
+      if (d2.kind == KIND_INT &&
+	  d3.kind == KIND_INT) {
+	
+	if constexpr(op == EXPR_EQUAL) {
+	    opcode = 170;
+	  } else if(op == EXPR_NOTEQUAL) {
+	  opcode = 171;
+	} else {
+	  if(d2.a1 == 0 && d3.a1 == 0) {
+	    if constexpr(op == EXPR_LESSTHAN) {
+	      opcode = 176;
+	      } else if(op == EXPR_GREATERTHAN) {
+	      opcode = 172;
+	    } else if(op == EXPR_LESSOREQUAL) {
+	      opcode = 178;
+	    } else if(op == EXPR_GREATEROREQUAL) {
+	      opcode = 174;
+	    } else {
+	      printf("Comparison operator %d not defined for unsigned int\n",
+		     (int)op);
+	    }
+	  } else if(d2.a1 == 1 && d3.a1 == 1) {
+	    if constexpr(op == EXPR_LESSTHAN) {
+		opcode = 177;
+	      } else if (op == EXPR_GREATERTHAN) {
+	      opcode = 173;
+	    } else if(op == EXPR_LESSOREQUAL) {
+	      opcode = 179;
+	    } else if(op == EXPR_GREATEROREQUAL) {
+	      opcode = 175;
+	    } else {
+	      printf("Comparison operator %d not defined for signed int\n",
+		     (int)op);
+	    }
+	  }
+	}
+      } else if(d2.kind == KIND_FLOAT &&
+		d3.kind == KIND_FLOAT) {
+	// Using OpFOrd as opposed to OpFUnord
+	// Not sure right now how the difference would turn out
+	if constexpr(op == EXPR_EQUAL) {
+	    opcode = 180;
+	  } else if(op == EXPR_NOTEQUAL) {
+	  opcode = 182;
+	} else if(op == EXPR_LESSTHAN) {
+	  opcode = 184;
+	} else if(op == EXPR_GREATERTHAN) {
+	  opcode = 186;
+	} else if(op == EXPR_LESSOREQUAL) {
+	  opcode = 188;
+	} else if(op == EXPR_GREATEROREQUAL) {
+	  opcode = 190;
+	} else {
+	  printf("Comparison operator %d not defined for floats\n", (int)op);
+	}
+      } else {
+	printf("Comparison operator %d not defined for kinds %d and %d\n",
+	       (int)op, (int)d2.kind, (int)d3.kind);
+      }
+
+      SUtils::add(res, (5 << 16) | opcode);
+      SUtils::add(res, tt::getID());
+      SUtils::add(res, this->getID());
+      SUtils::add(res, this->v1->getID());
+      SUtils::add(res, this->v2->getID());
+      
+    } else if(d1 == d2 && d2 == d3) {
       if (d1.kind == KIND_INT) {
 	if constexpr(op == EXPR_ADDITION) {
 	    opcode = 128;
@@ -113,7 +179,7 @@ namespace spurv {
 	  } else if constexpr(op == EXPR_DIVISION) {
 	    opcode = (d1.a1 == 0 ? 134 : 135);
 	  } else {
-	  printf("Tried to output expression with integer type and operation = %d\n", op);
+	  printf("Tried to output expression with integer type and operation = %d\n", (int)op);
 	  exit(-1);
 	}
       } else if (d1.kind == KIND_FLOAT) {
@@ -126,7 +192,7 @@ namespace spurv {
 	  } else if constexpr(op == EXPR_DIVISION) {
 	    opcode = 136;
 	  } else {
-	  printf("Tried to output expression with float type and operation = %d\n", op);
+	  printf("Tried to output expression with float type and operation = %d\n", (int)op);
 	  exit(-1);
 	}
       } else if(d1.kind == KIND_MAT) {
@@ -324,7 +390,55 @@ namespace spurv {
 	return *ex;
       }
   }
+  
 
+  /*
+   * Comparison operations
+   */
+
+  template<typename tt, SExprOp op>
+  static SExpr<SBool, op, tt, tt>& construct_comparison_val(SValue<tt>& v1, SValue<tt>& v2) {
+    static_assert(is_spurv_int_type<tt>::value || is_spurv_float_type<tt>::value,
+		  "Comparison not yet defined for non-scalar types");
+
+    SExpr<SBool, op, tt, tt>* ex =
+      SUtils::allocate<SExpr<SBool, op, tt, tt> >();
+
+    ex->register_left_node(v1);
+    ex->register_right_node(v2);
+    return *ex;
+  }
+  
+  template<typename tt>
+  SExpr<SBool, EXPR_EQUAL, tt, tt>& operator==(SValue<tt>& v1, SValue<tt>& v2) {
+    return construct_comparison_val<tt, EXPR_EQUAL>(v1, v2);
+  }
+
+  template<typename tt>
+  SExpr<SBool, EXPR_NOTEQUAL, tt, tt>& operator!=(SValue<tt>& v1, SValue<tt>& v2) {
+    return construct_comparison_val<tt, EXPR_NOTEQUAL>(v1, v2);
+  }
+
+  template<typename tt>
+  SExpr<SBool, EXPR_LESSTHAN, tt, tt>& operator<(SValue<tt>& v1, SValue<tt>& v2) {
+    return construct_comparison_val<tt, EXPR_LESSTHAN>(v1, v2);
+  }
+  
+  template<typename tt>
+  SExpr<SBool, EXPR_GREATERTHAN, tt, tt>& operator>(SValue<tt>& v1, SValue<tt>& v2) {
+    return construct_comparison_val<tt, EXPR_GREATERTHAN>(v1, v2);
+  }
+  
+  template<typename tt>
+  SExpr<SBool, EXPR_LESSOREQUAL, tt, tt>& operator<=(SValue<tt>& v1, SValue<tt>& v2) {
+    return construct_comparison_val<tt, EXPR_LESSOREQUAL>(v1, v2);
+  }
+  
+  template<typename tt>
+  SExpr<SBool, EXPR_GREATEROREQUAL, tt, tt>& operator>=(SValue<tt>& v1, SValue<tt>& v2) {
+    return construct_comparison_val<tt, EXPR_GREATEROREQUAL>(v1, v2);
+  }
+  
   
   /*
    * Special operator functions

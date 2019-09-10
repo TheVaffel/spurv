@@ -16,7 +16,8 @@ HDRS=$(SROOT)/src/declarations.hpp \
     $(SROOT)/src/shaders.hpp \
     $(SROOT)/include/spurv.hpp \
     $(SROOT)/src/uniforms.hpp \
-    $(SROOT)/src/constant_registry.hpp
+    $(SROOT)/src/constant_registry.hpp \
+    $(SROOT)/src/variable_registry.hpp
 
 IMPL_HDRS= $(SROOT)/src/utils_impl.hpp \
     $(SROOT)/src/expressions_impl.hpp \
@@ -28,7 +29,8 @@ IMPL_HDRS= $(SROOT)/src/utils_impl.hpp \
 SRCS=$(SROOT)/src/types.cpp \
     $(SROOT)/src/uniforms.cpp \
     $(SROOT)/src/constant_registry.cpp \
-    $(SROOT)/src/utils.cpp
+    $(SROOT)/src/utils.cpp \
+    $(SROOT)/src/variable_registry.cpp
 
 all: test test2 texture_test
 
