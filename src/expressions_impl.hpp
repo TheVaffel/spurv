@@ -374,22 +374,18 @@ namespace spurv {
     return v1 * f;
   }
 
-  template<typename comp>
-  template<typename res, typename ind>
-  SValue<res>& SValue<comp>::lookup(SValue<ind>& index) {
-    if constexpr(is_spurv_texture_type<comp>::value &&
-		 is_spurv_mat_type<ind>::value) {
-	static_assert(ind::getArg1() == 1 &&
-		      ind::getArg0() == comp::getArg0(),
-		      "Dimensions of texture and vector  does not match"); // Is index a vector, and does dimensions match?
-	SExpr<res, EXPR_LOOKUP, comp, ind>* ex =
-	  SUtils::allocate<SExpr<res, EXPR_LOOKUP, comp, ind> >();
+  template<typename tt>
+  SValue<typename lookup_result<tt>::type>&
+  SValue<tt>::operator[](SValue<typename lookup_index<tt>::type >& index) {
 
-	ex->register_left_node(*this);
-	ex->register_right_node(index);
-	return *ex;
-      }
-  }
+    SExpr<typename lookup_result<tt>::type, EXPR_LOOKUP,
+	  tt, typename lookup_index<tt>::type >* ex  =
+      SUtils::allocate<SExpr<typename lookup_result<tt>::type, EXPR_LOOKUP,
+			     tt, typename lookup_index<tt>::type > >(); 
+    ex->register_left_node(*this);
+    ex->register_right_node(index);
+    return *ex;
+  } 
   
 
   /*

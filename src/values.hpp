@@ -9,6 +9,36 @@
 #include <vector>
 
 namespace spurv {
+
+  /*
+   * Utility for determining result type of lookups
+   */
+  
+  template<typename tt>
+  struct lookup_result {
+    using type = void_s;
+  };
+
+  template<int n>
+  struct lookup_result<STexture<n> > {
+    using type = vec4_s;
+  };
+
+  
+  /*
+   * Utility for determining result type of lookups
+   */
+  
+  template<typename tt>
+  struct lookup_index {
+    using type = void_s;
+  };
+
+  template<int n>
+  struct lookup_index<STexture<n> > {
+    using type = SMat<n, 1>;
+  };
+
   
   /*
    * SValue - The mother of all nodes in the syntax trees
@@ -36,7 +66,10 @@ namespace spurv {
     
     virtual void define(std::vector<uint32_t>& res) = 0;
 
-    virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res,
+				     std::vector<SDeclarationState*>& declaration_states);
+
+    SValue<typename lookup_result<tt>::type>& operator[](SValue<typename lookup_index<tt>::type >& index);
     
     template<typename res, typename ind>
     SValue<res>& lookup(SValue<ind>& index);
@@ -44,7 +77,7 @@ namespace spurv {
     // Only deletes tree if ref_count reaches zero
     virtual void unref_tree() = 0;
   };
-
+  
 
   /*
    * Constant - Represents nodes that have known value at shader compilation time
