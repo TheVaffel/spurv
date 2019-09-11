@@ -24,6 +24,11 @@ namespace spurv {
     using type = vec4_s;
   };
 
+  template<int n>
+  struct lookup_result<SMat<n, 1> > {
+    using type = float_s;
+  };
+
   
   /*
    * Utility for determining result type of lookups
@@ -37,6 +42,11 @@ namespace spurv {
   template<int n>
   struct lookup_index<STexture<n> > {
     using type = SMat<n, 1>;
+  };
+
+  template<int n>
+  struct lookup_index<SMat<n, 1> > {
+    using type = int_s;
   };
 
   
@@ -53,15 +63,14 @@ namespace spurv {
     uint ref_count;
   public:
 
+    typedef tt type;
+    
     SValue();
     
     virtual void print_nodes_post_order(std::ostream& str) const;
 
     int getID() const;
-    void declareDefined();
-    bool isDefined() const;
-    void incrementRefCount();
-
+    
     void ensure_defined(std::vector<uint32_t>& res);
     
     virtual void define(std::vector<uint32_t>& res) = 0;
@@ -71,11 +80,8 @@ namespace spurv {
 
     SValue<typename lookup_result<tt>::type>& operator[](SValue<typename lookup_index<tt>::type >& index);
     
-    template<typename res, typename ind>
-    SValue<res>& lookup(SValue<ind>& index);
+    SValue<typename lookup_result<tt>::type>& operator[](int s); // Lookup operator that requires constants
     
-    // Only deletes tree if ref_count reaches zero
-    virtual void unref_tree() = 0;
   };
   
 
@@ -87,9 +93,9 @@ namespace spurv {
   struct Constant : public SValue<typename MapSType<tt>::type> {
     Constant(const tt& val);
 
-    virtual void unref_tree();
-
     virtual void define(std::vector<uint32_t>& res);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res,
+				     std::vector<SDeclarationState*>& declaration_states);
     
     tt value;
   };
@@ -104,7 +110,7 @@ namespace spurv {
     std::string name;
     SIOVar();
     SIOVar(std::string _name);
-    virtual void unref_tree();
+
   };
 
 
@@ -116,6 +122,8 @@ namespace spurv {
   struct SUniformVar : public SIOVar<tt> {
     int set_no, bind_no, member_no;
     int pointer_id, parent_struct_id;
+
+    Constant<int>* member_index;
     
     SUniformVar(int s, int b, int m, int pointer_id, int parent_struct_id) ;
     virtual void define(std::vector<uint32_t>& res);
@@ -168,7 +176,6 @@ namespace spurv {
     SExpr(const SExpr<tt, op, tt2, tt3>& e) = delete;
 
     virtual void print_nodes_post_order(std::ostream& str) const ;
-    virtual void unref_tree();
     virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
     virtual void define(std::vector<uint32_t>& res);
   };
@@ -182,12 +189,11 @@ namespace spurv {
   struct ConstructMatrix : public SValue<SMat<n, m> > {
   protected:
     template<typename... Types>
-    ConstructMatrix(const Types&... args);
+    ConstructMatrix(Types&... args);
     
     template<typename First, typename... Types>
-    void insertComponents(int u, const First& first, const Types&... args);
+    void insertComponents(int u, First& first, Types&... args);
 
-    virtual void unref_tree();
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
@@ -213,7 +219,6 @@ namespace spurv {
 		    SValue<tt>& tru_val,
 		    SValue<tt>& fal_val);
     
-    virtual void unref_tree();
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
@@ -228,6 +233,22 @@ namespace spurv {
   SelectConstruct<tt>& select(SValue<SBool>& cond,
 			      SValue<tt>& true_val,
 			      SValue<tt>& false_val);
+
+  /*
+   * Utilities to distinguish value types from everything else
+   */
+
+  // Hacky trick incoming
+  // https://stackoverflow.com/questions/5997956/how-to-determine-if-a-type-is-derived-from-a-template-class
+
+  template<typename s_type>
+  constexpr std::true_type _is_spurv_value(SValue<s_type> const volatile&);
+  constexpr std::false_type _is_spurv_value(...);
+
+  template<typename T>
+  constexpr bool is_spurv_value(T&& t) {
+    return decltype(_is_spurv_value(t))::value;
+  }
   
   /*
    * SValue node types defined by default

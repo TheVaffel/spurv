@@ -17,21 +17,6 @@ namespace spurv {
   }
   
   template<typename tt>
-  void SValue<tt>::declareDefined() {
-    this->defined = true;
-  }
-
-  template<typename tt>
-  bool SValue<tt>::isDefined() const {
-    return this->defined;
-  }
-
-  template<typename tt>
-  void SValue<tt>::incrementRefCount() {
-    this->ref_count++;
-  }
-
-  template<typename tt>
   void SValue<tt>::print_nodes_post_order(std::ostream& str) const {
     str << this->id << std::endl;
   }
@@ -40,13 +25,13 @@ namespace spurv {
   SValue<tt>::SValue() { this->id = SUtils::getNewID(); this->ref_count = 0; this->defined = false; }
   
   template<typename tt>
-  void SValue<tt>::ensure_defined(std::vector<uint32_t>& res) {
-    if(this->isDefined()) {
+  void SValue<tt>::ensure_defined(std::vector<uint32_t>& res)  {
+    if(this->defined) {
       return;
     }
 
     this->define(res);
-    this->declareDefined();
+    this->defined = true;
   }
   
   template<typename tt>
@@ -62,31 +47,41 @@ namespace spurv {
   template<typename tt>
   Constant<tt>::Constant(const tt& val) {
     this->value = val;
-  }
+    if constexpr(std::is_same<tt, float>::value ||
+		 std::is_same<tt, double>::value) {
+	if(SConstantRegistry::isRegisteredFloat(sizeof(tt) * 8, val)) {
+	  this->id = SConstantRegistry::getIDFloat(sizeof(tt) * 8, val);
+	} else {
+	  SConstantRegistry::registerFloat(sizeof(tt) * 8, val, this->id);
+	}
 
-  template<typename tt>
-  void Constant<tt>::unref_tree() {
-    this->ref_count--;
-    if(this->ref_count <= 0) {
-      delete this;
+      } else {
+      int i = std::numeric_limits<tt>::is_signed ? 1 : 0;
+      if(SConstantRegistry::isRegisteredInt(sizeof(tt) * 8, i, val)) {
+	this->id = SConstantRegistry::getIDInteger(sizeof(tt) * 8, i, val);
+      } else {
+	SConstantRegistry::registerInt(sizeof(tt) * 8, i, val, this->id);
+      }
+
     }
   }
+
 
   template<typename tt>
   void Constant<tt>::define(std::vector<uint32_t>& res) {
 
-    SConstantRegistry::ensureDefinedConstant<tt>(this->value, this->id,
-						res);
+    // SConstantRegistry::ensureDefinedConstant<tt>(this->value, this->id,
+    // res);
+  }
+  
+  template<typename tt>
+  void Constant<tt>::ensure_type_defined(std::vector<uint32_t>& res,
+					 std::vector<SDeclarationState*>& states) {
+    MapSType<tt>::type::ensure_defined(res,
+				       states);
 
-    // Update ID in case it has been overwritten
-    // The hack level is enormous, I know
-    if constexpr(std::is_same<tt, float>::value) {
-	this->id = SConstantRegistry::getIDFloat(32, this->value);
-      } else if(std::is_same<tt, int>::value) {
-      this->id = SConstantRegistry::getIDInteger(32, 1, this->value);
-    } else {
-      this->id = SConstantRegistry::getIDInteger(32, 0, this->value);
-    }
+    SConstantRegistry::ensureDefinedConstant<tt>(this->value, this->id,
+						 res);
   }
 
 
@@ -102,14 +97,6 @@ namespace spurv {
     this->name = _name;
   }
   
-  template<typename tt>
-  void SIOVar<tt>::unref_tree() {
-    this->ref_count--;
-    if (this->ref_count <= 0) {
-      delete this;
-    }
-  }
-
   
   /*
    * SUniformVar member functions
@@ -122,6 +109,8 @@ namespace spurv {
     this->member_no = m;
     this->pointer_id = pointer_id;
     this->parent_struct_id = parent_struct_id;
+
+    this->member_index = SUtils::allocate<Constant<int> >(member_no);
   }
 
   template<typename tt>
@@ -145,7 +134,7 @@ namespace spurv {
 
   template<typename tt>
   void SUniformVar<tt>::ensure_type_defined(std::vector<uint32_t>& res,
-					      std::vector<SDeclarationState*>& declaration_states) {
+					    std::vector<SDeclarationState*>& declaration_states) {
 
     tt::ensure_defined(res, declaration_states);
     SPointer<STORAGE_UNIFORM, tt>::ensure_defined(res, declaration_states);
@@ -155,8 +144,9 @@ namespace spurv {
     // accessing this variable within the uniformbinding, is
     // defined
     
-    SInt<32, 1>::ensure_defined(res, declaration_states);
-    SConstantRegistry::ensureDefinedConstant((int32_t)this->member_no, SUtils::getNewID(), res);
+    // SInt<32, 1>::ensure_defined(res, declaration_states);
+    // SConstantRegistry::ensureDefinedConstant((int32_t)this->member_no, SUtils::getNewID(), res);
+    this->member_index->ensure_type_defined(res, declaration_states);
   }
 
   
@@ -186,7 +176,7 @@ namespace spurv {
 
   template<int n, int m>
   template<typename... Types>
-  ConstructMatrix<n, m>::ConstructMatrix(const Types&... args) {
+  ConstructMatrix<n, m>::ConstructMatrix(Types&... args) {
     static_assert(sizeof...(args) == n * m,
 		  "Number of arguments to matrix construction does not match number of components in matrix");
     insertComponents(0, args...);
@@ -194,42 +184,34 @@ namespace spurv {
 
   template<int n, int m>
   template<typename First, typename... Types>
-  void ConstructMatrix<n, m>::insertComponents(int u, const First& first, const Types&... args) {
+  void ConstructMatrix<n, m>::insertComponents(int u, First& first, Types&... args) {
 
-    if constexpr(std::is_same<First, float_s>::value) {
-	this->components[u] = &first;
+    if constexpr(is_spurv_value(first)) {
+	if constexpr(std::is_same<typename First::type, float_s>::value) {
+	    this->components[u] = &first;
 
-	this->is_constant[u] = false;
+	    this->is_constant[u] = false;
+	  } else {
+	  std::cout << "Type of values given to construct a matrix must be float_s" << std::endl;
+										       exit(-1);
+	}
+      } else if constexpr (std::is_convertible<First, float>::value) {
+	    
+	    float ff = static_cast<float>(first);
+	    Constant<float>* constant = SUtils::allocate<Constant<float> >(ff);
+	    
+	    this->components[u] = constant;
+	    this->is_constant[u] = true;
+	    
+	  } else {
+	  std::cout << "Got datatype " << typeid(first).name() << std::endl;
+	  std::cout << "Datatypes given to ConstructMatrix must be convertible to float" << std::endl;
+	  exit(-1);
+	}
 	
-      } else if(std::is_convertible<First, float>::value) {
-
-      float ff = static_cast<float>(first);
-      Constant<float>* constant = SUtils::allocate<Constant<float> >(ff);
-      
-      this->components[u] = constant;
-      this->is_constant[u] = true;
-      
-    } else {
-      // static_assert(false, "Datatypes given to ConstructMatrix must be convertible to float");
-      std::cout << "Datatypes given to ConstructMatrix must be convertible to float" << std::endl;
-    }
-
-    this->components[u]->incrementRefCount();
-
-    if constexpr(sizeof...(args) > 0) {
-	insertComponents(u + 1, args...);
-      }
-  }
-
-  template<int n, int m>
-  void ConstructMatrix<n, m>::unref_tree() {
-    this->ref_count--;
-    if(this->ref_count <= 0) {
-      for(int i = 0; i < n * m; i++) {
-	this->components[i]->unref_tree();
-      }
-      delete this;
-    }
+	if constexpr(sizeof...(args) > 0) {
+	    insertComponents(u + 1, args...);
+	  }
   }
 
   template<int n, int m>
@@ -256,9 +238,8 @@ namespace spurv {
     // A bit hacky but oh well
     SMat<n, m>::ensure_defined(res, declaration_states);
     for(int i = 0; i < n * m; i++) {
-      if(this->is_constant[i]) {
-	this->components[i]->define(res);
-      }
+      this->components[i]->ensure_type_defined(res,
+					       declaration_states);
     }
   }
 
@@ -274,11 +255,6 @@ namespace spurv {
     this->condition = &cond;
     this->val_true = &tru_val;
     this->val_false = &fal_val;
-
-    this->condition->incrementRefCount();
-    this->val_true->incrementRefCount();
-    this->val_false->incrementRefCount();
-
   }
 
   template<typename tt>
@@ -347,17 +323,6 @@ namespace spurv {
     this->val_false->ensure_type_defined(res, declaration_states);
   }
   
-  template<typename tt>
-  void SelectConstruct<tt>::unref_tree() {
-    this->ref_count--;
-    if(this->ref_count <= 0) {
-      this->val_true->unref_tree();
-      this->val_false->unref_tree();
-      this->condition->unref_tree();
-
-      delete this;
-    }
-  }
 
   template<typename tt>
   SelectConstruct<tt>& select(SValue<SBool>& cond,

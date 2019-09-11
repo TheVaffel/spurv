@@ -18,19 +18,11 @@ namespace spurv {
 
   template<typename tt, SExprOp op, typename tt2, typename tt3>
   void SExpr<tt, op, tt2, tt3>::register_left_node(SValue<tt2>& node) {
-    node.incrementRefCount();
-    if(this->v1 != nullptr) {
-      this->v1->unref_tree();
-    }
     v1 = &node;
   };
   
   template<typename tt, SExprOp op, typename tt2, typename tt3>
   void SExpr<tt, op, tt2, tt3>::register_right_node(SValue<tt3>& node) {
-    node.incrementRefCount();
-    if(this->v2 != nullptr) {
-      this->v2->unref_tree();
-    }
     v2 = &node;
   }
 
@@ -46,23 +38,6 @@ namespace spurv {
 	v2->print_nodes_post_order(str);
       }
     str << this->getID() << std::endl;
-  }
-
-  
-  template<typename tt, SExprOp op, typename tt2, typename tt3>
-  void SExpr<tt, op, tt2, tt3>::unref_tree() {
-
-    this->ref_count--;
-
-    if(this->ref_count <= 0) {
-      if(v1) {
-	v1->unref_tree();
-      }
-      if(v2) {
-	v2->unref_tree();
-      }
-      delete this;
-    }
   }
 
   
@@ -278,6 +253,24 @@ namespace spurv {
 	    SUtils::add(res, this->v2->getID());
 	    SUtils::add(res, 2); // LoD
 	    SUtils::add(res, SConstantRegistry::getIDFloat(32, 0.0f));
+	  } else if(d2.kind == KIND_MAT) {
+	    
+	    if (d2.a1 == 1) {
+	      // OpVectorExtractDynamic <result_type> <result_id> <vector> <index>
+	      SUtils::add(res, (5 << 16) | 77);
+	      SUtils::add(res, float_s::getID());
+	      SUtils::add(res, this->getID());
+	      SUtils::add(res, this->v1->getID());
+	      SUtils::add(res, this->v2->getID());
+	      
+	    } else {
+	      // OpCompositeExtract <result_type> <result_id> <matrix> <index>
+	      SUtils::add(res, (5 << 16) | 81);
+	      SUtils::add(res, SMat<tt2::getArg0(), 1>::getID());
+	      SUtils::add(res, this->getID());
+	      SUtils::add(res, this->v1->getID());
+	      SUtils::add(res, this->v2->getID());
+	    }
 	  } else {
 	    printf("Expression lookup operation not yet implemented\n");
 	    exit(-1);
@@ -374,6 +367,11 @@ namespace spurv {
     return v1 * f;
   }
 
+  
+  /*
+   * Lookup functions
+   */
+
   template<typename tt>
   SValue<typename lookup_result<tt>::type>&
   SValue<tt>::operator[](SValue<typename lookup_index<tt>::type >& index) {
@@ -386,6 +384,20 @@ namespace spurv {
     ex->register_right_node(index);
     return *ex;
   } 
+
+  template<typename tt>
+  SValue<typename lookup_result<tt>::type>& SValue<tt>::operator[](int index) {
+
+    Constant<int>* c = SUtils::allocate<Constant<int> >(index);
+    SExpr<typename lookup_result<tt>::type, EXPR_LOOKUP,
+	  tt, typename lookup_index<tt>::type >* ex  =
+      SUtils::allocate<SExpr<typename lookup_result<tt>::type, EXPR_LOOKUP,
+			     tt, typename lookup_index<tt>::type > >(); 
+    ex->register_left_node(*this);
+    ex->register_right_node(*c);
+
+    return *ex;
+  }
   
 
   /*

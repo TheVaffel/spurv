@@ -17,7 +17,5 @@ int main() {
 
   cout << "The end!" << endl;
 
-  expr.unref_tree();
-  
   return 0;
 }

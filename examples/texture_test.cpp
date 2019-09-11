@@ -78,9 +78,11 @@ int main(){
 
     vec2_v coord = shader.input<0>();
 
-    vec2_v displacement = vec2_s::cons(0.5f, 0.5f);
-
-    vec4_v color = tex[coord + displacement];
+    vec2_v displacement = vec2_s::cons(0.2f, 0.2f);
+    
+    vec2_v dd = vec2_s::cons(displacement[0], 0.0f);
+    
+    vec4_v color = tex[coord + displacement + dd];
     
     
     shader.compile(spirv_fragment, factor * color);

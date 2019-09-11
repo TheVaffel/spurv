@@ -422,8 +422,8 @@ namespace spurv {
     SUtils::add(bin, sampled);
     SUtils::add(bin, 0); // Unknown
   }
-  
 
+  
   /*
    * STexture functions
    */
@@ -438,6 +438,7 @@ namespace spurv {
 
     // Explicitly define 0 to be default Lod when sampling
     SFloat<32>::ensure_defined(bin, declaration_states);
+    
     SConstantRegistry::ensureDefinedConstant<float>(0.0f, SUtils::getNewID(), bin);
 
     // Result will always be 4-component vector (according to specs, for some reason)

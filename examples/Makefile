@@ -8,7 +8,7 @@ LIBS=-lWingine -lvulkan -lFlatAlg  -l Winval -l X11
 LIB_DIRS=-L$(HCONLIB_ROOT)/lib -L$(VULKAN_SDK)/lib
 INCLUDE_DIRS=-I$(HCONLIB_ROOT)/include -I.
 
-ANTI_WARNINGS=-Wno-delete-non-virtual-dtor
+ANTI_WARNINGS=-Wno-delete-non-virtual-dtor -fpermissive
 
 HDRS=$(SROOT)/src/declarations.hpp \
     $(SROOT)/src/types.hpp \
@@ -24,7 +24,8 @@ IMPL_HDRS= $(SROOT)/src/utils_impl.hpp \
     $(SROOT)/src/uniforms_impl.hpp \
     $(SROOT)/src/types_impl.hpp \
     $(SROOT)/src/values_impl.hpp \
-    $(SROOT)/src/shaders_impl.hpp
+    $(SROOT)/src/shaders_impl.hpp \
+    $(SROOT)/src/constant_registry_impl.hpp
 
 SRCS=$(SROOT)/src/types.cpp \
     $(SROOT)/src/uniforms.cpp \
