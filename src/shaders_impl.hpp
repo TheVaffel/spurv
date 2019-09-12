@@ -93,7 +93,7 @@ namespace spurv {
   void SShader<type, InputTypes...>::output_shader_header_decorate_output_variables(std::vector<uint32_t>& bin, int n,
 									 SValue<tt>& arg0, NodeTypes... args) {
     bin.push_back((4 << 16) | 71);
-    bin.push_back(arg0.getID());
+    bin.push_back(this->output_pointer_ids[n]);
     bin.push_back(30);
     bin.push_back(n);
 
