@@ -44,7 +44,7 @@ namespace spurv {
     } else if( this->inner_types || ds.inner_types) {
       return false;
     }
-      
+
     return a;
   }
 

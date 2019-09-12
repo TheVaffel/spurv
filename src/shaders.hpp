@@ -53,22 +53,18 @@ namespace spurv {
     void output_used_builtin_ids(std::vector<uint32_t>& bin);
     void output_shader_header_decorate_begin(std::vector<uint32_t>& bin);
 
-    template<typename tt>
     void output_shader_header_output_variables(std::vector<uint32_t>& binary,
-					       int n, SValue<tt>& val);
+					       int n);
     template<typename tt, typename... NodeTypes>
     void output_shader_header_output_variables(std::vector<uint32_t>& binary, int n,
 					       SValue<tt>& val, NodeTypes... args);
 
-    template<typename tt>
-    void output_shader_header_decorate_output_variables(std::vector<uint32_t>& binary, int n,
-							SValue<tt>& val);
+    void output_shader_header_decorate_output_variables(std::vector<uint32_t>& binary, int n);
     template<typename tt, typename... NodeTypes>
     void output_shader_header_decorate_output_variables(std::vector<uint32_t>& binary, int n,
 							SValue<tt>& val, NodeTypes... args);
 
-    template<typename tt>
-    void output_output_tree_type_definitions(std::vector<uint32_t>& binary, SValue<tt>& val);
+    void output_output_tree_type_definitions(std::vector<uint32_t>& binary);
 
     template<typename tt, typename... NodeTypes>
     void output_output_tree_type_definitions(std::vector<uint32_t>& binary, SValue<tt>& val,
@@ -81,8 +77,7 @@ namespace spurv {
     
     void output_main_function_end(std::vector<uint32_t>& res);
     
-    template<typename tt>
-    void output_output_definitions(std::vector<uint32_t>& res, int n, SValue<tt>& node);
+    void output_output_definitions(std::vector<uint32_t>& res, int n);
 
     template<typename tt, typename... NodeType>
     void output_output_definitions(std::vector<uint32_t>& res, int n, SValue<tt>& node,
@@ -94,11 +89,10 @@ namespace spurv {
     template<int n, typename CurrType, typename... RestTypes>
     void output_input_pointers(std::vector<uint32_t>& res);
 
+    void output_output_pointers(std::vector<uint32_t>& res, int n);
+    
     template<typename tt, typename... NodeTypes>
     void output_output_pointers(std::vector<uint32_t>& res, int n, SValue<tt>& val, NodeTypes... args);
-
-    template<typename tt>
-    void output_output_pointers(std::vector<uint32_t>& res, int n, SValue<tt>& val);
 
     void output_uniform_pointers(std::vector<uint32_t>& res);
     

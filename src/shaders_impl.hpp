@@ -69,11 +69,9 @@ namespace spurv {
    */
   
   template<SShaderType type, typename... InputTypes>
-  template<typename tt>
   void SShader<type, InputTypes...>::output_shader_header_output_variables(std::vector<uint32_t>& binary,
-									       int n, SValue<tt>& arg0) {
-    static_assert(is_spurv_type<tt>::value);
-    binary.push_back(this->output_pointer_ids[n]);
+									       int n) {
+    return;
   }
   
   template<SShaderType type, typename... InputTypes>
@@ -86,13 +84,8 @@ namespace spurv {
   }
 
   template<SShaderType type, typename... InputTypes>
-  template<typename tt>
-  void SShader<type, InputTypes...>::output_shader_header_decorate_output_variables(std::vector<uint32_t>& bin, int n,
-									 SValue<tt>& arg0) {
-    bin.push_back((4 << 16) | 71);
-    bin.push_back(this->output_pointer_ids[n]);
-    bin.push_back(30);
-    bin.push_back(n);
+  void SShader<type, InputTypes...>::output_shader_header_decorate_output_variables(std::vector<uint32_t>& bin, int n) {
+    return;
   }									 
   
   template<SShaderType type, typename... InputTypes>
@@ -100,7 +93,7 @@ namespace spurv {
   void SShader<type, InputTypes...>::output_shader_header_decorate_output_variables(std::vector<uint32_t>& bin, int n,
 									 SValue<tt>& arg0, NodeTypes... args) {
     bin.push_back((4 << 16) | 71);
-    bin.push_back(arg0->getID());
+    bin.push_back(arg0.getID());
     bin.push_back(30);
     bin.push_back(n);
 
@@ -152,11 +145,8 @@ namespace spurv {
   }
 
   template<SShaderType type, typename... InputTypes>
-  template<typename tt>
-  void SShader<type, InputTypes...>::output_output_tree_type_definitions(std::vector<uint32_t>& bin,
-									 SValue<tt>& val) {
-    
-    val.ensure_type_defined(bin, this->defined_type_declaration_states);
+  void SShader<type, InputTypes...>::output_output_tree_type_definitions(std::vector<uint32_t>& bin) {
+    return;
   }
 
   
@@ -167,7 +157,7 @@ namespace spurv {
 									 NodeTypes... args) {
     val.ensure_type_defined(bin, this->defined_type_declaration_states);
 
-    this->output_type_definitions(bin, args...);
+    this->output_output_tree_type_definitions(bin, args...);
   }
 
 
@@ -343,6 +333,11 @@ namespace spurv {
   }
 
   template<SShaderType type, typename... InputTypes>
+  void SShader<type, InputTypes...>::output_output_definitions(std::vector<uint32_t>& res, int n) {
+    return;
+  }
+  
+  template<SShaderType type, typename... InputTypes>
   template<typename tt, typename... NodeTypes>
   void SShader<type, InputTypes...>::output_output_definitions(std::vector<uint32_t>& res, int n,
 								   SValue<tt>& node, NodeTypes... args) {
@@ -354,18 +349,6 @@ namespace spurv {
     SUtils::add(res, node.getID());
 
     this->output_output_definitions(res, n + 1, args...);
-  }
-
-  template<SShaderType type, typename... InputTypes>
-  template<typename tt>
-  void SShader<type, InputTypes...>::output_output_definitions(std::vector<uint32_t>& res, int n,
-								   SValue<tt>& node) {
-    node.ensure_defined(res);
-
-    // OpStore
-    SUtils::add(res, (3 << 16) | 62);
-    SUtils::add(res, this->output_pointer_ids[n]);
-    SUtils::add(res, node.getID());
   }
   
 
@@ -390,6 +373,11 @@ namespace spurv {
   }
 
   template<SShaderType type, typename... InputTypes>
+  void SShader<type, InputTypes...>::output_output_pointers(std::vector<uint32_t>& res, int n) {
+    return;
+  }
+  
+  template<SShaderType type, typename... InputTypes>
   template<typename tt, typename... NodeTypes>
   void SShader<type, InputTypes...>::output_output_pointers(std::vector<uint32_t>& res, int n,
 								SValue<tt>& val, NodeTypes... args) {
@@ -397,23 +385,11 @@ namespace spurv {
 
     // OpVariable...
     SUtils::add(res, (4 << 16) | 59);
-    SUtils::add(res, SPointer<STORAGE_OUTPUT, tt>::id);
+    SUtils::add(res, SPointer<STORAGE_OUTPUT, tt>::getID());
     SUtils::add(res, this->output_pointer_ids[n]);
     SUtils::add(res, STORAGE_OUTPUT);
 
     this->output_output_pointers(res, n + 1, args...);
-  }
-
-  template<SShaderType type, typename... InputTypes>
-  template<typename tt>
-  void SShader<type, InputTypes...>::output_output_pointers(std::vector<uint32_t>& res, int n, SValue<tt>& val) {
-    SPointer<STORAGE_OUTPUT, tt>::ensure_defined(res, this->defined_type_declaration_states);
-
-    // OpVariable...
-    SUtils::add(res, (4 << 16) | 59);
-    SUtils::add(res, SPointer<STORAGE_OUTPUT, tt>::getID());
-    SUtils::add(res, this->output_pointer_ids[n]);
-    SUtils::add(res, STORAGE_OUTPUT);
   }
 
   template<SShaderType type, typename... InputTypes>
