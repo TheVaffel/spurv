@@ -322,6 +322,14 @@ namespace spurv {
     ex->register_right_node(v2);
     return *ex;
   }
+
+  template<typename tt>
+  SExpr<tt, EXPR_DIVISION, tt, tt>& operator/(SValue<tt>& v1, SValue<tt>& v2) {
+    SExpr<tt, EXPR_DIVISION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_DIVISION, tt, tt> >();
+    ex->register_left_node(v1);
+    ex->register_right_node(v2);
+    return *ex;
+  }
   
   
   template<typename tt1, typename tt2>
