@@ -36,6 +36,7 @@ namespace spurv {
     
     // We use this to reset the type declaration_states (stored for each type) after compilation
     std::vector<SDeclarationState*> defined_type_declaration_states;
+    std::vector<bool*> decoration_states;
     
     std::vector<InputVariableEntry> input_entries;
     std::vector<uint32_t> output_pointer_ids;
@@ -109,6 +110,7 @@ namespace spurv {
     BuiltinEntry<arr_1_float_s>* builtin_arr_1_float_1; // Vertex: Cull Distance
 
     void cleanup_declaration_states();
+    void cleanup_decoration_states();
     
   public:
     SShader();

@@ -45,8 +45,9 @@ namespace spurv {
   }
 
   template<typename... InnerTypes>
-  void SUniformBinding<InnerTypes...>::decorateType(std::vector<uint32_t>& bin) {
-    SStruct<InnerTypes...>::ensure_decorated(bin);
+  void SUniformBinding<InnerTypes...>::decorateType(std::vector<uint32_t>& bin,
+						    std::vector<bool*>& decoration_states) {
+    SStruct<InnerTypes...>::ensure_decorated(bin, decoration_states);
   }
 
   /*

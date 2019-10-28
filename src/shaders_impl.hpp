@@ -62,6 +62,13 @@ namespace spurv {
       this->defined_type_declaration_states[i]->id = -1;
     }
   }
+
+  template<SShaderType type, typename... InputTypes>
+  void SShader<type, InputTypes...>::cleanup_decoration_states() {
+    for(uint i = 0; i < this->decoration_states.size(); i++) {
+      *this->decoration_states[i] = false;
+    }
+  }
   
   
   /*
@@ -269,7 +276,8 @@ namespace spurv {
     // Put decorations on uniforms
     for(uint i = 0; i < uniform_bindings.size(); i++) {
       
-      uniform_bindings[i]->decorateType(bin);
+      uniform_bindings[i]->decorateType(bin,
+					this->decoration_states);
 
       // Decorate <uniform_binding> DescriptorSet <num>
       SUtils::add(bin, (4 << 16) | 71);
@@ -667,6 +675,7 @@ namespace spurv {
     res[this->id_max_bound_index] = SUtils::getCurrentID();
 
     this->cleanup_declaration_states();
+    this->cleanup_decoration_states();
     
     SUtils::resetID();
     SUtils::clearAllocations();

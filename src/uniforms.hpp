@@ -26,7 +26,8 @@ namespace spurv {
 
     virtual void definePointer(std::vector<uint32_t>& bin,
 			       std::vector<SDeclarationState*>& declaration_states) = 0;
-    virtual void decorateType(std::vector<uint32_t>& bin);
+    virtual void decorateType(std::vector<uint32_t>& bin,
+			      std::vector<bool*>& decoration_states);
   };
 
 
@@ -48,7 +49,8 @@ namespace spurv {
 
     virtual void definePointer(std::vector<uint32_t>& bin,
 			       std::vector<SDeclarationState*>& declaration_states);
-    virtual void decorateType(std::vector<uint32_t>& bin);
+    virtual void decorateType(std::vector<uint32_t>& bin,
+			      std::vector<bool*>& decoration_states);
   };
 
   

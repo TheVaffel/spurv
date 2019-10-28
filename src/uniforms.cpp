@@ -22,5 +22,6 @@ namespace spurv {
     return this->pointer_id;
   }
 
-  void SUniformBindingBase::decorateType(std::vector<uint32_t>& bin) { }
+  void SUniformBindingBase::decorateType(std::vector<uint32_t>& bin,
+					 std::vector<bool*>& decoration_states) { }
 };

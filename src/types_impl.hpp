@@ -366,7 +366,8 @@ namespace spurv {
   }
 
   template<typename... InnerTypes>
-  void SStruct<InnerTypes...>::ensure_decorated(std::vector<uint32_t>& bin) {
+  void SStruct<InnerTypes...>::ensure_decorated(std::vector<uint32_t>& bin,
+						std::vector<bool*>& decoration_states) {
     if( is_decorated) {
       return;
     }
@@ -374,6 +375,7 @@ namespace spurv {
     SStruct<InnerTypes...>::ensureInitID();
 
     is_decorated = true;
+    decoration_states.push_back(&is_decorated);
 
     // OpDecorate <type id> Block
     SUtils::add(bin, (3 << 16) | 71);

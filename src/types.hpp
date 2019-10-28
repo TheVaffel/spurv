@@ -218,7 +218,8 @@ namespace spurv {
 					    std::vector<SDeclarationState*>& declaration_states);
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
-    static void ensure_decorated(std::vector<uint32_t>& bin);
+    static void ensure_decorated(std::vector<uint32_t>& bin,
+				 std::vector<bool*>& decoration_states);
     static void decorate_member_offsets(std::vector<uint32_t>& bin);
     
     static constexpr int getSize();
