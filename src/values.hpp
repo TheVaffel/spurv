@@ -189,10 +189,14 @@ namespace spurv {
   struct ConstructMatrix : public SValue<SMat<n, m> > {
   protected:
     template<typename... Types>
-    ConstructMatrix(Types&... args);
+    ConstructMatrix(Types&&... args);
     
+    
+    template<typename... Types>
+    void insertComponents(int u, float f, Types&&... args);
+
     template<typename First, typename... Types>
-    void insertComponents(int u, First& first, Types&... args);
+    void insertComponents(int u, First& first, Types&&... args);
 
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,

@@ -144,7 +144,7 @@ namespace spurv {
     static constexpr int getSize();
 
     template<typename... Types>
-    static ConstructMatrix<n, m>& cons(const Types&... args);
+    static ConstructMatrix<n, m>& cons(Types&&... args);
   };
 
   

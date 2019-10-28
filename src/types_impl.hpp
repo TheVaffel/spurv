@@ -213,7 +213,7 @@ namespace spurv {
   
   template<int n, int m>
   template<typename... Types>
-  ConstructMatrix<n, m>& SMat<n, m>::cons(const Types&... args) {
+  ConstructMatrix<n, m>& SMat<n, m>::cons(Types&&... args) {
     return *(SUtils::allocate<ConstructMatrix<n, m> >(args...));
   }
   

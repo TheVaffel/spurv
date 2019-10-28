@@ -176,42 +176,42 @@ namespace spurv {
 
   template<int n, int m>
   template<typename... Types>
-  ConstructMatrix<n, m>::ConstructMatrix(Types&... args) {
+  ConstructMatrix<n, m>::ConstructMatrix(Types&&... args) {
     static_assert(sizeof...(args) == n * m,
 		  "Number of arguments to matrix construction does not match number of components in matrix");
     insertComponents(0, args...);
   }
 
   template<int n, int m>
+  template<typename... Types>
+  void ConstructMatrix<n, m>::insertComponents(int u, float f, Types&&... args) {
+    Constant<float>* constant = SUtils::allocate<Constant<float> >(f);
+	    
+    this->components[u] = constant;
+    this->is_constant[u] = true;
+
+    if constexpr(sizeof...(args) > 0) {
+	insertComponents(u + 1, args...);
+      }
+  }
+
+  template<int n, int m>
   template<typename First, typename... Types>
-  void ConstructMatrix<n, m>::insertComponents(int u, First& first, Types&... args) {
+  void ConstructMatrix<n, m>::insertComponents(int u, First& first, Types&&... args) {
 
-    if constexpr(is_spurv_value(first)) {
-	if constexpr(std::is_same<typename First::type, float_s>::value) {
-	    this->components[u] = &first;
-
-	    this->is_constant[u] = false;
-	  } else {
-	  std::cout << "Type of values given to construct a matrix must be float_s" << std::endl;
-										       exit(-1);
-	}
-      } else if constexpr (std::is_convertible<First, float>::value) {
+    static_assert(is_spurv_value(first));
+    if(!std::is_same<typename First::type, float_s>::value) {
+      std::cout << "Type of value given to construct a matrix must be float_s or float" << std::endl;
+      exit(-1);
+    }
+    
+    this->components[u] = &first;
 	    
-	    float ff = static_cast<float>(first);
-	    Constant<float>* constant = SUtils::allocate<Constant<float> >(ff);
-	    
-	    this->components[u] = constant;
-	    this->is_constant[u] = true;
-	    
-	  } else {
-	  std::cout << "Got datatype " << typeid(first).name() << std::endl;
-	  std::cout << "Datatypes given to ConstructMatrix must be convertible to float" << std::endl;
-	  exit(-1);
-	}
+    this->is_constant[u] = false;
 	
-	if constexpr(sizeof...(args) > 0) {
-	    insertComponents(u + 1, args...);
-	  }
+    if constexpr(sizeof...(args) > 0) {
+	insertComponents(u + 1, args...);
+      }
   }
 
   template<int n, int m>
