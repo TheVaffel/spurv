@@ -110,7 +110,7 @@ namespace spurv {
     this->pointer_id = pointer_id;
     this->parent_struct_id = parent_struct_id;
 
-    this->member_index = SUtils::allocate<Constant<int> >(member_no);
+    this->member_index = SUtils::allocate<Constant<int> >(this->member_no);
   }
 
   template<typename tt>

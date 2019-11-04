@@ -179,7 +179,7 @@ namespace spurv {
     virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
     virtual void define(std::vector<uint32_t>& res);
   };
-
+  
   
   /*
    * ConstructMatrix - Represents a matrix/vector that is constructed from several other members in shader
@@ -237,6 +237,7 @@ namespace spurv {
   SelectConstruct<tt>& select(SValue<SBool>& cond,
 			      SValue<tt>& true_val,
 			      SValue<tt>& false_val);
+
 
   /*
    * Utilities to distinguish value types from everything else
