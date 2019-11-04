@@ -306,14 +306,57 @@ namespace spurv {
     ex->v2 = nullptr;
     return *ex;
   }
+
+
+  // Additions
+
+  template<typename in1_t, typename in2_t>
+  SExpr<typename SValueWrapper::unwrapped_type<in1_t>::type,
+	EXPR_ADDITION,
+	typename SValueWrapper::unwrapped_type<in1_t>::type,
+	typename SValueWrapper::unwrapped_type<in1_t>::type>& operator+(in1_t& in1, in2_t& in2) {
+    
+    using tt = typename SValueWrapper::unwrapped_type<in1_t>::type;
+    static_assert(SValueWrapper::does_wrap<in2_t, tt>::value);
+
+    SExpr<tt, EXPR_ADDITION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_ADDITION, tt, tt> >();
+    ex->register_left_node(SValueWrapper::unwrap_value(in1));
+    ex->register_right_node(SValueWrapper::unwrap_value(in2));
+    return *ex;
+  }
   
-  template<typename tt>
+    /* template<typename tt>
   SExpr<tt, EXPR_ADDITION, tt, tt>& operator+(SValue<tt>& v1, SValue<tt>& v2) {
     SExpr<tt, EXPR_ADDITION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_ADDITION, tt, tt> >();
     ex->register_left_node(v1);
     ex->register_right_node(v2);
     return *ex;
   };
+
+  template<typename tt, typename outside_t>
+  SExpr<tt, EXPR_ADDITION, tt, tt>& operator+(SValue<tt>& v1, const outside_t& v2) {
+    static_assert(std::is_same<tt, typename MapSType<outside_t>::type>::value );
+    
+    SExpr<tt, EXPR_ADDITION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_ADDITION, tt, tt> >();
+    ex->register_left_node(v1);
+    ex->register_right_node(tt::cons(v2));
+    return *ex;
+  }
+
+
+  template<typename tt, typename outside_t>
+  SExpr<tt, EXPR_ADDITION, tt, tt>& operator+(const outside_t& v2, SValue<tt>& v1) {
+    static_assert(std::is_same<tt, typename MapSType<outside_t>::type>::value );
+    
+    SExpr<tt, EXPR_ADDITION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_ADDITION, tt, tt> >();
+    
+    ex->register_left_node(tt::cons(v2));
+    ex->register_right_node(v1);
+    return *ex;
+    } */
+
+  
+  // Subtractions
 
   template<typename tt>
   SExpr<tt, EXPR_SUBTRACTION, tt, tt>& operator-(SValue<tt>& v1, SValue<tt>& v2) {
@@ -322,6 +365,31 @@ namespace spurv {
     ex->register_right_node(v2);
     return *ex;
   }
+
+  template<typename tt, typename outside_t>
+  SExpr<tt, EXPR_SUBTRACTION, tt, tt>& operator-(SValue<tt>& v1, const outside_t& v2) {
+    static_assert(std::is_same<tt, typename MapSType<outside_t>::type>::value);
+    
+    SExpr<tt, EXPR_SUBTRACTION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_SUBTRACTION, tt, tt> >();
+    ex->register_left_node(v1);
+    ex->register_right_node(tt::cons(v2));
+    return *ex;
+  }
+
+  template<typename tt, typename outside_t>
+  SExpr<tt, EXPR_SUBTRACTION, tt, tt>& operator-(const outside_t& v2, SValue<tt>& v1) {
+    static_assert(std::is_same<tt, typename MapSType<outside_t>::type>::value);
+    
+    SExpr<tt, EXPR_SUBTRACTION, tt, tt>* ex =
+      SUtils::allocate<SExpr<tt, EXPR_SUBTRACTION, tt, tt> >();
+    
+    ex->register_left_node(tt::cons(v2));
+    ex->register_right_node(v1);
+    return *ex;
+  }
+  
+  
+  // Division
 
   template<typename tt>
   SExpr<tt, EXPR_DIVISION, tt, tt>& operator/(SValue<tt>& v1, SValue<tt>& v2) {

@@ -219,9 +219,13 @@ namespace spurv {
     SValue<tt> *val_true, *val_false;
     SValue<SBool >* condition;
 
+    /* template<typename in1_t, typename in2_t, typename in3_t>
+    SelectConstruct(in1_t& cond,
+		    in2_t& tru_val,
+		    in3_t& fal_val); */
     SelectConstruct(SValue<SBool>& cond,
-		    SValue<tt>& tru_val,
-		    SValue<tt>& fal_val);
+		    SValue<tt>& true_val,
+		    SValue<tt>& false_val);
     
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
@@ -233,10 +237,10 @@ namespace spurv {
    * Selection method
    */
   
-  template<typename tt>
-  SelectConstruct<tt>& select(SValue<SBool>& cond,
-			      SValue<tt>& true_val,
-			      SValue<tt>& false_val);
+  template<typename tt, typename t1, typename t2, typename t3>
+  SelectConstruct<tt>& select(t1& cond,
+			      t2& true_val,
+			      t3& false_val);
 
 
   /*

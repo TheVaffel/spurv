@@ -250,11 +250,11 @@ namespace spurv {
 
   template<typename tt>
   SelectConstruct<tt>::SelectConstruct(SValue<SBool>& cond,
-				       SValue<tt>& tru_val,
-				       SValue<tt>& fal_val) {
+				   SValue<tt>& true_val,
+				   SValue<tt>& false_val) {
     this->condition = &cond;
-    this->val_true = &tru_val;
-    this->val_false = &fal_val;
+    this->val_true = &true_val;
+    this->val_false = &false_val;
   }
 
   template<typename tt>
@@ -324,13 +324,20 @@ namespace spurv {
   }
   
 
-  template<typename tt>
-  SelectConstruct<tt>& select(SValue<SBool>& cond,
-			      SValue<tt>& true_val,
-			      SValue<tt>& false_val) {
-    SelectConstruct<tt>* v = SUtils::allocate<SelectConstruct<tt> >(cond,
-								    true_val,
-								    false_val);
+  template<typename t1, typename t2, typename t3>
+  SelectConstruct<typename SValueWrapper::unwrapped_type<t2>::type>& select(t1& cond,
+									    t2& true_val,
+									    t3& false_val) {
+    using tt = typename SValueWrapper::unwrapped_type<t2>::type;
+    
+    static_assert(SValueWrapper::does_wrap<t2, tt>::value);
+    static_assert(SValueWrapper::does_wrap<t3, tt>::value);
+
+    static_assert(SValueWrapper::does_wrap<t1, SBool>::value);
+
+    SelectConstruct<tt>* v = SUtils::allocate<SelectConstruct<tt> >(SValueWrapper::unwrap_value(cond),
+								    SValueWrapper::unwrap_value(true_val),
+								    SValueWrapper::unwrap_value(false_val));
     return *v;
   }
   
