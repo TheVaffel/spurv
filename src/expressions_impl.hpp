@@ -332,33 +332,22 @@ namespace spurv {
   
   // Subtractions
 
-  template<typename tt>
-  SExpr<tt, EXPR_SUBTRACTION, tt, tt>& operator-(SValue<tt>& v1, SValue<tt>& v2) {
-    SExpr<tt, EXPR_SUBTRACTION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_SUBTRACTION, tt, tt> >();
-    ex->register_left_node(v1);
-    ex->register_right_node(v2);
-    return *ex;
-  }
+  template<typename in1_t, typename in2_t>
+  SExpr<typename SValueWrapper::unwrapped_type<typename std::remove_reference<in1_t>::type>::type,
+	EXPR_SUBTRACTION,
+	typename SValueWrapper::unwrapped_type<typename std::remove_reference<in1_t>::type>::type,
+	typename SValueWrapper::unwrapped_type<typename std::remove_reference<in2_t>::type>::type>&
+  operator-(in1_t&& in1, in2_t&& in2) {
 
-  template<typename tt, typename outside_t>
-  SExpr<tt, EXPR_SUBTRACTION, tt, tt>& operator-(SValue<tt>& v1, const outside_t& v2) {
-    static_assert(std::is_same<tt, typename MapSType<outside_t>::type>::value);
+    using t_in1 = typename std::remove_reference<in1_t>::type;
+    using t_in2 = typename std::remove_reference<in2_t>::type;
     
-    SExpr<tt, EXPR_SUBTRACTION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_SUBTRACTION, tt, tt> >();
-    ex->register_left_node(v1);
-    ex->register_right_node(tt::cons(v2));
-    return *ex;
-  }
+    using tt = typename SValueWrapper::unwrapped_type<t_in1>::type;
+    static_assert(SValueWrapper::does_wrap<t_in2, tt>::value);
 
-  template<typename tt, typename outside_t>
-  SExpr<tt, EXPR_SUBTRACTION, tt, tt>& operator-(const outside_t& v2, SValue<tt>& v1) {
-    static_assert(std::is_same<tt, typename MapSType<outside_t>::type>::value);
-    
-    SExpr<tt, EXPR_SUBTRACTION, tt, tt>* ex =
-      SUtils::allocate<SExpr<tt, EXPR_SUBTRACTION, tt, tt> >();
-    
-    ex->register_left_node(tt::cons(v2));
-    ex->register_right_node(v1);
+    SExpr<tt, EXPR_SUBTRACTION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_SUBTRACTION, tt, tt> >();
+    ex->register_left_node(SValueWrapper::unwrap_value(in1));
+    ex->register_right_node(SValueWrapper::unwrap_value(in2));
     return *ex;
   }
   
