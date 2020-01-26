@@ -183,34 +183,14 @@ namespace spurv {
   }
 
   template<int n, int m>
-  template<typename... Types>
-  void ConstructMatrix<n, m>::insertComponents(int u, float f, Types&&... args) {
-    Constant<float>* constant = SUtils::allocate<Constant<float> >(f);
-	    
-    this->components[u] = constant;
-    this->is_constant[u] = true;
+  template<typename t1, typename... trest>
+  void ConstructMatrix<n, m>::insertComponents(int u, t1&& first, trest&&... rest) {
+    static_assert(SValueWrapper::does_wrap<typename std::remove_reference<t1>::type, SFloat<32> >::value,
+		  "Values in matrix construction must be of float type");
 
-    if constexpr(sizeof...(args) > 0) {
-	insertComponents(u + 1, args...);
-      }
-  }
-
-  template<int n, int m>
-  template<typename First, typename... Types>
-  void ConstructMatrix<n, m>::insertComponents(int u, First& first, Types&&... args) {
-
-    static_assert(is_spurv_value(first));
-    if(!std::is_same<typename First::type, float_s>::value) {
-      std::cout << "Type of value given to construct a matrix must be float_s or float" << std::endl;
-      exit(-1);
-    }
-    
-    this->components[u] = &first;
-	    
-    this->is_constant[u] = false;
-	
-    if constexpr(sizeof...(args) > 0) {
-	insertComponents(u + 1, args...);
+    this->components[u] = &SValueWrapper::unwrap_value(first);
+    if constexpr(sizeof...(rest) > 0) {
+	insertComponents(u + 1, rest...);
       }
   }
 
@@ -325,15 +305,19 @@ namespace spurv {
   
 
   template<typename t1, typename t2, typename t3>
-  SelectConstruct<typename SValueWrapper::unwrapped_type<t2>::type>& select(t1& cond,
-									    t2& true_val,
-									    t3& false_val) {
-    using tt = typename SValueWrapper::unwrapped_type<t2>::type;
+  SelectConstruct<typename SValueWrapper::unwrapped_type<t2>::type>& select(t1&& cond,
+									    t2&& true_val,
+									    t3&& false_val) {
+    using tt1 = typename std::remove_reference<t1>::type;
+    using tt2 = typename std::remove_reference<t2>::type;
+    using tt3 = typename std::remove_reference<t3>::type;
     
-    static_assert(SValueWrapper::does_wrap<t2, tt>::value);
-    static_assert(SValueWrapper::does_wrap<t3, tt>::value);
+    using tt = typename SValueWrapper::unwrapped_type<tt2>::type;
+    
+    static_assert(SValueWrapper::does_wrap<tt2, tt>::value);
+    static_assert(SValueWrapper::does_wrap<tt3, tt>::value);
 
-    static_assert(SValueWrapper::does_wrap<t1, SBool>::value);
+    static_assert(SValueWrapper::does_wrap<tt1, SBool>::value);
 
     SelectConstruct<tt>* v = SUtils::allocate<SelectConstruct<tt> >(SValueWrapper::unwrap_value(cond),
 								    SValueWrapper::unwrap_value(true_val),

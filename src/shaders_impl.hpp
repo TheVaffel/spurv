@@ -79,15 +79,23 @@ namespace spurv {
   void SShader<type, InputTypes...>::output_shader_header_output_variables(std::vector<uint32_t>& binary,
 									       int n) {
     return;
-  }
+    } 
   
   template<SShaderType type, typename... InputTypes>
-  template<typename tt, typename... NodeTypes>
+  template<typename in1, typename... NodeTypes>
   void SShader<type, InputTypes...>::output_shader_header_output_variables(std::vector<uint32_t>& binary,
-									       int n, SValue<tt>& arg0, NodeTypes... args) {
-    static_assert(is_spurv_type<tt>::value);
+									   int n, in1&& arg0, NodeTypes&&... args) {
+
+    // Just double check that this is an actual useful type
+
+    using t_in1 = typename std::remove_reference<in1>::type;
+    using inner_type = typename SValueWrapper::unwrapped_type<t_in1>::type;
+    static_assert(SValueWrapper::does_wrap<t_in1, inner_type>::value);
     binary.push_back(this->output_pointer_ids[n]);
-    output_shader_header_output_variables(binary, n + 1, args...);
+
+    if constexpr(sizeof...(NodeTypes) > 0) {
+	output_shader_header_output_variables(binary, n + 1, args...);
+      }
   }
 
   template<SShaderType type, typename... InputTypes>
@@ -96,9 +104,9 @@ namespace spurv {
   }									 
   
   template<SShaderType type, typename... InputTypes>
-  template<typename tt, typename... NodeTypes>
+  template<typename in1, typename... NodeTypes>
   void SShader<type, InputTypes...>::output_shader_header_decorate_output_variables(std::vector<uint32_t>& bin, int n,
-									 SValue<tt>& arg0, NodeTypes... args) {
+									 in1&& arg0, NodeTypes&&... args) {
     bin.push_back((4 << 16) | 71);
     bin.push_back(this->output_pointer_ids[n]);
     bin.push_back(30);
@@ -158,10 +166,15 @@ namespace spurv {
 
   
   template<SShaderType type, typename... InputTypes>
-  template<typename tt, typename... NodeTypes>
+  template<typename in1, typename... NodeTypes>
   void SShader<type, InputTypes...>::output_output_tree_type_definitions(std::vector<uint32_t>& bin,
-									 SValue<tt>& val,
-									 NodeTypes... args) {
+									 in1&& wrapped_val,
+									 NodeTypes&&... args) {
+    using t_in1 = typename std::remove_reference<in1>::type;
+    using inner_type = typename SValueWrapper::unwrapped_type<t_in1>::type;
+
+    SValue<inner_type>& val = SValueWrapper::unwrap_value(wrapped_val);
+
     val.ensure_type_defined(bin, this->defined_type_declaration_states);
 
     this->output_output_tree_type_definitions(bin, args...);
@@ -346,9 +359,9 @@ namespace spurv {
   }
   
   template<SShaderType type, typename... InputTypes>
-  template<typename tt, typename... NodeTypes>
+  template<typename in1, typename... NodeTypes>
   void SShader<type, InputTypes...>::output_output_definitions(std::vector<uint32_t>& res, int n,
-								   SValue<tt>& node, NodeTypes... args) {
+							       in1&& node, NodeTypes&&... args) {
     node.ensure_defined(res);
 
     // OpStore
@@ -386,14 +399,18 @@ namespace spurv {
   }
   
   template<SShaderType type, typename... InputTypes>
-  template<typename tt, typename... NodeTypes>
+  template<typename in1, typename... NodeTypes>
   void SShader<type, InputTypes...>::output_output_pointers(std::vector<uint32_t>& res, int n,
-								SValue<tt>& val, NodeTypes... args) {
-    SPointer<STORAGE_OUTPUT, tt>::ensure_defined(res, this->defined_type_declaration_states);
+							    in1&& val, NodeTypes&&... args) {
+
+    using t_in1 = typename std::remove_reference<in1>::type;
+    using inner_type = typename SValueWrapper::unwrapped_type<t_in1>::type;
+    
+    SPointer<STORAGE_OUTPUT, inner_type>::ensure_defined(res, this->defined_type_declaration_states);
 
     // OpVariable...
     SUtils::add(res, (4 << 16) | 59);
-    SUtils::add(res, SPointer<STORAGE_OUTPUT, tt>::getID());
+    SUtils::add(res, SPointer<STORAGE_OUTPUT, inner_type>::getID());
     SUtils::add(res, this->output_pointer_ids[n]);
     SUtils::add(res, STORAGE_OUTPUT);
 
@@ -635,7 +652,7 @@ namespace spurv {
 
   template<SShaderType type, typename... InputTypes>
   template<typename... NodeTypes>
-  void SShader<type, InputTypes...>::compile(std::vector<uint32_t>& res, NodeTypes&... args) {
+  void SShader<type, InputTypes...>::compile(std::vector<uint32_t>& res, NodeTypes&&... args) {
 
     this->output_preamble(res);
     this->output_shader_header_begin(res);

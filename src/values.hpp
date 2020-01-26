@@ -191,19 +191,14 @@ namespace spurv {
     template<typename... Types>
     ConstructMatrix(Types&&... args);
     
-    
-    template<typename... Types>
-    void insertComponents(int u, float f, Types&&... args);
-
-    template<typename First, typename... Types>
-    void insertComponents(int u, First& first, Types&&... args);
+    template<typename t1, typename... trest>
+    void insertComponents(int u, t1&& first, trest&&... args);
 
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
 
     SValue<float_s>* components[n * m]; // Values in row-major order
-    bool is_constant[n * m]; // #feelsbadman, but oh well
     
     friend class SUtils;
   };
@@ -238,9 +233,9 @@ namespace spurv {
    */
   
   template<typename tt, typename t1, typename t2, typename t3>
-  SelectConstruct<tt>& select(t1& cond,
-			      t2& true_val,
-			      t3& false_val);
+  SelectConstruct<tt>& select(t1&& cond,
+			      t2&& true_val,
+			      t3&& false_val);
 
 
   /*

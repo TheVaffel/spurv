@@ -8,6 +8,7 @@
 #include "../src/types.hpp"
 #include "../src/values.hpp"
 #include "../src/shaders.hpp"
+#include "../src/value_wrapper.hpp"
 
 #include "../src/utils_impl.hpp"
 #include "../src/expressions_impl.hpp"
@@ -15,5 +16,6 @@
 #include "../src/types_impl.hpp"
 #include "../src/values_impl.hpp"
 #include "../src/shaders_impl.hpp"
+#include "../src/value_wrapper_impl.hpp"
 
 #endif // ndef __SPURV_SPURV

@@ -55,21 +55,21 @@ namespace spurv {
     void output_shader_header_decorate_begin(std::vector<uint32_t>& bin);
 
     void output_shader_header_output_variables(std::vector<uint32_t>& binary,
-					       int n);
-    template<typename tt, typename... NodeTypes>
+       int n); 
+    template<typename in1, typename... NodeTypes>
     void output_shader_header_output_variables(std::vector<uint32_t>& binary, int n,
-					       SValue<tt>& val, NodeTypes... args);
+					       in1&& val, NodeTypes&&... args);
 
     void output_shader_header_decorate_output_variables(std::vector<uint32_t>& binary, int n);
-    template<typename tt, typename... NodeTypes>
+    template<typename in1, typename... NodeTypes>
     void output_shader_header_decorate_output_variables(std::vector<uint32_t>& binary, int n,
-							SValue<tt>& val, NodeTypes... args);
+							in1&& val, NodeTypes&&... args);
 
     void output_output_tree_type_definitions(std::vector<uint32_t>& binary);
 
-    template<typename tt, typename... NodeTypes>
-    void output_output_tree_type_definitions(std::vector<uint32_t>& binary, SValue<tt>& val,
-					     NodeTypes... args);
+    template<typename in1, typename... NodeTypes>
+    void output_output_tree_type_definitions(std::vector<uint32_t>& binary, in1&& val,
+					     NodeTypes&&... args);
 
     void output_builtin_tree_type_definitions(std::vector<uint32_t>& binary);
 
@@ -80,9 +80,9 @@ namespace spurv {
     
     void output_output_definitions(std::vector<uint32_t>& res, int n);
 
-    template<typename tt, typename... NodeType>
-    void output_output_definitions(std::vector<uint32_t>& res, int n, SValue<tt>& node,
-				   NodeType... args);
+    template<typename in1, typename... NodeType>
+    void output_output_definitions(std::vector<uint32_t>& res, int n, in1&& node,
+				   NodeType&&... args);
 
     template<int n>
     void output_input_pointers(std::vector<uint32_t>& res);
@@ -92,8 +92,8 @@ namespace spurv {
 
     void output_output_pointers(std::vector<uint32_t>& res, int n);
     
-    template<typename tt, typename... NodeTypes>
-    void output_output_pointers(std::vector<uint32_t>& res, int n, SValue<tt>& val, NodeTypes... args);
+    template<typename in1, typename... NodeTypes>
+    void output_output_pointers(std::vector<uint32_t>& res, int n, in1&& val, NodeTypes&&... args);
 
     void output_uniform_pointers(std::vector<uint32_t>& res);
     
@@ -134,7 +134,7 @@ namespace spurv {
 			      SUniformBinding<InnerTypes...> >::type& uniformBinding(int set_no, int binding_no);
     
     template<typename... NodeTypes>
-    void compile(std::vector<uint32_t>& res, NodeTypes&... args);
+    void compile(std::vector<uint32_t>& res, NodeTypes&&... args);
   };
   
 };

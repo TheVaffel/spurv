@@ -12,7 +12,6 @@ set(SRC_DIR ${CMAKE_HOME_DIRECTORY}/src)
 
 set(SRC_NAMES ${SRC_DIR}/constant_registry.cpp ${SRC_DIR}/utils.cpp ${SRC_DIR}/uniforms.cpp ${SRC_DIR}/types.cpp ${SRC_DIR}/variable_registry.cpp)
 
-set(HDR_NAMES expressions_impl types uniforms_impl values constant_registry shaders types_impl values_impl constant_registry_impl shaders_impl utils declarations uniforms utils_impl)
 
 include_directories(${HCONLIB_ROOT}/include)
 
