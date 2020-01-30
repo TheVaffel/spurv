@@ -310,7 +310,7 @@ namespace spurv {
 
   // Additions
 
-  template<typename in1_t, typename in2_t>
+  /* template<typename in1_t, typename in2_t>
   SExpr<typename SValueWrapper::unwrapped_type<typename std::remove_reference<in1_t>::type>::type,
 	EXPR_ADDITION,
 	typename SValueWrapper::unwrapped_type<typename std::remove_reference<in1_t>::type>::type,
@@ -326,6 +326,24 @@ namespace spurv {
     SExpr<tt, EXPR_ADDITION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_ADDITION, tt, tt> >();
     ex->register_left_node(SValueWrapper::unwrap_value(in1));
     ex->register_right_node(SValueWrapper::unwrap_value(in2));
+    return *ex;
+    } */
+
+  template<typename in1_t, typename in2_t>
+  SExpr<typename SValueWrapper::unambiguous_unwrapped_type<in1_t, in2_t>::type,
+	EXPR_ADDITION,
+	typename SValueWrapper::unambiguous_unwrapped_type<in1_t, in2_t>::type,
+	typename SValueWrapper::unambiguous_unwrapped_type<in1_t, in2_t>::type>&
+  operator+(in1_t&& in1, in2_t&& in2) {
+    using tt = typename SValueWrapper::unambiguous_unwrapped_type<
+      typename std::remove_reference<in1_t>::type,
+      typename std::remove_reference<in2_t>::type>::type;
+
+    static_assert(SValueWrapper::does_both_wrap<in1_t, in2_t, tt>::value);
+
+    SExpr<tt, EXPR_ADDITION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_ADDITION, tt, tt> >();
+    ex->register_left_node(SValueWrapper::unwrap_to<in1_t, tt>(in1));
+    ex->register_right_node(SValueWrapper::unwrap_to<in2_t, tt>(in2));
     return *ex;
   }
 

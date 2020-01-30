@@ -10,10 +10,10 @@ namespace spurv {
     return val;
   }
 
-  template<typename S>
+  /* template<typename S>
   SValue<typename MapSType<S>::type >& SValueWrapper::unwrap_value(const S& val) {
     return *SUtils::allocate<Constant<S> >(val);
-  }
+    } */
 
   template<typename S, typename T>
   SValue<T>& SValueWrapper::unwrap_to(S &val) {
