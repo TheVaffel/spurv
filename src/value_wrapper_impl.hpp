@@ -4,22 +4,21 @@
 #include "value_wrapper.hpp"
 
 namespace spurv {
-
-  template<typename T>
-  SValue<T>& SValueWrapper::unwrap_value(SValue<T> &val) {
-    return val;
-  }
-
-  /* template<typename S>
-  SValue<typename MapSType<S>::type >& SValueWrapper::unwrap_value(const S& val) {
-    return *SUtils::allocate<Constant<S> >(val);
-    } */
-
+  
   template<typename S, typename T>
+  requires NoSpurvValue<S>
   SValue<T>& SValueWrapper::unwrap_to(S &val) {
-    static_assert(does_wrap<S, T>::value);
+    using ss = typename std::remove_reference<S>::type;
+    using tt = typename std::remove_reference<T>::type;
+    static_assert(does_wrap<ss, tt>::value);
 
-    return &T::cons(val); // SUtils::allocate<Constant<S> >(val);
+    return T::cons(val);
+  }
+  
+  template<typename S, typename T>
+  requires IsSpurvValueOf<S, T>
+  SValue<T>& SValueWrapper::unwrap_to(S& val) {
+    return val;
   }
 };
 

@@ -6,7 +6,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/examples)
 
 set(HCONLIB_ROOT /home/haakon/Documents/Code/C++/HConLib)
 
-add_definitions(-std=c++1z)
+add_definitions(-std=c++1z -fconcepts)
 
 set(SRC_DIR ${CMAKE_HOME_DIRECTORY}/src)
 

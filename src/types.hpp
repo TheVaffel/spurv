@@ -351,6 +351,35 @@ namespace spurv {
     typedef SType<KIND_MAT, n, m> type;
   };
 
+  
+  /*
+   * Inverse mapper
+   */
+  
+  template<typename tt>
+  struct InvMapSType {
+    typedef void type;
+  };
+
+  template<>
+  struct InvMapSType<void_s> {
+    typedef void type;
+  };
+
+  template<>
+  struct InvMapSType<uint_s> {
+    typedef uint32_t type;
+  };
+
+  template<>
+  struct InvMapSType<float_s> {
+    typedef float type;
+  };
+
+  template<int n, int m>
+  struct InvMapSType<SMat<n, m> > {
+    typedef Matrix<n, m> type;
+  };
 };
 
 #endif // __SPURV_TYPES

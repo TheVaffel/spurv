@@ -168,13 +168,8 @@ namespace spurv {
   template<SShaderType type, typename... InputTypes>
   template<typename in1, typename... NodeTypes>
   void SShader<type, InputTypes...>::output_output_tree_type_definitions(std::vector<uint32_t>& bin,
-									 in1&& wrapped_val,
+									 SValue<in1>& val,
 									 NodeTypes&&... args) {
-    using t_in1 = typename std::remove_reference<in1>::type;
-    using inner_type = typename SValueWrapper::unwrapped_type<t_in1>::type;
-
-    SValue<inner_type>& val = SValueWrapper::unwrap_value(wrapped_val);
-
     val.ensure_type_defined(bin, this->defined_type_declaration_states);
 
     this->output_output_tree_type_definitions(bin, args...);

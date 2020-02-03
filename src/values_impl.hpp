@@ -185,10 +185,8 @@ namespace spurv {
   template<int n, int m>
   template<typename t1, typename... trest>
   void ConstructMatrix<n, m>::insertComponents(int u, t1&& first, trest&&... rest) {
-    static_assert(SValueWrapper::does_wrap<typename std::remove_reference<t1>::type, SFloat<32> >::value,
-		  "Values in matrix construction must be of float type");
 
-    this->components[u] = &SValueWrapper::unwrap_value(first);
+    this->components[u] = &SValueWrapper::unwrap_to<t1, SFloat<32> >(first);
     if constexpr(sizeof...(rest) > 0) {
 	insertComponents(u + 1, rest...);
       }
@@ -302,26 +300,29 @@ namespace spurv {
     this->val_true->ensure_type_defined(res, declaration_states);
     this->val_false->ensure_type_defined(res, declaration_states);
   }
-  
 
+  // Shorthand to make the below code somewhat readable
+  template<typename S, typename T>
+  struct uuap {
+    using type = typename SValueWrapper::unambiguous_unwrapped_allow_primitives<typename std::remove_reference<S>::type,
+										typename std::remove_reference<T>::type>::type;
+  };
+  
   template<typename t1, typename t2, typename t3>
-  SelectConstruct<typename SValueWrapper::unwrapped_type<t2>::type>& select(t1&& cond,
-									    t2&& true_val,
-									    t3&& false_val) {
+  requires RequireUnambiguousUnwrappable<t2, t3> && SValueWrapper::does_wrap<typename std::remove_reference<t1>::type, SBool>::value
+  SelectConstruct<typename uuap<t2, t3>::type>& select(t1&& cond,
+						       t2&& true_val,
+						       t3&& false_val) {
     using tt1 = typename std::remove_reference<t1>::type;
-    using tt2 = typename std::remove_reference<t2>::type;
-    using tt3 = typename std::remove_reference<t3>::type;
-    
-    using tt = typename SValueWrapper::unwrapped_type<tt2>::type;
-    
-    static_assert(SValueWrapper::does_wrap<tt2, tt>::value);
-    static_assert(SValueWrapper::does_wrap<tt3, tt>::value);
+
+    using unwrapped_res_type = typename uuap<t2, t3>::type;
 
     static_assert(SValueWrapper::does_wrap<tt1, SBool>::value);
 
-    SelectConstruct<tt>* v = SUtils::allocate<SelectConstruct<tt> >(SValueWrapper::unwrap_value(cond),
-								    SValueWrapper::unwrap_value(true_val),
-								    SValueWrapper::unwrap_value(false_val));
+    SelectConstruct<unwrapped_res_type>* v =
+      SUtils::allocate<SelectConstruct<unwrapped_res_type> >(SValueWrapper::unwrap_to<t1, SBool>(cond),
+							     SValueWrapper::unwrap_to<t2, unwrapped_res_type>(true_val),
+							     SValueWrapper::unwrap_to<t3, unwrapped_res_type>(false_val));
     return *v;
   }
   

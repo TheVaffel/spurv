@@ -5,61 +5,83 @@
 #include "types.hpp"
 
 namespace spurv {
+
+  
+    
+  /*
+   * RequireOneSpurvValue - A concept requiring one Spurv type among
+   * the two provided types
+   */
+  
+  template<typename S, typename T>
+  concept constexpr bool RequireOneSpurvValue =
+    (is_spurv_value<typename std::remove_reference<S>::type>::value ||
+     is_spurv_value<typename std::remove_reference<T>::type>::value);
+
+  /*
+   * RequireUnambiguousUnwrappable - A concept requiring the two arguments to be
+   * of the same type and having an unambiguous unwrapped type
+   */
+
+  template<typename S, typename T>
+  concept constexpr bool RequireUnambiguousUnwrappable =
+    (RequireOneSpurvValue<S, T> ||
+    std::is_same<typename MapSType<typename std::remove_reference<S>::type >::type,
+     typename MapSType<typename std::remove_reference<T>::type >::type>::value);
+  
+
+  /*
+   * Conceptification of not is_spurv_value
+   */
+  
+  template<typename S>
+  concept constexpr bool NoSpurvValue =
+    !is_spurv_value<typename std::remove_reference<S>::type>::value;
+
+
+  /*
+   * Concept seeing if two spurv values are the same
+   */
+  
+  template<typename S, typename T>
+  concept constexpr bool SameSpurvType =
+    is_spurv_type<S>::value && is_spurv_type<T>::value && std::is_same<S, T>::value;
+
+
+  /*
+   * Concept seeing if first is a spurv value of the second type
+   */
+  
+  template<typename S, typename T>
+  concept constexpr bool IsSpurvValueOf =
+    is_spurv_type<T>::value &&
+    is_spurv_value<typename std::remove_reference<S>::type>::value &&
+    std::is_base_of<SValue<T>, typename std::remove_reference<S>::type>::value;
   
   /*
    * Value wrapping - Simplifying handling primitive input constants and input SValues the same way
    */
-
+  
   struct SValueWrapper {
-
-    // is_unambiguous_wrapper - check if a type is a spurv value and
-    // has an unambiguous wrapped type
-
-    template<typename T>
-    struct is_unambiguous_wrapper : std::false_type {};
-
-    template<typename tt>
-    struct is_unambiguous_wrapper<SValue<tt> > : std::true_type {};
-
-    template<typename t1, SExprOp op, typename t2, typename t3>
-    struct is_unambiguous_wrapper<SExpr<t1, op, t2, t3> > : std::true_type {};
-
-    template<typename tt>
-    struct is_unambiguous_wrapper<InputVar<tt> > : std::true_type {};
-
-    template<int n, int m>
-    struct is_unambiguous_wrapper<ConstructMatrix<n, m> > : std::true_type {};
-    
     
     // does_wrap - check if a type can be unwrapped
-    
-    template<typename, typename>
-    struct does_wrap : std::false_type {};
 
-    template<typename T>
-    struct does_wrap<SValue<T>, T> : std::true_type {};
-
-    template<typename t1, SExprOp op, typename t2, typename t3>
-    struct does_wrap<SExpr<t1, op, t2, t3>, t1> : std::true_type {};
-
-    template<typename t1>
-    struct does_wrap<InputVar<t1>, t1> : std::true_type {};
-    
-    template<int n>
-    struct does_wrap<float, SFloat<n>> : std::true_type {};
-
-    template<int n, int m>
-    struct does_wrap<ConstructMatrix<n, m>, SMat<n, m>> : std::true_type {};
-
-    template<typename t1, typename t2, typename t3>
-    struct does_both_wrap {
-      static constexpr bool value = does_wrap<t1, t3>::value && does_wrap<t2, t3>::value;
+    template<typename S, typename T>
+    struct does_wrap {
+      using ss = typename std::remove_reference<S>::type;
+      using tt = typename std::remove_reference<T>::type;
+      
+      static constexpr bool value =
+	std::is_base_of<SValue<tt>, ss>::value ||
+	std::is_convertible<ss, typename InvMapSType<tt>::type>::value;
     };
     
     // unwrapped_type - the type of an unwrapped value
 
     template<typename>
-    struct unwrapped_type : std::false_type { } ; 
+    struct unwrapped_type {
+      using type = void;
+    }; 
 
     template<typename tt>
     struct unwrapped_type<SValue<tt> > { using type = tt; };
@@ -76,48 +98,68 @@ namespace spurv {
     struct unwrapped_type<InputVar<tt> > { using type = tt; };
     
     // Accessible functions
-    
-    template<typename T>
-    static SValue<T>& unwrap_value(SValue<T> &val);
-
-    /* template<typename S>
-       static SValue<typename MapSType<S>::type >& unwrap_value(const S& val); */
-
+  
     template<typename S, typename T>
+    requires NoSpurvValue<S>
     static SValue<T>& unwrap_to(S &val);
 
+    template<typename S, typename T>
+    requires IsSpurvValueOf<S, T>
+    static SValue<T>& unwrap_to(S& val);
+
+    // Get type from primitives
+    template<typename S, typename T>
+    struct unwrapped_from_primitives {
+      using ss = typename std::remove_reference<S>::type;
+      using tt = typename std::remove_reference<T>::type;
+
+      using type = typename MapSType<ss>::type;
+
+      static_assert(std::is_same<ss, tt>::value,
+		    "The two primitives found are not the same type");
+    };
     
     // Get type the unwrapped type where only one type is guaranteed to have an
-    // unambiguous type
+    // unambiguous type (a.k.a it's a spurv value with a type)
 
     template<typename S, typename T>
-    struct unambiguous_unwrapped_type {
+    requires RequireOneSpurvValue<S, T>
+    struct unambiguous_unwrapped_require_spurv_type {
 
       using ss = typename std::remove_reference<S>::type;
       using tt = typename std::remove_reference<T>::type;
       
-      using type = typename std::conditional<is_unambiguous_wrapper<ss>::value,
+      using type = typename std::conditional<is_spurv_value<ss>::value,
 					     typename unwrapped_type<ss>::type,
 					     typename unwrapped_type<tt>::type>::type;
     };
-					     /* std::conditional<std::is_same<typename unwrapped_type<T>::type,
-									   std::false_type>::value,
-							      std::false_type,
-							      typename unwrapped_type<T>::type>,
-					     typename unwrapped_type<S>::type>::type;
-      static_assert(!is_unambiguous_wrapper<S>::value && !is_unambiguous_wrapper<T>::value,
-      "None of the types in unambiguous_unwrapped_type has unambiguous wrapped type");
-      }; 
-    // template<typename S, typename T>
-    // struct unambiguous_unwrapped_type { using type = typename unwrapped_type<T>::type: };
-      
-    }; */
 
-  /* template<>
-  struct SValueWrapper::unwrapped_type<float> {
-    using type = SFloat<32>;
-    }; */
+    // Another variant of the above function, not ensuring that any of the two inputs are SValues
+    // so that it can be used in conditionals 
+    
+    template<typename S, typename T>
+    struct unambiguous_unwrapped_require_spurv_type_unsafe {
+      using ss = typename std::remove_reference<S>::type;
+      using tt = typename std::remove_reference<T>::type;
+      using type = typename std::conditional<is_spurv_value<ss>::value,
+					     typename unwrapped_type<ss>::type,
+					     typename unwrapped_type<tt>::type>::type;
+    };
 
+    
+
+    // Get unwrapped type where we accept both primitives and spurv values
+    template<typename S, typename T>
+    requires RequireUnambiguousUnwrappable<S, T>
+    struct unambiguous_unwrapped_allow_primitives {
+      using ss = typename std::remove_reference<S>::type;
+      using tt = typename std::remove_reference<T>::type;
+
+      using type = typename std::conditional<is_spurv_value<ss>::value ||
+					     is_spurv_value<tt>::value,
+					     typename unambiguous_unwrapped_require_spurv_type_unsafe<S, T>::type,
+					     typename unwrapped_from_primitives<S, T>::type>::type; 
+    };
   };
 };
 

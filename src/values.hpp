@@ -214,10 +214,6 @@ namespace spurv {
     SValue<tt> *val_true, *val_false;
     SValue<SBool >* condition;
 
-    /* template<typename in1_t, typename in2_t, typename in3_t>
-    SelectConstruct(in1_t& cond,
-		    in2_t& tru_val,
-		    in3_t& fal_val); */
     SelectConstruct(SValue<SBool>& cond,
 		    SValue<tt>& true_val,
 		    SValue<tt>& false_val);
@@ -242,17 +238,17 @@ namespace spurv {
    * Utilities to distinguish value types from everything else
    */
 
-  // Hacky trick incoming
-  // https://stackoverflow.com/questions/5997956/how-to-determine-if-a-type-is-derived-from-a-template-class
-
-  template<typename s_type>
-  constexpr std::true_type _is_spurv_value(SValue<s_type> const volatile&);
-  constexpr std::false_type _is_spurv_value(...);
-
+  template<typename>
+  struct is_spurv_value : std::false_type {};
+  
   template<typename T>
-  constexpr bool is_spurv_value(T&& t) {
-    return decltype(_is_spurv_value(t))::value;
-  }
+  struct is_spurv_value<SValue<T> > : std::true_type {};
+
+  template<typename t1, SExprOp op, typename t2, typename t3>
+  struct is_spurv_value<SExpr<t1, op, t2, t3> > : std::true_type {};
+
+  template<int n, int m>
+  struct is_spurv_value<ConstructMatrix<n, m> > : std::true_type {};
   
   /*
    * SValue node types defined by default
