@@ -55,12 +55,12 @@ namespace spurv {
    */
   
   template<typename tt>
-  struct SValue {
+  class SValue {
     static_assert(is_spurv_type<tt>::value);
   protected:
-    uint id;
+    unsigned int id;
     bool defined;
-    uint ref_count;
+    unsigned int ref_count;
   public:
 
     typedef tt type;
@@ -90,7 +90,7 @@ namespace spurv {
    */
     
   template<typename tt>
-  struct Constant : public SValue<typename MapSType<tt>::type> {
+  class Constant : public SValue<typename MapSType<tt>::type> {
     Constant(const tt& val);
 
     virtual void define(std::vector<uint32_t>& res);
@@ -119,7 +119,7 @@ namespace spurv {
    */
   
   template<typename tt> // n is element number within binding
-  struct SUniformVar : public SIOVar<tt> {
+  class SUniformVar : public SIOVar<tt> {
     int set_no, bind_no, member_no;
     int pointer_id, parent_struct_id;
 
@@ -137,7 +137,7 @@ namespace spurv {
    */
   
   template<typename tt>
-  struct InputVar : public SIOVar<tt> {
+  class InputVar : public SIOVar<tt> {
     int input_no;
     int pointer_id;
     
@@ -152,7 +152,7 @@ namespace spurv {
    */
   
   template<typename tt, SExprOp op, typename tt2 = void_s, typename tt3 = void_s>
-  struct SExpr : public SValue<tt> {
+  class SExpr : public SValue<tt> {
     static_assert(is_spurv_type<tt>::value);
     static_assert(is_spurv_type<tt2>::value);
     static_assert(is_spurv_type<tt3>::value);
@@ -186,7 +186,7 @@ namespace spurv {
    */
   
   template<int n, int m>
-  struct ConstructMatrix : public SValue<SMat<n, m> > {
+  class ConstructMatrix : public SValue<SMat<n, m> > {
   protected:
     template<typename... Types>
     ConstructMatrix(Types&&... args);
@@ -209,7 +209,7 @@ namespace spurv {
    */
 
   template<typename tt>
-  struct SelectConstruct : public SValue<tt> {
+  class SelectConstruct : public SValue<tt> {
     
     SValue<tt> *val_true, *val_false;
     SValue<SBool >* condition;

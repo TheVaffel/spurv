@@ -12,7 +12,8 @@ namespace spurv {
    * Utility struct for SType
    */
 
-  struct SDeclarationState {
+  class SDeclarationState {
+  public:
     SDeclarationState();
     int id;
     bool is_defined;

@@ -94,15 +94,17 @@ namespace spurv {
   template<int n, typename inner>
   class SArr;
 
+  class SBool;
+
   template<SStorageClass n, typename inn>
   class SPointer;
   
   template<typename tt>
-  struct SValue;
+  class SValue;
 
   template<typename tt, SExprOp op,
 	   typename t1, typename t2>
-  struct SExpr;
+  class SExpr;
 
   class SUniformBindingBase;
 
@@ -119,12 +121,12 @@ namespace spurv {
   class Constant;
   
   template<int n, int m>
-  struct ConstructMatrix;
+  class ConstructMatrix;
 
   template<typename tt>
-  struct SelectConstruct;
+  class SelectConstruct;
   
-  struct SDeclarationState;
+  class SDeclarationState;
   
   class SConstantRegistry;
   

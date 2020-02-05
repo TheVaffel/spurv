@@ -8,7 +8,7 @@ namespace spurv {
   std::vector<SUtils::PWrapperBase*> SUtils::allocated_values;
 
   void SUtils::clearAllocations() {
-    for(uint i = 0; i < SUtils::allocated_values.size(); i++) {
+    for(unsigned int i = 0; i < SUtils::allocated_values.size(); i++) {
       SUtils::allocated_values[i]->exterminate();
       delete SUtils::allocated_values[i];
     }
@@ -30,7 +30,7 @@ namespace spurv {
   }
 
   int SUtils::stringWordLength(const std::string str) {
-    return (str.length() + 1 + 3 ) / 4; // Make room for terminating zero, round up to 4-byte words
+    return (int)(str.length() + 1 + 3 ) / 4; // Make room for terminating zero, round up to 4-byte words
   }
 
   void SUtils::add(std::vector<uint32_t>& binary, int a) {
@@ -38,7 +38,7 @@ namespace spurv {
   }
 
   void SUtils::add(std::vector<uint32_t>& binary, std::string str) {
-    int len = str.length(); // Space for null terminator
+    int len = (int)str.length(); // Space for null terminator
     int n = SUtils::stringWordLength(str);
 
     const char* pp = str.c_str();

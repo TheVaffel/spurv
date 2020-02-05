@@ -66,7 +66,7 @@ namespace spurv {
     template<SShaderType type, typename... InputTypes>
     friend class SShader;
 
-    friend struct SBool;
+    friend class SBool;
     
     template<int n>
     friend class SFloat;
@@ -118,7 +118,7 @@ namespace spurv {
     friend class STexture;
 
     template<int n, int m>
-    friend struct ConstructMatrix;
+    friend class ConstructMatrix;
 
     template<typename tt>
     friend class SelectConstruct;
