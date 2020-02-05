@@ -42,14 +42,14 @@ namespace spurv {
     int n = SUtils::stringWordLength(str);
 
     const char* pp = str.c_str();
-    for(int i = 0; i < n - 1; i++) {
+    for(int64_t i = 0; i < ((int64_t)n) - 1LL; i++) {
       SUtils::add(binary, *((int32_t*)(pp + 4 * i)));
     }
 
     int left = len - (n - 1) * 4;
     char last_int[4];
-    for(int i = 0; i < left; i++) {
-      last_int[i] = str[(n - 1) * 4 + i];
+    for(int64_t i = 0; i < left; i++) {
+      last_int[i] = str[(size_t)(n - 1LL) * 4 + i];
     }
   
     for(int i = left; i < 4; i++) {

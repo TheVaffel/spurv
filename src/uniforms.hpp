@@ -59,7 +59,7 @@ namespace spurv {
    */
 
   template<typename type>
-  struct SUniformConstant : public SUniformBindingBase, public SIOVar<type> {
+  class SUniformConstant : public SUniformBindingBase, public SIOVar<type> {
   public:
     SUniformConstant(int sn, int bn);
     

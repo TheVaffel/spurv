@@ -46,7 +46,7 @@ namespace spurv {
     DSType* inner_types;
     int num_inner_types;
     
-    constexpr DSType() : kind(KIND_INVALID),
+    constexpr DSType() : kind(STypeKind::KIND_INVALID),
       a0(0), a1(0), a2(0), a3(0), a4(0),
       inner_types(nullptr),  
       num_inner_types(0){ };
@@ -93,7 +93,7 @@ namespace spurv {
    * SBool - Representation of boolean values
    */
 
-  class SBool : public SType<KIND_BOOL> {
+  class SBool : public SType<STypeKind::KIND_BOOL> {
   public:
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
@@ -106,7 +106,7 @@ namespace spurv {
    */
 
   template<int n, int signedness>
-  class SInt : public SType<KIND_INT, n, signedness> {
+  class SInt : public SType<STypeKind::KIND_INT, n, signedness> {
   public:
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
@@ -121,7 +121,7 @@ namespace spurv {
    */
   
   template<int n>
-  class SFloat : public SType<KIND_FLOAT, n> {
+  class SFloat : public SType<STypeKind::KIND_FLOAT, n> {
   public:
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
@@ -136,7 +136,7 @@ namespace spurv {
    */
   
   template<int n, int m>
-  class SMat : public SType<KIND_MAT, n, m> {
+  class SMat : public SType<STypeKind::KIND_MAT, n, m> {
   public:
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
 					    std::vector<SDeclarationState*>& declaration_states);
@@ -177,7 +177,7 @@ namespace spurv {
    */
   
   template<int n, typename tt>
-  class SArr : public SType<KIND_ARR, n, 0, 0, 0, 0, tt >  {
+  class SArr : public SType<STypeKind::KIND_ARR, n, 0, 0, 0, 0, tt >  {
     constexpr SArr() {
       static_assert(is_spurv_type<tt>::value, "Inner type of SArr must be a spurv type");
     }
@@ -196,7 +196,7 @@ namespace spurv {
    */
   
   template<SStorageClass storage, typename tt>
-  class SPointer : public SType<KIND_POINTER, (int)storage, 0, 0, 0, 0, tt> {
+  class SPointer : public SType<STypeKind::KIND_POINTER, (int)storage, 0, 0, 0, 0, tt> {
   public:
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
 					    std::vector<SDeclarationState*>& declaration_states);
@@ -210,7 +210,7 @@ namespace spurv {
    */
   
   template<typename... InnerTypes>
-  class SStruct : public SType<KIND_STRUCT, 0, 0, 0, 0, 0, InnerTypes...> {
+  class SStruct : public SType<STypeKind::KIND_STRUCT, 0, 0, 0, 0, 0, InnerTypes...> {
     static bool is_decorated;
     
   public:
@@ -235,7 +235,7 @@ namespace spurv {
    */
 
   template<int dims, int depth, int arrayed, int multisamp, int sampled>
-  class SImage : public SType<KIND_IMAGE, dims, depth, arrayed, multisamp, sampled > {
+  class SImage : public SType<STypeKind::KIND_IMAGE, dims, depth, arrayed, multisamp, sampled > {
   public: 
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
 					    std::vector<SDeclarationState*>& declaration_states);
@@ -249,7 +249,7 @@ namespace spurv {
    */
 
   template<int n>
-  class STexture : public SType<KIND_TEXTURE, n> {
+  class STexture : public SType<STypeKind::KIND_TEXTURE, n> {
 
   public:
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
@@ -305,7 +305,7 @@ namespace spurv {
    * Types defined by default
    */
   
-  typedef SType<KIND_VOID> void_s;
+  typedef SType<STypeKind::KIND_VOID> void_s;
   typedef SBool bool_s;
   typedef SInt<32, 1> int_s;
   typedef SInt<32, 0> uint_s;
@@ -349,7 +349,7 @@ namespace spurv {
 
   template<int n, int m>
   struct MapSType<Matrix<n, m> > {
-    typedef SType<KIND_MAT, n, m> type;
+    typedef SType<STypeKind::KIND_MAT, n, m> type;
   };
 
   

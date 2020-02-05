@@ -12,7 +12,7 @@ namespace spurv {
    * Enums
    */
   
-   enum STypeKind {
+   enum class STypeKind {
     KIND_INVALID,
     KIND_BOOL,
     KIND_VOID,
@@ -26,7 +26,7 @@ namespace spurv {
     KIND_TEXTURE
   };
   
-  enum SShaderType {
+  enum class SShaderType {
     SHADER_VERTEX,
     SHADER_FRAGMENT,
   };

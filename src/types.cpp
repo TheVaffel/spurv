@@ -54,21 +54,21 @@ namespace spurv {
    */
   
   template<>
-  void SType<KIND_VOID>::define(std::vector<uint32_t>& bin) {
-    SType<KIND_VOID>::ensureInitID();
-    SType<KIND_VOID>::declareDefined();
+  void SType<STypeKind::KIND_VOID>::define(std::vector<uint32_t>& bin) {
+    SType<STypeKind::KIND_VOID>::ensureInitID();
+    SType<STypeKind::KIND_VOID>::declareDefined();
     
     SUtils::add(bin, (2 << 16) | 19);
-    SUtils::add(bin, SType<KIND_VOID>::getID());
+    SUtils::add(bin, SType<STypeKind::KIND_VOID>::getID());
     
   }
 
   template<>
-  void SType<KIND_VOID>::ensure_defined(std::vector<uint32_t>& bin,
+  void SType<STypeKind::KIND_VOID>::ensure_defined(std::vector<uint32_t>& bin,
 					std::vector<SDeclarationState*>& declaration_states) {
-    if( !SType<KIND_VOID>::isDefined()) {
+    if( !SType<STypeKind::KIND_VOID>::isDefined()) {
       define(bin);
-      declaration_states.push_back(&(SType<KIND_VOID>::declarationState));
+      declaration_states.push_back(&(SType<STypeKind::KIND_VOID>::declarationState));
     }
   }
 
@@ -78,18 +78,18 @@ namespace spurv {
    */
 
   void SBool::define(std::vector<uint32_t>& bin) {
-    SType<KIND_BOOL>::ensureInitID();
-    SType<KIND_BOOL>::declareDefined();
+    SType<STypeKind::KIND_BOOL>::ensureInitID();
+    SType<STypeKind::KIND_BOOL>::declareDefined();
 
     SUtils::add(bin, (2 << 16) | 20);
-    SUtils::add(bin, SType<KIND_BOOL>::getID());
+    SUtils::add(bin, SType<STypeKind::KIND_BOOL>::getID());
   }
 
   void SBool::ensure_defined(std::vector<uint32_t>& bin,
 					std::vector<SDeclarationState*>& declaration_states) {
-    if(!SType<KIND_BOOL>::isDefined()) {
+    if(!SType<STypeKind::KIND_BOOL>::isDefined()) {
       define(bin);
-      declaration_states.push_back(&(SType<KIND_BOOL>::declarationState));
+      declaration_states.push_back(&(SType<STypeKind::KIND_BOOL>::declarationState));
     }
   }
 
