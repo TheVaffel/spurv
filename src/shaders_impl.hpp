@@ -57,7 +57,7 @@ namespace spurv {
   
   template<SShaderType type, typename...InputTypes>
   void SShader<type, InputTypes...>::cleanup_declaration_states() {
-    for(uint i = 0; i < this->defined_type_declaration_states.size(); i++) {
+    for(unsigned int i = 0; i < this->defined_type_declaration_states.size(); i++) {
       this->defined_type_declaration_states[i]->is_defined  = false;
       this->defined_type_declaration_states[i]->id = -1;
     }
@@ -65,7 +65,7 @@ namespace spurv {
 
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::cleanup_decoration_states() {
-    for(uint i = 0; i < this->decoration_states.size(); i++) {
+    for(unsigned int i = 0; i < this->decoration_states.size(); i++) {
       *this->decoration_states[i] = false;
     }
   }
@@ -202,9 +202,9 @@ namespace spurv {
 
     std::string entry_point_name = "main";
 
-    if constexpr(type == SHADER_VERTEX) {
+    if constexpr(type == SShaderType::SHADER_VERTEX) {
 	SUtils::add(bin, 0); // Vertex
-      } else if constexpr(type == SHADER_FRAGMENT) {
+      } else if constexpr(type == SShaderType::SHADER_FRAGMENT) {
 	SUtils::add(bin, 4); // Fragment
       } else {
       printf("Shader type not yet accounted for in output_shader_header_begin\n");
@@ -215,7 +215,7 @@ namespace spurv {
     SUtils::add(bin, this->entry_point_id);
     SUtils::add(bin, entry_point_name);
 
-    for(uint i = 0; i < this->input_entries.size(); i++) {
+    for(unsigned int i = 0; i < this->input_entries.size(); i++) {
       if (this->input_entries[i].id == -1) {
 	printf("Input variable not initialized");
 	exit(-1);
@@ -228,7 +228,7 @@ namespace spurv {
 
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_shader_header_end(std::vector<uint32_t>& bin) {
-    if constexpr(type == SHADER_FRAGMENT) {
+    if constexpr(type == SShaderType::SHADER_FRAGMENT) {
 	// OpExecutionMode <entry_point_id> OriginUpperLeft
 	SUtils::add(bin, (3 << 16) | 16);
 	SUtils::add(bin, this->entry_point_id);
@@ -238,7 +238,7 @@ namespace spurv {
   
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_shader_header_decorate_begin(std::vector<uint32_t>& bin) {
-    if constexpr(type == SHADER_VERTEX) {
+    if constexpr(type == SShaderType::SHADER_VERTEX) {
 	if(this->builtin_vec4_0) {
 	  // Decorate <builtin> Builtin Position
 	  SUtils::add(bin, (4 << 16) | 71);
@@ -274,7 +274,7 @@ namespace spurv {
     }
 
     // Decorate <input_var> Location <index>
-    for(uint i = 0; i < input_entries.size(); i++) {
+    for(unsigned int i = 0; i < input_entries.size(); i++) {
       SUtils::add(bin, (4 << 16) | 71);
       SUtils::add(bin, input_entries[i].pointer_id);
       SUtils::add(bin, 30);
@@ -282,7 +282,7 @@ namespace spurv {
     }
 
     // Put decorations on uniforms
-    for(uint i = 0; i < uniform_bindings.size(); i++) {
+    for(unsigned int i = 0; i < uniform_bindings.size(); i++) {
       
       uniform_bindings[i]->decorateType(bin,
 					this->decoration_states);
@@ -304,18 +304,18 @@ namespace spurv {
 
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_main_function_begin(std::vector<uint32_t>& res) {
-    SType<KIND_VOID>::ensure_defined(res, this->defined_type_declaration_states);
+    SType<STypeKind::KIND_VOID>::ensure_defined(res, this->defined_type_declaration_states);
 
     int void_function_type = SUtils::getNewID();
     
     // OpTypeFunction <result_id> <result type> <result_id> 
     SUtils::add(res, (3 << 16) | 33);
     SUtils::add(res, void_function_type);
-    SUtils::add(res, SType<KIND_VOID>::getID());
+    SUtils::add(res, SType<STypeKind::KIND_VOID>::getID());
 
     // OpFunction <result type> <result_id> <function_control> <function_type>
     SUtils::add(res, (5 << 16) | 54);
-    SUtils::add(res, SType<KIND_VOID>::getID());
+    SUtils::add(res, SType<STypeKind::KIND_VOID>::getID());
     SUtils::add(res, entry_point_id);
     SUtils::add(res, 0);
     SUtils::add(res, void_function_type);
@@ -414,7 +414,7 @@ namespace spurv {
 
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_uniform_pointers(std::vector<uint32_t>& res) {
-    for(uint i = 0; i < this->uniform_bindings.size(); i++) {
+    for(unsigned int i = 0; i < this->uniform_bindings.size(); i++) {
       this->uniform_bindings[i]->definePointer(res, this->defined_type_declaration_states);
     }
   }
@@ -504,7 +504,7 @@ namespace spurv {
   template<SShaderType type, typename... InputTypes>
   template<SBuiltinVariable ind, typename tt>
   void SShader<type, InputTypes...>::setBuiltin(SValue<tt>& val) {
-    if constexpr(type == SHADER_VERTEX) {
+    if constexpr(type == SShaderType::SHADER_VERTEX) {
 	if constexpr(ind == BUILTIN_POSITION) {
         
 	    static_assert(std::is_same<tt, vec4_s>::value, "Position must be vec4_s");
@@ -567,7 +567,7 @@ namespace spurv {
     using input_type = First;
     static_assert(is_spurv_type<input_type>::value, "Supplied input values must be SType");
 
-    if(input_entries[n].ds.kind == KIND_INVALID) {
+    if(input_entries[n].ds.kind == STypeKind::KIND_INVALID) {
       
       input_type::getDSType(&(input_entries[n].ds));
       input_entries[n].pointer_id = SUtils::getNewID();
@@ -597,25 +597,26 @@ namespace spurv {
     }
   }
 
+  /*template<SShaderType type, typename... InputTypes>
   template<typename... InnerTypes>
-  constexpr bool isUniformConstantType() {
+  static constexpr bool SShader<type, InputTypes...>::isUniformConstantType() {
     return sizeof...(InnerTypes) == 1 &&
       is_spurv_texture_type<typename SUtils::NthType<0, InnerTypes...>::type>::value;
-  }
+  } */
 
   template<SShaderType type, typename... InputTypes>
   template<typename... InnerTypes>
-  typename std::conditional<isUniformConstantType<InnerTypes...>(),
+  typename std::conditional<SUtils::isUniformConstantType<InnerTypes...>,
 			    SUniformConstant<typename SUtils::NthType<0, InnerTypes...>::type>,
-			    SUniformBinding<InnerTypes...> >::type&
-  SShader<type, InputTypes...>::uniformBinding(int set_no, int binding_no) {
+			    SUniformBinding<InnerTypes...> >::type
+  &SShader<type, InputTypes...>::uniformBinding(int set_no, int binding_no) {
 
     // Check if this is just a uniform constant, not a struct
-    if constexpr(isUniformConstantType<InnerTypes...>()) {
+    if constexpr(SUtils::isUniformConstantType<InnerTypes...>) {
 
 	using Type = typename SUtils::NthType<0, InnerTypes...>::type;
 	
-	for(uint i = 0; i < this->uniform_bindings.size(); i++) {
+	for(unsigned int i = 0; i < this->uniform_bindings.size(); i++) {
 	  if(this->uniform_bindings[i]->getSetNo() == set_no &&
 	     this->uniform_bindings[i]->getBindingNo() == binding_no) {
 	    return *(SUniformConstant<Type>*)uniform_bindings[i];
@@ -630,7 +631,7 @@ namespace spurv {
       } else {
     
       // O(n^2).. But hopefully nobody cares
-      for(uint i = 0; i < this->uniform_bindings.size(); i++) {
+      for(unsigned int i = 0; i < this->uniform_bindings.size(); i++) {
 	if(this->uniform_bindings[i]->getSetNo() == set_no &&
 	   this->uniform_bindings[i]->getBindingNo() == binding_no) {
 	  return *(SUniformBinding<InnerTypes...>*)uniform_bindings[i];

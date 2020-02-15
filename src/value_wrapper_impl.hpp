@@ -12,7 +12,7 @@ namespace spurv {
     using tt = typename std::remove_reference<T>::type;
     static_assert(does_wrap<ss, tt>::value);
 
-    return T::cons(val);
+    return T::cons(static_cast<typename InvMapSType<tt>::type>(val));
   }
   
   template<typename S, typename T>

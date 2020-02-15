@@ -76,9 +76,9 @@ namespace spurv {
     
     
     int opcode = 0;
-    if(d1.kind == KIND_BOOL) {
-      if (d2.kind == KIND_INT &&
-	  d3.kind == KIND_INT) {
+    if(d1.kind == STypeKind::KIND_BOOL) {
+      if (d2.kind == STypeKind::KIND_INT &&
+	  d3.kind == STypeKind::KIND_INT) {
 	
 	if constexpr(op == EXPR_EQUAL) {
 	    opcode = 170;
@@ -113,8 +113,8 @@ namespace spurv {
 	    }
 	  }
 	}
-      } else if(d2.kind == KIND_FLOAT &&
-		d3.kind == KIND_FLOAT) {
+      } else if(d2.kind == STypeKind::KIND_FLOAT &&
+		d3.kind == STypeKind::KIND_FLOAT) {
 	// Using OpFOrd as opposed to OpFUnord
 	// Not sure right now how the difference would turn out
 	if constexpr(op == EXPR_EQUAL) {
@@ -144,7 +144,7 @@ namespace spurv {
       SUtils::add(res, this->v2->getID());
       
     } else if(d1 == d2 && d2 == d3) {
-      if (d1.kind == KIND_INT) {
+      if (d1.kind == STypeKind::KIND_INT) {
 	if constexpr(op == EXPR_ADDITION) {
 	    opcode = 128;
 	  } else if constexpr(op == EXPR_SUBTRACTION) {
@@ -157,7 +157,7 @@ namespace spurv {
 	  printf("Tried to output expression with integer type and operation = %d\n", (int)op);
 	  exit(-1);
 	}
-      } else if (d1.kind == KIND_FLOAT) {
+      } else if (d1.kind == STypeKind::KIND_FLOAT) {
 	if constexpr(op == EXPR_ADDITION) {
 	    opcode = 129;
 	  } else if constexpr(op == EXPR_SUBTRACTION) {
@@ -170,7 +170,7 @@ namespace spurv {
 	  printf("Tried to output expression with float type and operation = %d\n", (int)op);
 	  exit(-1);
 	}
-      } else if(d1.kind == KIND_MAT) {
+      } else if(d1.kind == STypeKind::KIND_MAT) {
 	if constexpr(op == EXPR_ADDITION) {
 	    opcode = 129;
 	  } else if(op == EXPR_SUBTRACTION) {
@@ -189,7 +189,7 @@ namespace spurv {
 
     } else {
       if constexpr(op == EXPR_MULTIPLICATION) {
-	  if (d2.kind == KIND_MAT && d3.kind == KIND_FLOAT) {
+	  if (d2.kind == STypeKind::KIND_MAT && d3.kind == STypeKind::KIND_FLOAT) {
 	    // Differ between vector and matrix
 	    if (d2.a1 == 1) {
 	      SUtils::add(res, (5 << 16) | 142);
@@ -201,7 +201,7 @@ namespace spurv {
 	    SUtils::add(res, this->getID());
 	    SUtils::add(res, this->v1->getID());
 	    SUtils::add(res, this->v2->getID());
-	  } else if(d2.kind == KIND_FLOAT && d3.kind == KIND_MAT) {
+	  } else if(d2.kind == STypeKind::KIND_FLOAT && d3.kind == STypeKind::KIND_MAT) {
 	    if (d3.a1 == 1) {
 	      SUtils::add(res, (5 << 16) | 142);
 	    } else {
@@ -218,7 +218,7 @@ namespace spurv {
 	  }
 	} else if constexpr(op == EXPR_DOT) {
 	  if (d2.a1 == 1 && d3.a1 == 1) {
-	    if(d1.kind != KIND_FLOAT) {
+	    if(d1.kind != STypeKind::KIND_FLOAT) {
 	      printf("Operands should have made scalar, but didn't\n");
 	      exit(-1);
 	    }
@@ -244,7 +244,7 @@ namespace spurv {
 	    SUtils::add(res, this->v2->getID());
 	  }
 	} else if constexpr(op == EXPR_LOOKUP) {
-	  if(d2.kind == KIND_TEXTURE) {
+	  if(d2.kind == STypeKind::KIND_TEXTURE) {
 	    // OpImageSampleExplicitLod
 	    SUtils::add(res, (7 << 16) | 88);
 	    SUtils::add(res, vec4_s::getID());
@@ -253,7 +253,7 @@ namespace spurv {
 	    SUtils::add(res, this->v2->getID());
 	    SUtils::add(res, 2); // LoD
 	    SUtils::add(res, SConstantRegistry::getIDFloat(32, 0.0f));
-	  } else if(d2.kind == KIND_MAT) {
+	  } else if(d2.kind == STypeKind::KIND_MAT) {
 	    
 	    if (d2.a1 == 1) {
 	      // OpVectorExtractDynamic <result_type> <result_id> <vector> <index>

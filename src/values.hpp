@@ -82,6 +82,7 @@ namespace spurv {
     
     SValue<typename lookup_result<tt>::type>& operator[](int s); // Lookup operator that requires constants
     
+    friend class SUtils;
   };
   
 
@@ -93,11 +94,14 @@ namespace spurv {
   class Constant : public SValue<typename MapSType<tt>::type> {
     Constant(const tt& val);
 
+  public:
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
     
     tt value;
+
+    friend class SUtils;
   };
 
 
@@ -126,9 +130,12 @@ namespace spurv {
     Constant<int>* member_index;
     
     SUniformVar(int s, int b, int m, int pointer_id, int parent_struct_id) ;
+  public:
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
+
+    friend class SUtils;
   };
 
 
@@ -143,7 +150,10 @@ namespace spurv {
     
     InputVar(int n, int pointer_id);
 
+  public:
     virtual void define(std::vector<uint32_t>& res);
+
+    friend class SUtils;
   };
 
   
@@ -163,9 +173,6 @@ namespace spurv {
 
     SExpr();
 
-    void register_left_node(SValue<tt2>& node);
-    void register_right_node(SValue<tt3>& node);
-
     // Since expressions are returned as references from e.g.
     // binary operations, if you assign a normal (non-reference) variable to an expression resulting
     // from such an operation, it will (if I understand correctly) call the copy constructor, and thus
@@ -175,9 +182,16 @@ namespace spurv {
     // Thus, we avoid copies
     SExpr(const SExpr<tt, op, tt2, tt3>& e) = delete;
 
+
+  public:
     virtual void print_nodes_post_order(std::ostream& str) const ;
     virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
     virtual void define(std::vector<uint32_t>& res);
+
+      void register_left_node(SValue<tt2>& node);
+      void register_right_node(SValue<tt3>& node);
+
+      friend class SUtils;
   };
   
   
@@ -194,6 +208,7 @@ namespace spurv {
     template<typename t1, typename... trest>
     void insertComponents(int u, t1&& first, trest&&... args);
 
+  public:
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
@@ -218,9 +233,12 @@ namespace spurv {
 		    SValue<tt>& true_val,
 		    SValue<tt>& false_val);
     
+  public:
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
+    
+    friend class SUtils;
   };
 
 

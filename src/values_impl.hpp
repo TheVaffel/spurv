@@ -139,13 +139,6 @@ namespace spurv {
     tt::ensure_defined(res, declaration_states);
     SPointer<STORAGE_UNIFORM, tt>::ensure_defined(res, declaration_states);
 
-    // A little bit hacky, but at least it makes the job done
-    // This ensures that the constant int we need to use when
-    // accessing this variable within the uniformbinding, is
-    // defined
-    
-    // SInt<32, 1>::ensure_defined(res, declaration_states);
-    // SConstantRegistry::ensureDefinedConstant((int32_t)this->member_no, SUtils::getNewID(), res);
     this->member_index->ensure_type_defined(res, declaration_states);
   }
 

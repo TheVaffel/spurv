@@ -14,7 +14,7 @@ namespace spurv {
 					       std::vector<uint32_t>& res) {
     using st = typename MapSType<tt>::type;
 
-    static_assert(st::getKind() == KIND_INT || st::getKind() == KIND_FLOAT,
+    static_assert(st::getKind() == STypeKind::KIND_INT || st::getKind() == STypeKind::KIND_FLOAT,
 		  "Constant definitions only allowed for ints and floats for now");
 
     static_assert(st::getArg0() == 32,
@@ -22,7 +22,7 @@ namespace spurv {
 
     int n_id;
     
-    if constexpr(st::getKind() == KIND_INT) {
+    if constexpr(st::getKind() == STypeKind::KIND_INT) {
 
 	if(isDefinedInt(st::getArg0(), st::getArg1(), val)) {
 	  return getIDInteger(st::getArg0(), st::getArg1(), val);;
@@ -36,7 +36,7 @@ namespace spurv {
 	
 	declareDefinedInt(st::getArg0(), st::getArg1(), val);
 	
-    } else if constexpr(st::getKind() == KIND_FLOAT) {
+    } else if constexpr(st::getKind() == STypeKind::KIND_FLOAT) {
 	if(isDefinedFloat(st::getArg0(), val)) {
 	  return getIDFloat(st::getArg0(), val);
 	}

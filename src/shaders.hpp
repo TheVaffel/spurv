@@ -4,13 +4,6 @@
 namespace spurv {
 
   /*
-   * Utility functions for use in SShaders
-   */
-
-  template<typename... InnerTypes>
-  constexpr bool isUniformConstantType();
-  
-  /*
    * SShader - The object responsible for IO and compilation of the shader
    */
   
@@ -103,6 +96,7 @@ namespace spurv {
     
     int get_num_defined_builtins();
     
+
     // Builtin outputs
     BuiltinEntry<vec4_s>* builtin_vec4_0; // Vertex: Position
     BuiltinEntry<float_s>* builtin_float_0; // Vertex: PointSize
@@ -129,7 +123,7 @@ namespace spurv {
 
     // Return an SUniformConstant if applicable, otherwise an SUniformBinding
     template<typename... InnerTypes>
-    typename std::conditional<isUniformConstantType<InnerTypes...>(),
+    typename std::conditional<SUtils::isUniformConstantType<InnerTypes...>,
 			      SUniformConstant<typename SUtils::NthType<0, InnerTypes...>::type>,
 			      SUniformBinding<InnerTypes...> >::type& uniformBinding(int set_no, int binding_no);
     
