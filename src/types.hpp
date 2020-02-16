@@ -299,7 +299,16 @@ namespace spurv {
 
   template<int n>
   struct is_spurv_texture_type<STexture<n> > : std::true_type {};
+
+
+  /* 
+   * Function to determine whether a type represents a uniform constant (as opposed
+   * to a descriptor set)
+   */
   
+  template<typename... InnerTypes>
+  static constexpr bool isUniformConstantType = sizeof...(InnerTypes) == 1 &&
+    is_spurv_texture_type<typename SUtils::NthType<0, InnerTypes...>::type>::value;
 
   /*
    * Types defined by default
@@ -348,7 +357,7 @@ namespace spurv {
   };
 
   template<int n, int m>
-  struct MapSType<Matrix<n, m> > {
+  struct MapSType<falg::Matrix<n, m> > {
     typedef SType<STypeKind::KIND_MAT, n, m> type;
   };
 
@@ -379,7 +388,7 @@ namespace spurv {
 
   template<int n, int m>
   struct InvMapSType<SMat<n, m> > {
-    typedef Matrix<n, m> type;
+    typedef falg::Matrix<n, m> type;
   };
 };
 

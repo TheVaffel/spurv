@@ -56,10 +56,6 @@ namespace spurv {
     template<typename First, typename... Types>
     constexpr int getSumSize();
 
-    template<typename... InnerTypes>
-    static constexpr bool isUniformConstantType = sizeof...(InnerTypes) == 1 &&
-        is_spurv_texture_type<typename SUtils::NthType<0, InnerTypes...>::type>::value;
-
     
     SUtils() = delete;
     

@@ -29,7 +29,6 @@ namespace spurv {
   template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
   int SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::getID() {
     if(declarationState.id == -1) {
-      printf("Kind = %d, arg0 = %d, arg1 = %d\n", kind, arg0, arg1);
       printf("Tried to use type declarationState.id before defined\n");
       // Fall through to catch errors other places..
 

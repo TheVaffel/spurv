@@ -123,7 +123,7 @@ namespace spurv {
 
     // Return an SUniformConstant if applicable, otherwise an SUniformBinding
     template<typename... InnerTypes>
-    typename std::conditional<SUtils::isUniformConstantType<InnerTypes...>,
+    typename std::conditional<isUniformConstantType<InnerTypes...>,
 			      SUniformConstant<typename SUtils::NthType<0, InnerTypes...>::type>,
 			      SUniformBinding<InnerTypes...> >::type& uniformBinding(int set_no, int binding_no);
     

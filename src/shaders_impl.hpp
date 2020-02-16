@@ -597,22 +597,15 @@ namespace spurv {
     }
   }
 
-  /*template<SShaderType type, typename... InputTypes>
-  template<typename... InnerTypes>
-  static constexpr bool SShader<type, InputTypes...>::isUniformConstantType() {
-    return sizeof...(InnerTypes) == 1 &&
-      is_spurv_texture_type<typename SUtils::NthType<0, InnerTypes...>::type>::value;
-  } */
-
   template<SShaderType type, typename... InputTypes>
   template<typename... InnerTypes>
-  typename std::conditional<SUtils::isUniformConstantType<InnerTypes...>,
+  typename std::conditional<isUniformConstantType<InnerTypes...>,
 			    SUniformConstant<typename SUtils::NthType<0, InnerTypes...>::type>,
 			    SUniformBinding<InnerTypes...> >::type
   &SShader<type, InputTypes...>::uniformBinding(int set_no, int binding_no) {
 
     // Check if this is just a uniform constant, not a struct
-    if constexpr(SUtils::isUniformConstantType<InnerTypes...>) {
+    if constexpr(isUniformConstantType<InnerTypes...>) {
 
 	using Type = typename SUtils::NthType<0, InnerTypes...>::type;
 	
