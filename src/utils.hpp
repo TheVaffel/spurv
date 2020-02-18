@@ -50,8 +50,6 @@ namespace spurv {
     
     static void clearAllocations();
     
-    template<int n, typename...Types>
-    struct NthType;
 
     template<typename First, typename... Types>
     constexpr int getSumSize();
@@ -130,6 +128,9 @@ namespace spurv {
     template<typename tt, typename... Types>
     static tt* allocate(Types&... args);
   
+    // Utility to get nth type from a parameter pack of types
+    template<int n, typename...Types>
+    struct NthType;
     
   };
 
