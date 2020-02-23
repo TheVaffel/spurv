@@ -343,7 +343,7 @@ namespace spurv {
     using tt = typename uwr<in1_t, in2_t>::type;
 
     
-    SExpr<tt, EXPR_SUBTRACTION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_ADDITION, tt, tt> >();
+    SExpr<tt, EXPR_SUBTRACTION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_SUBTRACTION, tt, tt> >();
     ex->register_left_node(SValueWrapper::unwrap_to<in1_t, tt>(in1));
     ex->register_right_node(SValueWrapper::unwrap_to<in2_t, tt>(in2));
     return *ex;
