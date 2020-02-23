@@ -127,7 +127,8 @@ namespace spurv {
     static void define(std::vector<uint32_t>& bin);
     static constexpr int getSize();
 
-    static SValue<SFloat<n> >& cons(double arg);
+    template<typename tt>
+    static SValue<SFloat<n> >& cons(tt arg);
   };
   
 
