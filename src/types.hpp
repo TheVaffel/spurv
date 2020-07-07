@@ -158,6 +158,9 @@ namespace spurv {
   struct is_spurv_type : std::false_type {};
 
   template<>
+  struct is_spurv_type<SType<STypeKind::KIND_VOID> > : std::true_type {};
+  
+  template<>
   struct is_spurv_type<SBool> : std::true_type {};
 
   template<int n, int s>

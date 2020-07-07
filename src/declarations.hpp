@@ -52,6 +52,7 @@ namespace spurv {
     EXPR_SQRT,
     EXPR_POW,
     EXPR_LOOKUP, // Sampling, indexing etc..
+    EXPR_CAST,
     EXPR_EQUAL,
     EXPR_NOTEQUAL,
     EXPR_LESSTHAN,
@@ -65,8 +66,8 @@ namespace spurv {
     BUILTIN_POINT_SIZE,
     BUILTIN_CLIP_DISTANCE,
     BUILTIN_CULL_DISTANCE,
-    BUILTIN_INSTANCE_ID,
-    BUILTIN_VERTEX_ID,
+    BUILTIN_INSTANCE_INDEX,
+    BUILTIN_VERTEX_INDEX,
     BUILTIN_FRAG_COORD
   };
 

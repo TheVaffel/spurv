@@ -288,22 +288,24 @@ namespace spurv {
 	  SUtils::add(bin, 11);
 	  SUtils::add(bin, 4);
 	}
-
-	// Vertex Index
+	
+	// Instance Index
 	if(this->builtin_uint32_0) {
 	  SUtils::add(bin, (4 << 16) | 71);
 	  SUtils::add(bin, this->builtin_uint32_0->pointer_id);
 	  SUtils::add(bin, 11);
-	  SUtils::add(bin, 5);
+	  SUtils::add(bin, 43); // InstanceIndex
 	}
-
-	// Instance Index
+	
+	// Vertex Index
 	if(this->builtin_uint32_1) {
 	  SUtils::add(bin, (4 << 16) | 71);
 	  SUtils::add(bin, this->builtin_uint32_1->pointer_id);
 	  SUtils::add(bin, 11);
-	  SUtils::add(bin, 6);
+	  SUtils::add(bin, 42); // VertexIndex
+	  printf("Defined vertex index!\n");
 	}
+
 
       } else if constexpr(type == SShaderType::SHADER_FRAGMENT) {
 	if(this->builtin_vec4_0) {
@@ -587,7 +589,7 @@ namespace spurv {
   template<SBuiltinVariable ind, typename tt>
     SValue<tt>& SShader<type, InputTypes...>::getBuiltin() {
     if constexpr(type == SShaderType::SHADER_VERTEX) {
-	if constexpr(ind == BUILTIN_INSTANCE_ID) {
+	if constexpr(ind == BUILTIN_INSTANCE_INDEX) {
 	    static_assert(std::is_same<tt, uint32_s>::value, "Vertex shader instance ID must be unsigned 32-bit integer");
 
 	    if(!this->builtin_uint32_0) {
@@ -598,12 +600,14 @@ namespace spurv {
 	    }
 	    return *this->builtin_uint32_0->value_node;
 	    
-	  } else if constexpr(ind == BUILTIN_VERTEX_ID) {
+	  } else if constexpr(ind == BUILTIN_VERTEX_INDEX) {
 	    
 	    static_assert(std::is_same<tt, uint32_s>::value, "Vertex shader vertex ID must be unsigned 32-bit integer");
+	    printf("In builtin vertex index, defining it\n");
 	    if(!this->builtin_uint32_1) {
 	      int pointer_id = SUtils::getNewID();
 	      this->builtin_uint32_1 = SUtils::allocate<BuiltinEntry<uint32_s> >();
+	      printf("Allocated\n");
 	      this->builtin_uint32_1->value_node = SUtils::allocate<SPointerVar<uint32_s, STORAGE_INPUT> >(pointer_id);
 	      this->builtin_uint32_1->pointer_id = pointer_id;
 	    }

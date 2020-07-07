@@ -26,6 +26,7 @@ namespace spurv {
     v2 = &node;
   }
 
+  
   /*
    * Overrides of inherited member functions
    */
@@ -228,13 +229,13 @@ namespace spurv {
 	    SUtils::add(res, this->v1->getID());
 	    SUtils::add(res, this->v2->getID());
 	  } else if (d3.a1 == 1) {
-	    SUtils::add(res, (5 << 16) | 145); // Vector times Matrix
+	    SUtils::add(res, (5 << 16) | 145); // Matrix times vector
 	    SUtils::add(res, tt::getID());
 	    SUtils::add(res, this->getID());
 	    SUtils::add(res, this->v1->getID());
 	    SUtils::add(res, this->v2->getID());
 	  } else if (d2.a1 == 1) {
-	    printf("Vector - matrix multiplication not yet implemented!\n");
+	    printf("[spurv] Error: Vector - matrix multiplication not yet implemented!\n");
 	    exit(-1);
 	  } else {
 	    SUtils::add(res, (5 << 16) | 146);
@@ -270,10 +271,75 @@ namespace spurv {
 	      SUtils::add(res, this->getID());
 	      SUtils::add(res, this->v1->getID());
 	      SUtils::add(res, this->v2->getID());
+	    
 	    }
 	  } else {
 	    printf("Expression lookup operation not yet implemented\n");
 	    exit(-1);
+	  }
+	} else if constexpr(op == EXPR_CAST) {
+	  if(d1.kind == d2.kind &&
+	     d1.a0 == d2.a0 &&
+	     d1.a1 == d2.a1) {
+	    printf("[spurv] Error: Trying to convert a value to the type it already is");
+	    exit(-1);
+	  }
+	  if(d1.kind == STypeKind::KIND_FLOAT) {
+	    if(d2.kind == STypeKind::KIND_FLOAT) {
+	      // OpFConvert
+	      SUtils::add(res, (4 << 16) | 115);
+	      SUtils::add(res, tt::getID());
+	      SUtils::add(res, this->getID());
+	      SUtils::add(res, this->v1->getID());
+	    } else if(d2.kind == STypeKind::KIND_INT) {
+	      // OpConvertSToF / OpConvertUToF
+	      // (Yes, think this is right, although the order is S-U, opposite of convention)
+	      int opcode = d2.a1 == 1 ? 111 : 112;
+	      
+	      SUtils::add(res, (4 << 16) | opcode);
+	      SUtils::add(res, tt::getID());
+	      SUtils::add(res, this->getID());
+	      SUtils::add(res, this->v1->getID());
+	    } else {
+	      printf("[spurv] Error: Trying to convert to float from unsupported value\n");
+	    }
+	  } else if(d1.kind == STypeKind::KIND_INT) {
+	    if(d2.kind == STypeKind::KIND_INT) {
+	      if (d1.a0 != d2.a0 && d1.a1 != d2.a1) {
+		// Both bit width and signedness differs, must do two operations
+		int temp_id = SUtils::getNewID();
+
+		// Not sure what's the best order, I choose to bitcast first
+		
+		// OpBitCast
+		SUtils::add(res, (4 << 16) | 124);
+		SUtils::add(res, tt::getID());
+		SUtils::add(res, temp_id);
+		SUtils::add(res, this->v1->getID());
+
+		// OpSConvert / OpUConvert
+		int opcode = d2.a1 == 1 ? 114 : 113;
+		SUtils::add(res, (4 << 16) | opcode);
+		SUtils::add(res, tt::getID());
+		SUtils::add(res, this->getID());
+		SUtils::add(res, temp_id);
+	      } else if(d1.a0 == d2.a0) {
+		// Width is equal, only do signedness convertion
+		// OpBitCast
+		SUtils::add(res, (4 << 16) | 124);
+		SUtils::add(res, tt::getID());
+		SUtils::add(res, this->getID());
+		SUtils::add(res, this->v1->getID());
+	      } else {
+		// Since we know not everything is equal, width must be different
+		// OpSConvert / OpUConvert
+		int opcode = d2.a1 == 1 ? 114 : 113;
+		SUtils::add(res, (4 << 16) | opcode);
+		SUtils::add(res, tt::getID());
+		SUtils::add(res, this->getID());
+		SUtils::add(res, this->v1->getID());
+	      }
+	    }
 	  }
 	} else {
 	printf("Expression operation not yet implemented\n");
@@ -438,6 +504,19 @@ namespace spurv {
     ex->register_left_node(*this);
     ex->register_right_node(*c);
 
+    return *ex;
+  }
+
+
+  /*
+   * Casting
+   */
+
+  template<typename t1, typename t2>
+  SExpr<t1, EXPR_CAST, t2>& cast(SValue<t2>& val) {
+    SExpr<t1, EXPR_CAST, t2>* ex = SUtils::allocate<SExpr<t1, EXPR_CAST, t2> >();
+    
+    ex->register_left_node(val);
     return *ex;
   }
   
