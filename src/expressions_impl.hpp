@@ -55,6 +55,31 @@ namespace spurv {
     tt::ensure_defined(res, declaration_states);
   }
 
+  /*
+   * Utility functions for the expression define() function
+   */
+  
+  // Returns component type (which is the type itself if scalar)
+  static const DSType& get_comp_type(const DSType& ds) {
+    if(ds.kind == STypeKind::KIND_MAT || ds.kind == STypeKind::KIND_ARR) {
+      return *ds.inner_types;
+    }
+
+    return ds;
+  }
+
+  static int num_components(const DSType& ds) {
+    if(ds.kind == STypeKind::KIND_MAT) {
+      return ds.a0 * ds.a1;
+    } else if(ds.kind == STypeKind::KIND_BOOL ||
+	      ds.kind == STypeKind::KIND_FLOAT ||
+	      ds.kind == STypeKind::KIND_INT) {
+      return 1;
+    } else {
+      printf("[spurv] num_components cannot be called for this kind\n");
+      exit(-1);
+    }
+  }
 
   /*
    * Output the expression to the binary
@@ -74,7 +99,9 @@ namespace spurv {
     tt::getDSType(&d1);
     tt2::getDSType(&d2);
     tt3::getDSType(&d3);
-    
+
+    const DSType& d1_comp = get_comp_type(d1);
+    const DSType& d2_comp = get_comp_type(d2);
     
     int opcode = 0;
     if(d1.kind == STypeKind::KIND_BOOL) {
@@ -145,7 +172,7 @@ namespace spurv {
       SUtils::add(res, this->v2->getID());
       
     } else if(d1 == d2 && d2 == d3) {
-      if (d1.kind == STypeKind::KIND_INT) {
+      if (d1_comp.kind == STypeKind::KIND_INT) {
 	if constexpr(op == EXPR_ADDITION) {
 	    opcode = 128;
 	  } else if constexpr(op == EXPR_SUBTRACTION) {
@@ -153,12 +180,16 @@ namespace spurv {
 	  } else if constexpr(op == EXPR_MULTIPLICATION) {
 	    opcode = 132;
 	  } else if constexpr(op == EXPR_DIVISION) {
-	    opcode = (d1.a1 == 0 ? 134 : 135);
+	    opcode = (d1.a1 == 0 ? 134 : 135); // OpUDiv / OpSDiv
+	  } else if constexpr(op == EXPR_REM) {
+	    opcode = (d1.a1 == 0 ? 137 : 138); // OpUMod (!) / OpSRem
+	  } else if constexpr(op == EXPR_MOD) {
+	    opcode = (d1.a1 == 0 ? 137 : 139); // OpUMod / OpSMod
 	  } else {
 	  printf("Tried to output expression with integer type and operation = %d\n", (int)op);
 	  exit(-1);
 	}
-      } else if (d1.kind == STypeKind::KIND_FLOAT) {
+      } else if (d1_comp.kind == STypeKind::KIND_FLOAT) {
 	if constexpr(op == EXPR_ADDITION) {
 	    opcode = 129;
 	  } else if constexpr(op == EXPR_SUBTRACTION) {
@@ -167,15 +198,13 @@ namespace spurv {
 	    opcode = 133;
 	  } else if constexpr(op == EXPR_DIVISION) {
 	    opcode = 136;
+	  } else if constexpr(op == EXPR_REM) {
+	    opcode = 140; // OpFRem
+	  } else if constexpr(op == EXPR_MOD) {
+	    opcode = 141; // OpFMod
 	  } else {
 	  printf("Tried to output expression with float type and operation = %d\n", (int)op);
 	  exit(-1);
-	}
-      } else if(d1.kind == STypeKind::KIND_MAT) {
-	if constexpr(op == EXPR_ADDITION) {
-	    opcode = 129;
-	  } else if(op == EXPR_SUBTRACTION) {
-	  opcode = 131;
 	}
       } else {
 	printf("Tried to output expression where types were equal, but not int or float (feature yet to be implemented, probably)\n");
@@ -267,7 +296,7 @@ namespace spurv {
 	    } else {
 	      // OpCompositeExtract <result_type> <result_id> <matrix> <index>
 	      SUtils::add(res, (5 << 16) | 81);
-	      SUtils::add(res, SMat<tt2::getArg0(), 1>::getID());
+	      SUtils::add(res, SMat<tt2::getArg0(), 1, typename tt2::firstInnerType>::getID());
 	      SUtils::add(res, this->getID());
 	      SUtils::add(res, this->v1->getID());
 	      SUtils::add(res, this->v2->getID());
@@ -278,20 +307,21 @@ namespace spurv {
 	    exit(-1);
 	  }
 	} else if constexpr(op == EXPR_CAST) {
-	  if(d1.kind == d2.kind &&
-	     d1.a0 == d2.a0 &&
-	     d1.a1 == d2.a1) {
+	  if(d1 == d2) {
 	    printf("[spurv] Error: Trying to convert a value to the type it already is");
 	    exit(-1);
 	  }
-	  if(d1.kind == STypeKind::KIND_FLOAT) {
-	    if(d2.kind == STypeKind::KIND_FLOAT) {
+
+	  assert(num_components(d1) == num_components(d2));
+	  
+	  if(d1_comp.kind == STypeKind::KIND_FLOAT) {
+	    if(d2_comp.kind == STypeKind::KIND_FLOAT) {
 	      // OpFConvert
 	      SUtils::add(res, (4 << 16) | 115);
 	      SUtils::add(res, tt::getID());
 	      SUtils::add(res, this->getID());
 	      SUtils::add(res, this->v1->getID());
-	    } else if(d2.kind == STypeKind::KIND_INT) {
+	    } else if(d2_comp.kind == STypeKind::KIND_INT) {
 	      // OpConvertSToF / OpConvertUToF
 	      // (Yes, think this is right, although the order is S-U, opposite of convention)
 	      int opcode = d2.a1 == 1 ? 111 : 112;
@@ -303,9 +333,9 @@ namespace spurv {
 	    } else {
 	      printf("[spurv] Error: Trying to convert to float from unsupported value\n");
 	    }
-	  } else if(d1.kind == STypeKind::KIND_INT) {
-	    if(d2.kind == STypeKind::KIND_INT) {
-	      if (d1.a0 != d2.a0 && d1.a1 != d2.a1) {
+	  } else if(d1_comp.kind == STypeKind::KIND_INT) {
+	    if(d2_comp.kind == STypeKind::KIND_INT) {
+	      if (d1_comp.a0 != d2_comp.a0 && d1_comp.a1 != d2_comp.a1) {
 		// Both bit width and signedness differs, must do two operations
 		int temp_id = SUtils::getNewID();
 
@@ -318,12 +348,12 @@ namespace spurv {
 		SUtils::add(res, this->v1->getID());
 
 		// OpSConvert / OpUConvert
-		int opcode = d2.a1 == 1 ? 114 : 113;
+		int opcode = d2_comp.a1 == 1 ? 114 : 113;
 		SUtils::add(res, (4 << 16) | opcode);
 		SUtils::add(res, tt::getID());
 		SUtils::add(res, this->getID());
 		SUtils::add(res, temp_id);
-	      } else if(d1.a0 == d2.a0) {
+	      } else if(d1_comp.a0 == d2_comp.a0) {
 		// Width is equal, only do signedness convertion
 		// OpBitCast
 		SUtils::add(res, (4 << 16) | 124);
@@ -333,7 +363,7 @@ namespace spurv {
 	      } else {
 		// Since we know not everything is equal, width must be different
 		// OpSConvert / OpUConvert
-		int opcode = d2.a1 == 1 ? 114 : 113;
+		int opcode = d2_comp.a1 == 1 ? 114 : 113;
 		SUtils::add(res, (4 << 16) | opcode);
 		SUtils::add(res, tt::getID());
 		SUtils::add(res, this->getID());
@@ -448,11 +478,11 @@ namespace spurv {
     return *ex;
   }
 
-  template<int n, int m, int a, int b>
-  SExpr<SMat<n, b>, EXPR_DOT, SMat<n, m>, SMat<a, b> >&
-  operator*(SValue<SMat<n, m> >& v1, SValue<SMat<a, b> >& v2) {
+  template<int n, int m, int a, int b, typename inner>
+  SExpr<SMat<n, b, inner>, EXPR_DOT, SMat<n, m, inner>, SMat<a, b, inner> >&
+  operator*(SValue<SMat<n, m, inner> >& v1, SValue<SMat<a, b, inner> >& v2) {
     static_assert(m == a || (m == 1 && b == 1));
-    SExpr<SMat<n, b>, EXPR_DOT, SMat<n, m>, SMat<a, b> >* ex = SUtils::allocate<SExpr<SMat<n, b>, EXPR_DOT, SMat<n, m>, SMat<a, b> > >();
+    SExpr<SMat<n, b, inner>, EXPR_DOT, SMat<n, m, inner>, SMat<a, b, inner> >* ex = SUtils::allocate<SExpr<SMat<n, b, inner>, EXPR_DOT, SMat<n, m, inner>, SMat<a, b, inner> > >();
     ex->register_left_node(v1);
     ex->register_right_node(v2);
     return *ex;
@@ -475,6 +505,42 @@ namespace spurv {
     return v1 * f;
   }
 
+  // Mod and Rem
+  template<typename in1_t, typename in2_t>
+  SExpr<typename uwr<in1_t, in2_t>::type,
+	EXPR_MOD,
+	typename uwr<in1_t, in2_t>::type,
+	typename uwr<in1_t, in2_t>::type>& mod(in1_t&& in1, in2_t&& in2) {
+    using tt = typename uwr<in1_t, in2_t>::type;
+
+    SExpr<tt, EXPR_MOD, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_MOD, tt, tt> >();
+    ex->register_left_node(SValueWrapper::unwrap_to<in1_t, tt>(in1));
+    ex->register_right_node(SValueWrapper::unwrap_to<in2_t, tt>(in2));
+    return *ex;
+  }
+
+  template<typename in1_t, typename in2_t>
+  SExpr<typename uwr<in1_t, in2_t>::type,
+	EXPR_REM,
+	typename uwr<in1_t, in2_t>::type,
+	typename uwr<in1_t, in2_t>::type>& rem(in1_t&& in1, in2_t&& in2) {
+
+    using tt = typename uwr<in1_t, in2_t>::type;
+
+    SExpr<tt, EXPR_REM, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_REM, tt, tt> >();
+    ex->register_left_node(SValueWrapper::unwrap_to<in1_t, tt>(in1));
+    ex->register_right_node(SValueWrapper::unwrap_to<in2_t, tt>(in2));
+    return *ex;
+  }
+
+  template<typename in1_t, typename in2_t>
+  SExpr<typename uwr<in1_t, in2_t>::type,
+	EXPR_MOD,
+	typename uwr<in1_t, in2_t>::type,
+	typename uwr<in1_t, in2_t>::type>& operator%(in1_t&& in1, in2_t&& in2) {
+    return mod(in1, in2);
+  }
+  
   
   /*
    * Lookup functions

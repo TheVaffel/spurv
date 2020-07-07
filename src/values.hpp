@@ -24,9 +24,9 @@ namespace spurv {
     using type = vec4_s;
   };
 
-  template<int n>
-  struct lookup_result<SMat<n, 1> > {
-    using type = float_s;
+  template<int n, typename inner>
+  struct lookup_result<SMat<n, 1, inner> > {
+    using type = inner;
   };
 
   
@@ -41,11 +41,11 @@ namespace spurv {
 
   template<int n>
   struct lookup_index<STexture<n> > {
-    using type = SMat<n, 1>;
+    using type = SMat<n, 1, float_s>;
   };
 
-  template<int n>
-  struct lookup_index<SMat<n, 1> > {
+  template<int n, typename inner>
+  struct lookup_index<SMat<n, 1, inner> > {
     using type = int_s;
   };
 
@@ -204,8 +204,8 @@ namespace spurv {
    * ConstructMatrix - Represents a matrix/vector that is constructed from several other members in shader
    */
   
-  template<int n, int m>
-  class ConstructMatrix : public SValue<SMat<n, m> > {
+  template<int n, int m, typename inner>
+  class ConstructMatrix : public SValue<SMat<n, m, inner> > {
   protected:
     template<typename... Types>
     ConstructMatrix(Types&&... args);
@@ -218,7 +218,7 @@ namespace spurv {
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
 
-    SValue<float_s>* components[n * m]; // Values in row-major order
+    SValue<inner>* components[n * m]; // Values in row-major order
     
     friend class SUtils;
   };
@@ -270,8 +270,8 @@ namespace spurv {
   template<typename t1, SExprOp op, typename t2, typename t3>
   struct is_spurv_value<SExpr<t1, op, t2, t3> > : std::true_type {};
 
-  template<int n, int m>
-  struct is_spurv_value<ConstructMatrix<n, m> > : std::true_type {};
+  template<int n, int m, typename inner>
+  struct is_spurv_value<ConstructMatrix<n, m, inner> > : std::true_type {};
   
   /*
    * SValue node types defined by default

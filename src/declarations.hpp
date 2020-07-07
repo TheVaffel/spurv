@@ -51,6 +51,8 @@ namespace spurv {
     EXPR_EXP,
     EXPR_SQRT,
     EXPR_POW,
+    EXPR_MOD,
+    EXPR_REM,
     EXPR_LOOKUP, // Sampling, indexing etc..
     EXPR_CAST,
     EXPR_EQUAL,
@@ -92,7 +94,7 @@ namespace spurv {
   template<int n, int s>
   class SInt;
 
-  template<int n, int m>
+  template<int n, int m, typename inner>
   class SMat;
 
   template<int n, typename inner>
@@ -124,7 +126,7 @@ namespace spurv {
   template<typename tt>
   class Constant;
   
-  template<int n, int m>
+  template<int n, int m, typename inner>
   class ConstructMatrix;
 
   template<typename tt>

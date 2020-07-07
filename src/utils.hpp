@@ -73,7 +73,7 @@ namespace spurv {
     template<int n, int s>
     friend class SInt;
 
-    template<int n, int m>
+    template<int n, int m, typename inner>
     friend class SMat;
 
     template<int n, typename inner>
@@ -116,7 +116,7 @@ namespace spurv {
     template<int d>
     friend class STexture;
 
-    template<int n, int m>
+    template<int n, int m, typename inner>
     friend class ConstructMatrix;
 
     template<typename tt>

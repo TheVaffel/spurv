@@ -92,8 +92,8 @@ namespace spurv {
     template<typename tt>
     struct unwrapped_type<SValue<tt> > { using type = tt; };
 
-    template<int n, int m>
-    struct unwrapped_type<ConstructMatrix<n, m> > { using type = SMat<n, m>; };
+    template<int n, int m, typename inner>
+    struct unwrapped_type<ConstructMatrix<n, m, inner> > { using type = SMat<n, m, inner>; };
 
     template<typename T1, typename T2, typename T3, SExprOp s>
     struct unwrapped_type<SExpr<T1, s, T2, T3> > {

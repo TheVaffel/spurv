@@ -56,7 +56,7 @@ namespace spurv {
     bool operator==(const DSType& ds) const;
   };
   
-
+  
   /*
    * SType - The mother of them all
    */
@@ -86,7 +86,12 @@ namespace spurv {
     static constexpr int getArg1();
 
     static constexpr int getSize();
+
+    
+    using firstInnerType = std::tuple_element_t<0, std::tuple<InnerTypes..., void> >;
+      
   };
+
 
 
   /*
@@ -112,7 +117,8 @@ namespace spurv {
     static void define(std::vector<uint32_t>& bin);
     static constexpr int getSize();
 
-    static SValue<SInt<n, signedness> >& cons(int64_t arg);
+    template<typename tt>
+    static SValue<SInt<n, signedness> >& cons(tt&& arg);
   };
   
 
@@ -128,7 +134,7 @@ namespace spurv {
     static constexpr int getSize();
 
     template<typename tt>
-    static SValue<SFloat<n> >& cons(tt arg);
+    static SValue<SFloat<n> >& cons(tt&& arg);
   };
   
 
@@ -136,8 +142,8 @@ namespace spurv {
    * SMat - Representation of vectors and matrices
    */
   
-  template<int n, int m>
-  class SMat : public SType<STypeKind::KIND_MAT, n, m> {
+  template<int n, int m, typename inner>
+  class SMat : public SType<STypeKind::KIND_MAT, n, m, 0, 0, 0, inner> {
   public:
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
 					    std::vector<SDeclarationState*>& declaration_states);
@@ -146,7 +152,7 @@ namespace spurv {
     static constexpr int getSize();
 
     template<typename... Types>
-    static ConstructMatrix<n, m>& cons(Types&&... args);
+    static ConstructMatrix<n, m, inner>& cons(Types&&... args);
   };
 
   
@@ -169,8 +175,8 @@ namespace spurv {
   template<int n>
   struct is_spurv_type<SFloat<n> > : std::true_type {};
 
-  template<int n, int m>
-  struct is_spurv_type<SMat<n, m> > : std::true_type {};
+  template<int n, int m, typename inner>
+  struct is_spurv_type<SMat<n, m, inner> > : std::true_type {};
 
   template<>
   struct is_spurv_type<NullType> : std::true_type {};
@@ -282,8 +288,8 @@ namespace spurv {
   template<int d>
   struct is_spurv_type<STexture<d> > : std::true_type {} ;
 
-  template<int n, int m>
-  struct is_spurv_mat_type<SMat<n, m> > : std::true_type {};
+  template<int n, int m, typename inner>
+  struct is_spurv_mat_type<SMat<n, m, inner> > : std::true_type {};
 
   
   template<typename>
@@ -325,12 +331,12 @@ namespace spurv {
   typedef SInt<32, 0> uint32_s;
   typedef SInt<32, 0> uint_s;
   typedef SFloat<32> float_s;
-  typedef SMat<2, 2> mat2_s;
-  typedef SMat<3, 3> mat3_s;
-  typedef SMat<4, 4> mat4_s;
-  typedef SMat<2, 1> vec2_s;
-  typedef SMat<3, 1> vec3_s;
-  typedef SMat<4, 1> vec4_s;
+  typedef SMat<2, 2, float_s> mat2_s;
+  typedef SMat<3, 3, float_s> mat3_s;
+  typedef SMat<4, 4, float_s> mat4_s;
+  typedef SMat<2, 1, float_s> vec2_s;
+  typedef SMat<3, 1, float_s> vec3_s;
+  typedef SMat<4, 1, float_s> vec4_s;
   typedef SArr<1, float_s> arr_1_float_s;
   typedef STexture<2> texture2D_s;
 
@@ -388,12 +394,17 @@ namespace spurv {
   };
 
   template<>
+  struct InvMapSType<int_s> {
+    typedef int32_t type;
+  };
+
+  template<>
   struct InvMapSType<float_s> {
     typedef float type;
   };
 
   template<int n, int m>
-  struct InvMapSType<SMat<n, m> > {
+  struct InvMapSType<SMat<n, m, float_s> > {
     typedef falg::Matrix<n, m> type;
   };
 };

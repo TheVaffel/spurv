@@ -171,17 +171,17 @@ namespace spurv {
    * ConstructMatrix member functions
    */
 
-  template<int n, int m>
+  template<int n, int m, typename inner>
   template<typename... Types>
-  ConstructMatrix<n, m>::ConstructMatrix(Types&&... args) {
+  ConstructMatrix<n, m, inner>::ConstructMatrix(Types&&... args) {
     static_assert(sizeof...(args) == n * m,
 		  "Number of arguments to matrix construction does not match number of components in matrix");
     insertComponents(0, args...);
   }
 
-  template<int n, int m>
+  template<int n, int m, typename inner>
   template<typename t1, typename... trest>
-  void ConstructMatrix<n, m>::insertComponents(int u, t1&& first, trest&&... rest) {
+  void ConstructMatrix<n, m, inner>::insertComponents(int u, t1&& first, trest&&... rest) {
 
     this->components[u] = &SValueWrapper::unwrap_to<t1, SFloat<32> >(first);
     if constexpr(sizeof...(rest) > 0) {
@@ -189,15 +189,15 @@ namespace spurv {
       }
   }
 
-  template<int n, int m>
-  void ConstructMatrix<n, m>::define(std::vector<uint32_t>& res) {
+  template<int n, int m, typename inner>
+  void ConstructMatrix<n, m, inner>::define(std::vector<uint32_t>& res) {
     for(int i = 0; i < n * m; i++) {
       this->components[i]->ensure_defined(res);
     }
 
     // OpCompositeConstruct <result type> <resul id> <components...>
     SUtils::add(res, ((3 + n * m) << 16) | 80);
-    SUtils::add(res, SMat<n, m>::getID());
+    SUtils::add(res, SMat<n, m, inner>::getID());
     SUtils::add(res, this->id);
 
     for(int i = 0; i < m; i++) { // Output in col-major order
@@ -207,11 +207,11 @@ namespace spurv {
     }
   }
 
-  template<int n, int m>
-  void ConstructMatrix<n, m>::ensure_type_defined(std::vector<uint32_t>& res,
+  template<int n, int m, typename inner>
+  void ConstructMatrix<n, m, inner>::ensure_type_defined(std::vector<uint32_t>& res,
 						  std::vector<SDeclarationState*>& declaration_states) {
     // A bit hacky but oh well
-    SMat<n, m>::ensure_defined(res, declaration_states);
+    SMat<n, m, inner>::ensure_defined(res, declaration_states);
     for(int i = 0; i < n * m; i++) {
       this->components[i]->ensure_type_defined(res,
 					       declaration_states);

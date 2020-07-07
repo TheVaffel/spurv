@@ -115,10 +115,12 @@ namespace spurv {
   constexpr int SInt<n, signedness>::getSize() {
     return (n + 7) / 8; // Round up number of bytes
   }
-
+  
   template<int n, int signedness>
-  SValue<SInt<n, signedness> >& SInt<n, signedness>::cons(int64_t arg) {
-    SValue<SInt<n, signedness> >* value = SUtils::allocate<Constant<int64_t> >(arg);
+  template<typename tt>
+  SValue<SInt<n, signedness> >& SInt<n, signedness>::cons(tt&& arg) {
+    static_assert(std::is_convertible<tt, int32_t>::value, "Integer construction value must be convertible to integer");
+    SValue<SInt<n, signedness> >* value = SUtils::allocate<Constant< typename InvMapSType<SInt<n, signedness> >::type> >(arg);
     return *value;
   }
 
@@ -155,7 +157,7 @@ namespace spurv {
 
   template<int n>
   template<typename tt>
-  SValue<SFloat<n> >& SFloat<n>::cons(tt arg) {
+  SValue<SFloat<n> >& SFloat<n>::cons(tt&& arg) {
       static_assert(std::is_convertible<tt, float>::value, "Value must be convertible to float");
       float f = static_cast<float>(arg);
     SValue<SFloat<n> >* value = SUtils::allocate<Constant<float> >(f);
@@ -167,56 +169,56 @@ namespace spurv {
    * Mat member functions
    */
   
-  template<int n, int m>
-  void SMat<n, m>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
-					       std::vector<SDeclarationState*>& declaration_states) {
+  template<int n, int m, typename inner>
+  void SMat<n, m, inner>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
+							       std::vector<SDeclarationState*>& declaration_states) {
     if constexpr(m == 1) {
-	SFloat<32>::ensure_defined(bin, declaration_states);
+	inner::ensure_defined(bin, declaration_states);
       } else {
-      SMat<n, 1>::ensure_defined(bin, declaration_states);
+      SMat<n, 1, inner>::ensure_defined(bin, declaration_states);
     }
   }
 
-  template<int n, int m>
-  void SMat<n, m>::ensure_defined(std::vector<uint32_t>& bin,
-				  std::vector<SDeclarationState*>& declaration_states) {
-    if( !SMat<n, m>::isDefined()) {
+  template<int n, int m, typename inner>
+  void SMat<n, m, inner>::ensure_defined(std::vector<uint32_t>& bin,
+					 std::vector<SDeclarationState*>& declaration_states) {
+    if( !SMat<n, m, inner>::isDefined()) {
       ensure_defined_dependencies(bin, declaration_states);
       define(bin);
-      declaration_states.push_back(&(SMat<n, m>::declarationState));
+      declaration_states.push_back(&(SMat<n, m, inner>::declarationState));
     }
   }
   
-  template<int n, int m>
-  void SMat<n, m>::define(std::vector<uint32_t>& bin) {
+  template<int n, int m, typename inner>
+  void SMat<n, m, inner>::define(std::vector<uint32_t>& bin) {
 
-    SMat<n, m>::ensureInitID();
-    SMat<n, m>::declareDefined();
+    SMat<n, m, inner>::ensureInitID();
+    SMat<n, m, inner>::declareDefined();
     
     if constexpr(m == 1) {
 	SUtils::add(bin, (4 << 16) | 23);
-	SUtils::add(bin, SMat<n, 1>::getID());
+	SUtils::add(bin, SMat<n, 1, inner>::getID());
 	SUtils::add(bin, SFloat<32>::getID());
 	SUtils::add(bin, n);
       } else {
       SUtils::add(bin, (4 << 16) | 24);
-      SUtils::add(bin, SMat<n, m>::getID());
-      SUtils::add(bin, SMat<n, 1>::getID());
+      SUtils::add(bin, SMat<n, m, inner>::getID());
+      SUtils::add(bin, SMat<n, 1, inner>::getID());
       SUtils::add(bin, m);
     }
   }
 
-  template<int n, int m>
-  constexpr int SMat<n, m>::getSize() {
+  template<int n, int m, typename inner>
+  constexpr int SMat<n, m, inner>::getSize() {
     // Assume perfectly aligned and with 32-bit components
     return n * m * 4; 
   }
 
   
-  template<int n, int m>
+  template<int n, int m, typename inner>
   template<typename... Types>
-  ConstructMatrix<n, m>& SMat<n, m>::cons(Types&&... args) {
-    return *(SUtils::allocate<ConstructMatrix<n, m> >(args...));
+  ConstructMatrix<n, m, inner>& SMat<n, m, inner>::cons(Types&&... args) {
+    return *(SUtils::allocate<ConstructMatrix<n, m, inner> >(args...));
   }
   
 
