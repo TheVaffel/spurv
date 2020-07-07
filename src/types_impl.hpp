@@ -157,7 +157,8 @@ namespace spurv {
   template<typename tt>
   SValue<SFloat<n> >& SFloat<n>::cons(tt arg) {
       static_assert(std::is_convertible<tt, float>::value, "Value must be convertible to float");
-    SValue<SFloat<n> >* value = SUtils::allocate<Constant<float> >(static_cast<float>(arg));
+      float f = static_cast<float>(arg);
+    SValue<SFloat<n> >* value = SUtils::allocate<Constant<float> >(f);
     return *value;
   }
 
