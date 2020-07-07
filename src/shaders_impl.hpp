@@ -303,7 +303,6 @@ namespace spurv {
 	  SUtils::add(bin, this->builtin_uint32_1->pointer_id);
 	  SUtils::add(bin, 11);
 	  SUtils::add(bin, 42); // VertexIndex
-	  printf("Defined vertex index!\n");
 	}
 
 
@@ -586,8 +585,10 @@ namespace spurv {
    */
 
   template<SShaderType type, typename... InputTypes>
-  template<SBuiltinVariable ind, typename tt>
-    SValue<tt>& SShader<type, InputTypes...>::getBuiltin() {
+  template<SBuiltinVariable ind>
+  SValue< typename BuiltinToType<ind>::type >& SShader<type, InputTypes...>::getBuiltin() {
+    using tt = typename BuiltinToType<ind>::type;
+    
     if constexpr(type == SShaderType::SHADER_VERTEX) {
 	if constexpr(ind == BUILTIN_INSTANCE_INDEX) {
 	    static_assert(std::is_same<tt, uint32_s>::value, "Vertex shader instance ID must be unsigned 32-bit integer");
@@ -603,11 +604,9 @@ namespace spurv {
 	  } else if constexpr(ind == BUILTIN_VERTEX_INDEX) {
 	    
 	    static_assert(std::is_same<tt, uint32_s>::value, "Vertex shader vertex ID must be unsigned 32-bit integer");
-	    printf("In builtin vertex index, defining it\n");
 	    if(!this->builtin_uint32_1) {
 	      int pointer_id = SUtils::getNewID();
 	      this->builtin_uint32_1 = SUtils::allocate<BuiltinEntry<uint32_s> >();
-	      printf("Allocated\n");
 	      this->builtin_uint32_1->value_node = SUtils::allocate<SPointerVar<uint32_s, STORAGE_INPUT> >(pointer_id);
 	      this->builtin_uint32_1->pointer_id = pointer_id;
 	    }
@@ -637,10 +636,12 @@ namespace spurv {
   template<SShaderType type, typename... InputTypes>
   template<SBuiltinVariable ind, typename tt>
   void SShader<type, InputTypes...>::setBuiltin(SValue<tt>& val) {
+    static_assert(std::is_same<tt, typename BuiltinToType<ind>::type>::value,
+		  "[spurv] Compilation error: Mismatch type in builtin set");
+    
     if constexpr(type == SShaderType::SHADER_VERTEX) {
 	if constexpr(ind == BUILTIN_POSITION) {
         
-	    static_assert(std::is_same<tt, vec4_s>::value, "Position must be vec4_s");
 	    if(this->builtin_vec4_0) {
 	      printf("Cannot set builtin multiple times");
 	      exit(-1);
@@ -648,8 +649,8 @@ namespace spurv {
 	    this->builtin_vec4_0 = SUtils::allocate<BuiltinEntry<vec4_s> >();
 	    this->builtin_vec4_0->value_node = &val;
 	    this->builtin_vec4_0->pointer_id = SUtils::getNewID();
+	    
 	  } else if constexpr(ind == BUILTIN_POINT_SIZE) {
-	    static_assert(std::is_same<tt, float_s>::value, "PointSize must be float_s");
 	    
 	    if(this->builtin_float_0) {
 	      printf("Cannot set builtin multiple times");
@@ -658,8 +659,8 @@ namespace spurv {
 	    this->builtin_float_0 = SUtils::allocate< BuiltinEntry<float_s> >();
 	    this->builtin_float_0->value_node = &val;
 	    this->builtin_float_0->pointer_id = SUtils::getNewID();
+	    
 	  } else if constexpr(ind == BUILTIN_CLIP_DISTANCE) {
-	    static_assert(std::is_same<tt, arr_1_float_s>::value, "Clip Distance must be arr_1_float_s");
 	    
 	    if(this->builtin_arr_1_float_0) {
 	      printf("Cannot set builtin multiple times");
@@ -668,8 +669,8 @@ namespace spurv {
 	    this->builtin_arr_1_float_0 = SUtils::allocate<BuiltinEntry<arr_1_float_s> >();
 	    this->builtin_arr_1_float_0->value_node = &val;
 	    this->builtin_arr_1_float_0->pointer_id = SUtils::getNewID();
+	    
 	  } else if constexpr(ind == BUILTIN_CULL_DISTANCE) {
-	    static_assert(std::is_same<tt, arr_1_float_s>::value, "Cull Distance must be arr_1_float_s");
 	    
 	    if(this->builtin_arr_1_float_1) {
 	      printf("Cannot set builtin multiple times");

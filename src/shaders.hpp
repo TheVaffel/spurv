@@ -4,6 +4,35 @@
 namespace spurv {
 
   /*
+   * BuiltinToType: Convert a builtin index to its type
+   */
+  
+  template<SBuiltinVariable>
+  struct BuiltinToType {};
+
+  template<>
+  struct BuiltinToType<BUILTIN_POSITION> { using type = vec4_s; };
+
+  template<>
+  struct BuiltinToType<BUILTIN_POINT_SIZE> { using type = float_s; };
+
+  template<>
+  struct BuiltinToType<BUILTIN_CLIP_DISTANCE> { using type = arr_1_float_s; };
+
+  template<>
+  struct BuiltinToType<BUILTIN_CULL_DISTANCE> { using type = arr_1_float_s; };
+
+  template<>
+  struct BuiltinToType<BUILTIN_INSTANCE_INDEX> { using type = uint32_s; };
+
+  template<>
+  struct BuiltinToType<BUILTIN_VERTEX_INDEX> { using type = uint32_s; };
+
+  template<>
+  struct BuiltinToType<BUILTIN_FRAG_COORD> { using type = vec4_s; };
+  
+  
+  /*
    * SShader - The object responsible for IO and compilation of the shader
    */
   
@@ -48,7 +77,7 @@ namespace spurv {
     void output_shader_header_decorate_begin(std::vector<uint32_t>& bin);
 
     void output_shader_header_output_variables(std::vector<uint32_t>& binary,
-       int n); 
+					       int n); 
     template<typename in1, typename... NodeTypes>
     void output_shader_header_output_variables(std::vector<uint32_t>& binary, int n,
 					       in1&& val, NodeTypes&&... args);
@@ -111,8 +140,8 @@ namespace spurv {
   public:
     SShader();
     
-    template<SBuiltinVariable ind, typename tt>
-    SValue<tt>& getBuiltin();
+    template<SBuiltinVariable ind>
+    SValue<typename BuiltinToType<ind>::type >& getBuiltin();
     
     template<SBuiltinVariable ind, typename tt>
     void setBuiltin(SValue<tt>& val);
@@ -135,6 +164,7 @@ namespace spurv {
     template<typename... NodeTypes>
     void compile(std::vector<uint32_t>& res, NodeTypes&&... args);
   };
+  
   
 };
 
