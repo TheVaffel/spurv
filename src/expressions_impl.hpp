@@ -351,12 +351,17 @@ namespace spurv {
   
   
   // Division
+  template<typename in1_t, typename in2_t>
+  SExpr<typename uwr<in1_t, in2_t>::type,
+	EXPR_DIVISION,
+	typename uwr<in1_t, in2_t>::type,
+	typename uwr<in1_t, in2_t>::type>&
+  operator/(in1_t&& in1, in2_t&& in2) {
+    using tt = typename uwr<in1_t, in2_t>::type;
 
-  template<typename tt>
-  SExpr<tt, EXPR_DIVISION, tt, tt>& operator/(SValue<tt>& v1, SValue<tt>& v2) {
     SExpr<tt, EXPR_DIVISION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_DIVISION, tt, tt> >();
-    ex->register_left_node(v1);
-    ex->register_right_node(v2);
+    ex->register_left_node(SValueWrapper::unwrap_to<in1_t, tt>(in1));
+    ex->register_right_node(SValueWrapper::unwrap_to<in2_t, tt>(in2));
     return *ex;
   }
   
