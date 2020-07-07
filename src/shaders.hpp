@@ -102,13 +102,18 @@ namespace spurv {
     BuiltinEntry<float_s>* builtin_float_0; // Vertex: PointSize
     BuiltinEntry<arr_1_float_s>* builtin_arr_1_float_0; // Vertex: Clip Distance
     BuiltinEntry<arr_1_float_s>* builtin_arr_1_float_1; // Vertex: Cull Distance
+    BuiltinEntry<uint32_s>* builtin_uint32_0; // Vertex: VertexId
+    BuiltinEntry<uint32_s>* builtin_uint32_1; // Vertex: InstanceId
 
     void cleanup_declaration_states();
     void cleanup_decoration_states();
     
   public:
     SShader();
-
+    
+    template<SBuiltinVariable ind, typename tt>
+    SValue<tt>& getBuiltin();
+    
     template<SBuiltinVariable ind, typename tt>
     void setBuiltin(SValue<tt>& val);
     

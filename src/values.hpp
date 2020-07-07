@@ -104,17 +104,23 @@ namespace spurv {
     friend class SUtils;
   };
 
-
   /*
-   * SIOVar - Base class for input attributes and uniforms
+   * SPointerVar - Base class for pointer-based values (input attributes, uniforms, builtins etc.)
+   * NB: Currently, since it only contains one ID from SValue, it only supports loading once. 
+   * Yeah... It is a bit of a mess
    */
 
-  template<typename tt>
-  struct SIOVar : public SValue<tt> {
-    std::string name;
-    SIOVar();
-    SIOVar(std::string _name);
+  template<typename tt, SStorageClass storage>
+  class SPointerVar : public SValue<tt> {
+  protected:
+    int pointer_id;
+    SPointerVar(int pointer_id);
+  public:
+    virtual void define(std::vector<uint32_t>& res);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res,
+				     std::vector<SDeclarationState*>& declaration_states);
 
+    friend class SUtils;
   };
 
 
@@ -123,7 +129,7 @@ namespace spurv {
    */
   
   template<typename tt> // n is element number within binding
-  class SUniformVar : public SIOVar<tt> {
+  class SUniformVar : public SPointerVar<tt, STORAGE_UNIFORM> {
     int set_no, bind_no, member_no;
     int pointer_id, parent_struct_id;
 
@@ -144,14 +150,13 @@ namespace spurv {
    */
   
   template<typename tt>
-  class InputVar : public SIOVar<tt> {
+  class InputVar : public SPointerVar<tt, STORAGE_INPUT> {
     int input_no;
-    int pointer_id;
     
     InputVar(int n, int pointer_id);
 
   public:
-    virtual void define(std::vector<uint32_t>& res);
+    // virtual void define(std::vector<uint32_t>& res);
 
     friend class SUtils;
   };

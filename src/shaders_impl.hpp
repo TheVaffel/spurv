@@ -17,6 +17,8 @@ namespace spurv {
     builtin_float_0 = nullptr;
     builtin_arr_1_float_0 = nullptr;
     builtin_arr_1_float_1 = nullptr;
+    builtin_uint32_0 = nullptr;
+    builtin_uint32_1 = nullptr;
 
     input_entries = std::vector<InputVariableEntry>(sizeof...(InputTypes)); 
   }
@@ -49,6 +51,12 @@ namespace spurv {
       num++;
     }
     if(this->builtin_arr_1_float_1) {
+      num++;
+    }
+    if(this->builtin_uint32_0) {
+      num++;
+    }
+    if(this->builtin_uint32_1) {
       num++;
     }
 
@@ -129,9 +137,13 @@ namespace spurv {
     if(this->builtin_arr_1_float_1) {
       bin.push_back(this->builtin_arr_1_float_1->pointer_id);
     }
+    if(this->builtin_uint32_0) {
+      bin.push_back(this->builtin_uint32_0->pointer_id);
+    }
+    if(this->builtin_uint32_1) {
+      bin.push_back(this->builtin_uint32_1->pointer_id);
+    }
   }
-
-  
 
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_builtin_tree_type_definitions(std::vector<uint32_t>& bin) {
@@ -146,6 +158,12 @@ namespace spurv {
     }
     if(this->builtin_arr_1_float_1) {
       this->builtin_arr_1_float_1->value_node->ensure_type_defined(bin, this->defined_type_declaration_states);
+    }
+    if(this->builtin_uint32_0) {
+      this->builtin_uint32_0->value_node->ensure_type_defined(bin, this->defined_type_declaration_states);
+    }
+    if(this->builtin_uint32_1) {
+      this->builtin_uint32_1->value_node->ensure_type_defined(bin, this->defined_type_declaration_states);
     }
   }
 
@@ -246,33 +264,64 @@ namespace spurv {
 	  SUtils::add(bin, 11);
 	  SUtils::add(bin, 0);
 	}
-    
+
+	// Decorate <builtin> Builtin PointSize
 	if(this->builtin_float_0) {
 	  SUtils::add(bin, (4 << 16) | 71);
 	  SUtils::add(bin, this->builtin_float_0->pointer_id);
 	  SUtils::add(bin, 11);
 	  SUtils::add(bin, 1);
 	}
+
+	// Clip Distance
 	if(this->builtin_arr_1_float_0) {
 	  SUtils::add(bin, (4 << 16) | 71);
 	  SUtils::add(bin, this->builtin_arr_1_float_0->pointer_id);
 	  SUtils::add(bin, 11);
 	  SUtils::add(bin, 3);
 	}
+
+	// Cull Distance
 	if(this->builtin_arr_1_float_1) {
 	  SUtils::add(bin, (4 << 16) | 71);
 	  SUtils::add(bin, this->builtin_arr_1_float_1->pointer_id);
 	  SUtils::add(bin, 11);
 	  SUtils::add(bin, 4);
 	}
-      } else {
-      if(this->builtin_vec4_0 || this->builtin_float_0 ||
-	 this->builtin_arr_1_float_0 || this->builtin_arr_1_float_1) {
-	printf("Builtin variables for other than Vertex shader must still be implemented\n");
-	exit(-1);
-      }
-    }
 
+	// Vertex Index
+	if(this->builtin_uint32_0) {
+	  SUtils::add(bin, (4 << 16) | 71);
+	  SUtils::add(bin, this->builtin_uint32_0->pointer_id);
+	  SUtils::add(bin, 11);
+	  SUtils::add(bin, 5);
+	}
+
+	// Instance Index
+	if(this->builtin_uint32_1) {
+	  SUtils::add(bin, (4 << 16) | 71);
+	  SUtils::add(bin, this->builtin_uint32_1->pointer_id);
+	  SUtils::add(bin, 11);
+	  SUtils::add(bin, 6);
+	}
+
+      } else if constexpr(type == SShaderType::SHADER_FRAGMENT) {
+	if(this->builtin_vec4_0) {
+	  // Frag Coord
+	  SUtils::add(bin, (4 << 16) | 71);
+	  SUtils::add(bin, this->builtin_vec4_0->pointer_id);
+	  SUtils::add(bin, 11);
+	  SUtils::add(bin, 15); // FragCoord
+	}
+      } else {
+	if(this->builtin_vec4_0 || this->builtin_float_0 ||
+	   this->builtin_arr_1_float_0 || this->builtin_arr_1_float_1 ||
+	   this->builtin_uint32_0 || this->builtin_uint32_1) {
+	  printf("Builtin variables for other than Vertex and Fragment shader must still be implemented\n");
+	  exit(-1);
+	}
+    }
+    
     // Decorate <input_var> Location <index>
     for(unsigned int i = 0; i < input_entries.size(); i++) {
       SUtils::add(bin, (4 << 16) | 71);
@@ -301,6 +350,7 @@ namespace spurv {
 
     }
   }
+  
 
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_main_function_begin(std::vector<uint32_t>& res) {
@@ -421,85 +471,164 @@ namespace spurv {
 
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_used_builtin_pointers(std::vector<uint32_t>& res){
-    if(this->builtin_vec4_0) {
-      SPointer<STORAGE_OUTPUT, vec4_s>::ensure_defined(res, this->defined_type_declaration_states);
+    if constexpr(type == SShaderType::SHADER_VERTEX) {
+	if(this->builtin_vec4_0) {
+	  SPointer<STORAGE_OUTPUT, vec4_s>::ensure_defined(res, this->defined_type_declaration_states);
       
-      // OpVariable
-      SUtils::add(res, (4 << 16) | 59);
-      SUtils::add(res, SPointer<STORAGE_OUTPUT, vec4_s>::getID());
-      SUtils::add(res, this->builtin_vec4_0->pointer_id);
-      SUtils::add(res, STORAGE_OUTPUT);
-    }
-    if(this->builtin_float_0) {
-      SPointer<STORAGE_OUTPUT, float_s>::ensure_defined(res, this->defined_type_declaration_states);
+	  // OpVariable
+	  SUtils::add(res, (4 << 16) | 59);
+	  SUtils::add(res, SPointer<STORAGE_OUTPUT, vec4_s>::getID());
+	  SUtils::add(res, this->builtin_vec4_0->pointer_id);
+	  SUtils::add(res, STORAGE_OUTPUT);
+	}
+	if(this->builtin_float_0) {
+	  SPointer<STORAGE_OUTPUT, float_s>::ensure_defined(res, this->defined_type_declaration_states);
       
-      // OpVariable
-      SUtils::add(res, (4 << 16) | 59);
-      SUtils::add(res, SPointer<STORAGE_OUTPUT, float_s>::getID());
-      SUtils::add(res, this->builtin_float_0->pointer_id);
-      SUtils::add(res, STORAGE_OUTPUT);
-    }
-    if(this->builtin_arr_1_float_0) {
-      SPointer<STORAGE_OUTPUT, arr_1_float_s>::ensure_defined(res, this->defined_type_declaration_states);
+	  // OpVariable
+	  SUtils::add(res, (4 << 16) | 59);
+	  SUtils::add(res, SPointer<STORAGE_OUTPUT, float_s>::getID());
+	  SUtils::add(res, this->builtin_float_0->pointer_id);
+	  SUtils::add(res, STORAGE_OUTPUT);
+	}
+	if(this->builtin_arr_1_float_0) {
+	  SPointer<STORAGE_OUTPUT, arr_1_float_s>::ensure_defined(res, this->defined_type_declaration_states);
       
-      // OpVariable
-      SUtils::add(res, (4 << 16) | 59);
-      SUtils::add(res, SPointer<STORAGE_OUTPUT, arr_1_float_s>::getID());
-      SUtils::add(res, this->builtin_arr_1_float_0->pointer_id);
-      SUtils::add(res, STORAGE_OUTPUT);
-    }
-    if(this->builtin_arr_1_float_1) {
-      SPointer<STORAGE_OUTPUT, arr_1_float_s>::ensure_defined(res, this->defined_type_declaration_states);
+	  // OpVariable
+	  SUtils::add(res, (4 << 16) | 59);
+	  SUtils::add(res, SPointer<STORAGE_OUTPUT, arr_1_float_s>::getID());
+	  SUtils::add(res, this->builtin_arr_1_float_0->pointer_id);
+	  SUtils::add(res, STORAGE_OUTPUT);
+	}
+	if(this->builtin_arr_1_float_1) {
+	  SPointer<STORAGE_OUTPUT, arr_1_float_s>::ensure_defined(res, this->defined_type_declaration_states);
       
-      // OpVariable
-      SUtils::add(res, (4 << 16) | 59);
-      SUtils::add(res, SPointer<STORAGE_OUTPUT, arr_1_float_s>::getID());
-      SUtils::add(res, this->builtin_arr_1_float_1->pointer_id);
-      SUtils::add(res, STORAGE_OUTPUT);
-    }
+	  // OpVariable
+	  SUtils::add(res, (4 << 16) | 59);
+	  SUtils::add(res, SPointer<STORAGE_OUTPUT, arr_1_float_s>::getID());
+	  SUtils::add(res, this->builtin_arr_1_float_1->pointer_id);
+	  SUtils::add(res, STORAGE_OUTPUT);
+	}
+	if(this->builtin_uint32_0) {
+	  SPointer<STORAGE_INPUT, uint32_s>::ensure_defined(res, this->defined_type_declaration_states);
+
+	  // OpVariable
+	  SUtils::add(res, (4 << 16) | 59);
+	  SUtils::add(res, SPointer<STORAGE_INPUT, uint32_s>::getID());
+	  SUtils::add(res, this->builtin_uint32_0->pointer_id);
+	  SUtils::add(res, STORAGE_INPUT);
+	}
+	if(this->builtin_uint32_1) {
+	  SPointer<STORAGE_INPUT, uint32_s>::ensure_defined(res, this->defined_type_declaration_states);
+
+	  // OpVariable
+	  SUtils::add(res, (4 << 16) | 59);
+	  SUtils::add(res, SPointer<STORAGE_INPUT, uint32_s>::getID());
+	  SUtils::add(res, this->builtin_uint32_1->pointer_id);
+	  SUtils::add(res, STORAGE_INPUT);
+	}
+      } else if constexpr (type == SShaderType::SHADER_FRAGMENT) {
+	if(this->builtin_vec4_0) {
+	  SPointer<STORAGE_INPUT, vec4_s>::ensure_defined(res, this->defined_type_declaration_states);
+
+	  // OpVariable
+	  SUtils::add(res, (4 << 16) | 59);
+	  SUtils::add(res, SPointer<STORAGE_INPUT, vec4_s>::getID());
+	  SUtils::add(res, this->builtin_vec4_0->pointer_id);
+	  SUtils::add(res, STORAGE_INPUT);
+	}
+      }
   }
   
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_builtin_output_definitions(std::vector<uint32_t>& res) {
-    if(this->builtin_vec4_0) {
-      this->builtin_vec4_0->value_node->ensure_defined(res);
+    if constexpr(type == SShaderType::SHADER_VERTEX) {
+	if(this->builtin_vec4_0) {
+	  this->builtin_vec4_0->value_node->ensure_defined(res);
       
-      // OpStore
-      SUtils::add(res, (3 << 16) | 62);
-      SUtils::add(res, this->builtin_vec4_0->pointer_id);
-      SUtils::add(res, this->builtin_vec4_0->value_node->getID());
+	  // OpStore
+	  SUtils::add(res, (3 << 16) | 62);
+	  SUtils::add(res, this->builtin_vec4_0->pointer_id);
+	  SUtils::add(res, this->builtin_vec4_0->value_node->getID());
       
-    }
-    if(this->builtin_float_0) {
-      this->builtin_float_0->value_node->ensure_defined(res);
+	}
+	if(this->builtin_float_0) {
+	  this->builtin_float_0->value_node->ensure_defined(res);
       
-      // OpStore
-      SUtils::add(res, (3 << 16) | 62);
-      SUtils::add(res, this->builtin_float_0->pointer_id);
-      SUtils::add(res, this->builtin_float_0->value_node->getID());
-    }
-    if(this->builtin_arr_1_float_0) {
-      this->builtin_arr_1_float_0->value_node->ensure_defined(res);
+	  // OpStore
+	  SUtils::add(res, (3 << 16) | 62);
+	  SUtils::add(res, this->builtin_float_0->pointer_id);
+	  SUtils::add(res, this->builtin_float_0->value_node->getID());
+	}
+	if(this->builtin_arr_1_float_0) {
+	  this->builtin_arr_1_float_0->value_node->ensure_defined(res);
       
-      // OpStore
-      SUtils::add(res, (3 << 16) | 62);
-      SUtils::add(res, this->builtin_arr_1_float_0->pointer_id);
-      SUtils::add(res, this->builtin_arr_1_float_0->value_node->getID());
-    }
-    if(this->builtin_arr_1_float_1) {
-      this->builtin_arr_1_float_1->value_node->ensure_defined(res);
+	  // OpStore
+	  SUtils::add(res, (3 << 16) | 62);
+	  SUtils::add(res, this->builtin_arr_1_float_0->pointer_id);
+	  SUtils::add(res, this->builtin_arr_1_float_0->value_node->getID());
+	}
+	if(this->builtin_arr_1_float_1) {
+	  this->builtin_arr_1_float_1->value_node->ensure_defined(res);
       
-      // OpStore
-      SUtils::add(res, (3 << 16) | 62);
-      SUtils::add(res, this->builtin_arr_1_float_1->pointer_id);
-      SUtils::add(res, this->builtin_arr_1_float_1->value_node->getID());
-    }
+	  // OpStore
+	  SUtils::add(res, (3 << 16) | 62);
+	  SUtils::add(res, this->builtin_arr_1_float_1->pointer_id);
+	  SUtils::add(res, this->builtin_arr_1_float_1->value_node->getID());
+	}
+      }
   }
 
   
   /*
    * Public member function
    */
+
+  template<SShaderType type, typename... InputTypes>
+  template<SBuiltinVariable ind, typename tt>
+    SValue<tt>& SShader<type, InputTypes...>::getBuiltin() {
+    if constexpr(type == SShaderType::SHADER_VERTEX) {
+	if constexpr(ind == BUILTIN_INSTANCE_ID) {
+	    static_assert(std::is_same<tt, uint32_s>::value, "Vertex shader instance ID must be unsigned 32-bit integer");
+
+	    if(!this->builtin_uint32_0) {
+	      int pointer_id = SUtils::getNewID();
+	      this->builtin_uint32_0 = SUtils::allocate<BuiltinEntry<uint32_s> >();
+	      this->builtin_uint32_0->value_node = SUtils::allocate<SPointerVar<uint32_s, STORAGE_INPUT> >(pointer_id);
+	      this->builtin_uint32_0->pointer_id = pointer_id;
+	    }
+	    return *this->builtin_uint32_0->value_node;
+	    
+	  } else if constexpr(ind == BUILTIN_VERTEX_ID) {
+	    
+	    static_assert(std::is_same<tt, uint32_s>::value, "Vertex shader vertex ID must be unsigned 32-bit integer");
+	    if(!this->builtin_uint32_1) {
+	      int pointer_id = SUtils::getNewID();
+	      this->builtin_uint32_1 = SUtils::allocate<BuiltinEntry<uint32_s> >();
+	      this->builtin_uint32_1->value_node = SUtils::allocate<SPointerVar<uint32_s, STORAGE_INPUT> >(pointer_id);
+	      this->builtin_uint32_1->pointer_id = pointer_id;
+	    }
+	    return *this->builtin_uint32_1->value_node;
+	  } else {
+	  printf("Builtin does not support read in vertex shader\n");
+	  exit(-1);
+	}
+      } else if constexpr(type == SShaderType::SHADER_FRAGMENT) {
+	if constexpr(ind == BUILTIN_FRAG_COORD) {
+	    static_assert(std::is_same<tt, vec4_s>::value, "Fragment shader fragment coordinate must have type vec4");
+	    
+	    if(!this->builtin_vec4_0) {
+	      int pointer_id = SUtils::getNewID();
+	      this->builtin_vec4_0 = SUtils::allocate<BuiltinEntry<vec4_s> >();
+	      this->builtin_vec4_0->value_node = SUtils::allocate<SPointerVar<vec4_s, STORAGE_INPUT> >(pointer_id);
+	      this->builtin_vec4_0->pointer_id = pointer_id;
+	    }
+	    return *this->builtin_vec4_0->value_node;
+	  } else {
+	  printf("Builtin does not support read in fragment shader\n");
+	  exit(-1);	
+	}
+      }
+  }
 
   template<SShaderType type, typename... InputTypes>
   template<SBuiltinVariable ind, typename tt>

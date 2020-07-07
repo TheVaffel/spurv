@@ -86,15 +86,30 @@ namespace spurv {
 
 
   /*
-   * Var member functions
+   * SPointerVar member functions
    */
 
-  template<typename tt>
-  SIOVar<tt>::SIOVar() {}
-  
-  template<typename tt>
-  SIOVar<tt>::SIOVar(std::string _name) {
-    this->name = _name;
+  template<typename tt, SStorageClass storage>
+  SPointerVar<tt, storage>::SPointerVar(int pointer_id) : pointer_id(pointer_id) { }
+
+  template<typename tt, SStorageClass storage>
+  void SPointerVar<tt, storage>::define(std::vector<uint32_t>& res) {
+    // This default implementation assumes the pointer itself has already
+    // been defined somewhere else (which is the case for input vars, builtins),
+    // and only loads from the pointer
+    
+    // OpLoad
+    SUtils::add(res, (4 << 16) | 61);
+    SUtils::add(res, tt::getID());
+    SUtils::add(res, this->id);
+    SUtils::add(res, this->pointer_id);
+  }
+
+  template<typename tt, SStorageClass storage>
+  void SPointerVar<tt, storage>::ensure_type_defined(std::vector<uint32_t>& res,
+						std::vector<SDeclarationState*>& declaration_states) {
+    tt::ensure_defined(res, declaration_states);
+    SPointer<storage, tt>::ensure_defined(res, declaration_states);
   }
   
   
@@ -103,11 +118,11 @@ namespace spurv {
    */
   
   template<typename tt>
-  SUniformVar<tt>::SUniformVar(int s, int b, int m, int pointer_id, int parent_struct_id) {
+  SUniformVar<tt>::SUniformVar(int s, int b, int m,
+			       int pointer_id, int parent_struct_id) : SPointerVar<tt, STORAGE_UNIFORM>(pointer_id) {
     this->set_no = s;
     this->bind_no = b;
     this->member_no = m;
-    this->pointer_id = pointer_id;
     this->parent_struct_id = parent_struct_id;
 
     this->member_index = SUtils::allocate<Constant<int> >(this->member_no);
@@ -148,20 +163,9 @@ namespace spurv {
    */
   
   template<typename tt>
-  InputVar<tt>::InputVar(int n, int pointer_id) {
+  InputVar<tt>::InputVar(int n, int pointer_id) : SPointerVar<tt, STORAGE_INPUT>(pointer_id) {
     this->input_no = n;
-    this->pointer_id = pointer_id;
   }
-
-  template<typename tt>
-  void InputVar<tt>::define(std::vector<uint32_t>& res) {
-    // OpLoad
-    SUtils::add(res, (4 << 16) | 61);
-    SUtils::add(res, tt::getID());
-    SUtils::add(res, this->id);
-    SUtils::add(res, this->pointer_id);
-  }
-
   
   /*
    * ConstructMatrix member functions

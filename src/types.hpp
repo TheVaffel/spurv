@@ -316,7 +316,9 @@ namespace spurv {
   
   typedef SType<STypeKind::KIND_VOID> void_s;
   typedef SBool bool_s;
+  typedef SInt<32, 1> int32_s;
   typedef SInt<32, 1> int_s;
+  typedef SInt<32, 0> uint32_s;
   typedef SInt<32, 0> uint_s;
   typedef SFloat<32> float_s;
   typedef SMat<2, 2> mat2_s;

@@ -28,6 +28,9 @@ namespace spurv {
 			       std::vector<SDeclarationState*>& declaration_states) = 0;
     virtual void decorateType(std::vector<uint32_t>& bin,
 			      std::vector<bool*>& decoration_states);
+
+    template<typename type>
+    friend class SUniformConstant;
   };
 
 
@@ -59,7 +62,7 @@ namespace spurv {
    */
 
   template<typename type>
-  class SUniformConstant : public SUniformBindingBase, public SIOVar<type> {
+  class SUniformConstant : public SUniformBindingBase, public SValue<type> {
   public:
     SUniformConstant(int sn, int bn);
     

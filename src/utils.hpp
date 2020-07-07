@@ -121,6 +121,9 @@ namespace spurv {
 
     template<typename tt>
     friend class SelectConstruct;
+
+    template<typename tt, SStorageClass storage>
+    friend class SPointerVar;
     
   public:
 
