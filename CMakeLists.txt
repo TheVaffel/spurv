@@ -4,7 +4,7 @@ project(spurv)
 if(WIN32)
   add_definitions(/std:c++17)
 else()
-  add_definitions(-std=c++1z -fconcepts)
+  add_definitions(-std=c++1z -fconcepts -mavx)
 endif()
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/lib)
