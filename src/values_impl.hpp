@@ -298,21 +298,14 @@ namespace spurv {
     this->val_false->ensure_type_defined(res, declaration_states);
   }
 
-  // Shorthand to make the below code somewhat readable
-  template<typename S, typename T>
-  struct uuap {
-    using type = typename SValueWrapper::unambiguous_unwrapped_allow_primitives<typename std::remove_reference<S>::type,
-										typename std::remove_reference<T>::type>::type;
-  };
   
   template<typename t1, typename t2, typename t3>
-  requires RequireUnambiguousUnwrappable<t2, t3> && SValueWrapper::does_wrap<typename std::remove_reference<t1>::type, SBool>::value
-  SelectConstruct<typename uuap<t2, t3>::type>& select(t1&& cond,
-						       t2&& true_val,
-						       t3&& false_val) {
+  SelectConstruct<typename uwr<t2, t3>::type>& select(t1&& cond,
+						      t2&& true_val,
+						      t3&& false_val) {
     using tt1 = typename std::remove_reference<t1>::type;
 
-    using unwrapped_res_type = typename uuap<t2, t3>::type;
+    using unwrapped_res_type = typename uwr<t2, t3>::type;
 
     static_assert(SValueWrapper::does_wrap<tt1, SBool>::value);
 

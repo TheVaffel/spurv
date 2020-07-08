@@ -193,6 +193,8 @@ namespace spurv {
     this->output_output_tree_type_definitions(bin, args...);
   }
 
+  
+  static const std::string entry_point_name = "main";
 
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_shader_header_begin(std::vector<uint32_t>& bin) {
@@ -213,12 +215,10 @@ namespace spurv {
     SUtils::add(bin, (3 << 16) | 14);
     SUtils::add(bin, 0);
     SUtils::add(bin, 1);
-
+    
     // entry_point vertex_shader main "main" input/output_variables
     this->entry_point_declaration_size_index = bin.size(); // Add size afterwards
     SUtils::add(bin, 15);
-
-    std::string entry_point_name = "main";
 
     if constexpr(type == SShaderType::SHADER_VERTEX) {
 	SUtils::add(bin, 0); // Vertex
@@ -242,20 +242,32 @@ namespace spurv {
     }
 
     output_used_builtin_ids(bin);
+
   }
 
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_shader_header_end(std::vector<uint32_t>& bin) {
+
     if constexpr(type == SShaderType::SHADER_FRAGMENT) {
 	// OpExecutionMode <entry_point_id> OriginUpperLeft
 	SUtils::add(bin, (3 << 16) | 16);
 	SUtils::add(bin, this->entry_point_id);
 	SUtils::add(bin, 7);
       }
+
+    
+    int strl = SUtils::stringWordLength(entry_point_name);
+    
+    // OpName <main_id> "main"
+    SUtils::add(bin, ((2 + strl) << 16) | 5);
+    SUtils::add(bin, this->entry_point_id);
+    SUtils::add(bin, entry_point_name);
+    
   }
   
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_shader_header_decorate_begin(std::vector<uint32_t>& bin) {
+    
     if constexpr(type == SShaderType::SHADER_VERTEX) {
 	if(this->builtin_vec4_0) {
 	  // Decorate <builtin> Builtin Position

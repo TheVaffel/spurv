@@ -222,7 +222,7 @@ namespace spurv {
     
     friend class SUtils;
   };
-  
+
 
   /*
    * SelectConstruct - Represents a conditional choice between two values
@@ -245,16 +245,6 @@ namespace spurv {
     
     friend class SUtils;
   };
-
-
-  /*
-   * Selection method
-   */
-  
-  template<typename tt, typename t1, typename t2, typename t3>
-  SelectConstruct<tt>& select(t1&& cond,
-			      t2&& true_val,
-			      t3&& false_val);
 
 
   /*

@@ -591,8 +591,11 @@ namespace spurv {
    * Comparison operations
    */
 
-  template<typename tt, SExprOp op>
-  static SExpr<SBool, op, tt, tt>& construct_comparison_val(SValue<tt>& v1, SValue<tt>& v2) {
+  template<typename t1, typename t2, SExprOp op>
+  static SExpr<SBool, op,
+	       typename uwr<t1, t2>::type,
+	       typename uwr<t1, t2>::type>& construct_comparison_val(t1&& v1, t2&& v2) {
+    using tt = typename uwr<t1, t2>::type;
     static_assert(is_spurv_int_type<tt>::value || is_spurv_float_type<tt>::value,
 		  "Comparison not yet defined for non-scalar types");
 
@@ -604,34 +607,46 @@ namespace spurv {
     return *ex;
   }
   
-  template<typename tt>
-  SExpr<SBool, EXPR_EQUAL, tt, tt>& operator==(SValue<tt>& v1, SValue<tt>& v2) {
-    return construct_comparison_val<tt, EXPR_EQUAL>(v1, v2);
+  template<typename t1, typename t2>
+  SExpr<SBool, EXPR_EQUAL,
+	typename uwr<t1, t2>::type,
+	typename uwr<t1, t2>::type>& operator==(t1&& v1, t2&& v2) {
+    return construct_comparison_val<t1, t2, EXPR_EQUAL>(v1, v2);
   }
 
-  template<typename tt>
-  SExpr<SBool, EXPR_NOTEQUAL, tt, tt>& operator!=(SValue<tt>& v1, SValue<tt>& v2) {
-    return construct_comparison_val<tt, EXPR_NOTEQUAL>(v1, v2);
+  template<typename t1, typename t2>
+  SExpr<SBool, EXPR_NOTEQUAL,
+	typename uwr<t1, t2>::type,
+	typename uwr<t1, t2>::type>& operator!=(t1&& v1, t2&& v2) {
+    return construct_comparison_val<t1, t2, EXPR_NOTEQUAL>(v1, v2);
   }
 
-  template<typename tt>
-  SExpr<SBool, EXPR_LESSTHAN, tt, tt>& operator<(SValue<tt>& v1, SValue<tt>& v2) {
-    return construct_comparison_val<tt, EXPR_LESSTHAN>(v1, v2);
+  template<typename t1, typename t2>
+  SExpr<SBool, EXPR_LESSTHAN,
+	typename uwr<t1, t2>::type,
+	typename uwr<t1, t2>::type>& operator<(t1&& v1, t2&& v2) {
+    return construct_comparison_val<t1, t2, EXPR_LESSTHAN>(v1, v2);
   }
   
-  template<typename tt>
-  SExpr<SBool, EXPR_GREATERTHAN, tt, tt>& operator>(SValue<tt>& v1, SValue<tt>& v2) {
-    return construct_comparison_val<tt, EXPR_GREATERTHAN>(v1, v2);
+  template<typename t1, typename t2>
+  SExpr<SBool, EXPR_GREATERTHAN,
+	typename uwr<t1, t2>::type,
+	typename uwr<t1, t2>::type>& operator>(t1&& v1, t2&& v2) {
+    return construct_comparison_val<t1, t2, EXPR_GREATERTHAN>(v1, v2);
   }
   
-  template<typename tt>
-  SExpr<SBool, EXPR_LESSOREQUAL, tt, tt>& operator<=(SValue<tt>& v1, SValue<tt>& v2) {
-    return construct_comparison_val<tt, EXPR_LESSOREQUAL>(v1, v2);
+  template<typename t1, typename t2>
+  SExpr<SBool, EXPR_LESSOREQUAL,
+	typename uwr<t1, t2>::type,
+	typename uwr<t1, t2>::type>& operator<=(t1&& v1, t2&& v2) {
+    return construct_comparison_val<t1, t2, EXPR_LESSOREQUAL>(v1, v2);
   }
   
-  template<typename tt>
-  SExpr<SBool, EXPR_GREATEROREQUAL, tt, tt>& operator>=(SValue<tt>& v1, SValue<tt>& v2) {
-    return construct_comparison_val<tt, EXPR_GREATEROREQUAL>(v1, v2);
+  template<typename t1, typename t2>
+  SExpr<SBool, EXPR_GREATEROREQUAL,
+	typename uwr<t1, t2>::type,
+	typename uwr<t1, t2>::type>& operator>=(t1&& v1, t2&& v2) {
+    return construct_comparison_val<t1, t2, EXPR_GREATEROREQUAL>(v1, v2);
   }
   
   
