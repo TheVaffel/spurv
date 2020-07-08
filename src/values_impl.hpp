@@ -299,13 +299,19 @@ namespace spurv {
   }
 
   
+  // Shorthand
+  template<typename t1, typename t2>
+  struct ruu {
+    using type = typename SValueWrapper::unambiguous_unwrapped_allow_primitives<t1, t2>::type;
+  };
+  
   template<typename t1, typename t2, typename t3>
-  SelectConstruct<typename uwr<t2, t3>::type>& select(t1&& cond,
+  SelectConstruct<typename ruu<t2, t3>::type>& select(t1&& cond,
 						      t2&& true_val,
 						      t3&& false_val) {
     using tt1 = typename std::remove_reference<t1>::type;
 
-    using unwrapped_res_type = typename uwr<t2, t3>::type;
+    using unwrapped_res_type = typename ruu<t2, t3>::type;
 
     static_assert(SValueWrapper::does_wrap<tt1, SBool>::value);
 

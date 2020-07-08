@@ -24,6 +24,12 @@ namespace spurv {
     (is_spurv_value<typename std::remove_reference<S>::type>::value ||
      is_spurv_value<typename std::remove_reference<T>::type>::value);
 
+  template<typename S, typename T>
+  requires !RequireOneSpurvValue<S, T>
+  BOOL_CONCEPT SameSpurvType = (std::is_same<typename MapSType<typename std::remove_reference<S>::type>::type,
+					    typename MapSType<typename std::remove_reference<T>::type>::type>::value);
+    
+  
   /*
    * RequireUnambiguousUnwrappable - A concept requiring the two arguments to be
    * of the same type and having an unambiguous unwrapped type
@@ -31,9 +37,7 @@ namespace spurv {
 
   template<typename S, typename T>
   BOOL_CONCEPT RequireUnambiguousUnwrappable =
-    (RequireOneSpurvValue<S, T> ||
-    std::is_same<typename MapSType<typename std::remove_reference<S>::type >::type,
-     typename MapSType<typename std::remove_reference<T>::type >::type>::value);
+    (RequireOneSpurvValue<S, T> || SameSpurvType<S, T>);
   
 
   /*
@@ -140,31 +144,35 @@ namespace spurv {
 					     typename unwrapped_type<tt>::type>::type;
     };
 
-    // Another variant of the above function, not ensuring that any of the two inputs are SValues
-    // so that it can be used in conditionals 
     
-    template<typename S, typename T>
-    struct unambiguous_unwrapped_require_spurv_type_unsafe {
-      using ss = typename std::remove_reference<S>::type;
-      using tt = typename std::remove_reference<T>::type;
-      using type = typename std::conditional<is_spurv_value<ss>::value,
-					     typename unwrapped_type<ss>::type,
-					     typename unwrapped_type<tt>::type>::type;
+    /*
+     * ToType: Converts SValue<T> to T and primitives (i.e. float) to their SType counterparts (SFloat<32>)
+     */
+    
+    template<typename S>
+    struct ToType;
+
+    template<typename S>
+    struct ToType<SValue<S> > {
+      using type = S;
     };
 
-    
+    template<typename S>
+    struct ToType {
+      using type = typename MapSType<S>::type;
+    };
 
     // Get unwrapped type where we accept both primitives and spurv values
     template<typename S, typename T>
-    requires RequireUnambiguousUnwrappable<S, T>
     struct unambiguous_unwrapped_allow_primitives {
       using ss = typename std::remove_reference<S>::type;
       using tt = typename std::remove_reference<T>::type;
 
-      using type = typename std::conditional<is_spurv_value<ss>::value ||
-					     is_spurv_value<tt>::value,
-					     typename unambiguous_unwrapped_require_spurv_type_unsafe<S, T>::type,
-					     typename unwrapped_from_primitives<S, T>::type>::type; 
+      using uw1 = typename ToType<ss>::type;
+      using uw2 = typename ToType<tt>::type;
+
+      static_assert(std::is_same<uw1, uw2>::value, "[spurv] Types need to unwrap to same spurv type");
+      using type = uw1;
     };
   };
 };

@@ -586,7 +586,6 @@ namespace spurv {
     return *ex;
   }
   
-
   /*
    * Comparison operations
    */
