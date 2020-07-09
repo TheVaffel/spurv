@@ -33,16 +33,16 @@ int main(){
   Winval win(1280, 720);
   wg::Wingine wg(win);
 
-  wg::VertexBuffer<float> vertexBuffer = wg.createVertexBuffer<float>(4*4);
-  vertexBuffer.set(test_vertices, 4 * 4);
+  wg::VertexBuffer<float>* vertexBuffer = wg.createVertexBuffer<float>(4*4);
+  vertexBuffer->set(test_vertices, 4 * 4);
 
-  wg::VertexBuffer<float> colorBuffer = wg.createVertexBuffer<float>(4*4);
-  colorBuffer.set(test_colors, 4 * 4);
+  wg::VertexBuffer<float>* colorBuffer = wg.createVertexBuffer<float>(4*4);
+  colorBuffer->set(test_colors, 4 * 4);
 
-  wg::IndexBuffer indexBuffer = wg.createIndexBuffer(3*2);
-  indexBuffer.set(test_indices, 3 * 2);
+  wg::IndexBuffer* indexBuffer = wg.createIndexBuffer(3*2);
+  indexBuffer->set(test_indices, 3 * 2);
 
-  wgut::Model model({&vertexBuffer, &colorBuffer}, indexBuffer);
+  wgut::Model model({vertexBuffer, colorBuffer}, indexBuffer);
 
   std::vector<uint32_t> spirv_vertex;
   std::vector<uint32_t> spirv_fragment;
@@ -65,7 +65,7 @@ int main(){
   }
  
   
-  wg::Shader vertexShader = wg.createShader(wg::shaVertex, spirv_vertex);
+  wg::Shader* vertexShader = wg.createShader(wg::shaVertex, spirv_vertex);
 
   
   printf("Done with vertex shader\n");
@@ -97,16 +97,16 @@ int main(){
   float dc = 0.01;
 
 
-  wg::Uniform colorUniform = wg.createUniform<float>();
+  wg::Uniform<float>* colorUniform = wg.createUniform<float>();
   
   std::vector<uint64_t> resourceSetLayout  = {wg::resUniform | wg::shaVertex};
   
-  wg::ResourceSet colorSet = wg.createResourceSet(resourceSetLayout);
+  wg::ResourceSet* colorSet = wg.createResourceSet(resourceSetLayout);
   
-  colorSet.set({&colorUniform});
+  colorSet->set({colorUniform});
 
   
-  wg::Shader fragmentShader = wg.createShader(wg::shaFragment, spirv_fragment);
+  wg::Shader* fragmentShader = wg.createShader(wg::shaFragment, spirv_fragment);
 
   std::vector<wg::VertexAttribDesc> vertAttrDesc =
     std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
@@ -116,15 +116,19 @@ int main(){
 					0}, // Offset (bytes)
 				       {wg::tFloat32, 1, 4, 4 * sizeof(float), 0}};
   
-  wg::Pipeline colorPipeline = wg.createPipeline(vertAttrDesc,
-						 {&resourceSetLayout},
-						 {&vertexShader, &fragmentShader});
+  wg::Pipeline* colorPipeline = wg.createPipeline(vertAttrDesc,
+						 {resourceSetLayout},
+						 {vertexShader, fragmentShader});
 
-  wg::RenderFamily family = wg.createRenderFamily(colorPipeline, true);
+  wg::RenderFamily* family = wg.createRenderFamily(colorPipeline, true);
   
   clock_t start_time = clock();
   int count = 0;
 
+  family->startRecording();
+  family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {colorSet});
+  family->endRecording();
+  
   while(win.isOpen()){
     count++;
 
@@ -133,12 +137,9 @@ int main(){
       dc *= -1;
     }
 
-    colorUniform.set(color);
+    colorUniform->set(color);
     
-    family.startRecording();
-    family.recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {colorSet});
-    family.endRecording();
-
+    family->submit();
 
     wg.present();
     
@@ -165,7 +166,6 @@ int main(){
   wg.destroy(indexBuffer);
 
   wg.destroy(colorUniform);
-  wg.destroy(colorSet);
   wg.destroy(family);
   
   spirv_vertex.clear();

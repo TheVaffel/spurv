@@ -39,14 +39,14 @@ int main(){
   Winval win(1280, 720);
   wg::Wingine wg(win);
 
-  wg::VertexBuffer<float> vertexBuffer = wg.createVertexBuffer<float>(4*4);
-  vertexBuffer.set(test_vertices, 4 * 4);
+  wg::VertexBuffer<float>* vertexBuffer = wg.createVertexBuffer<float>(4*4);
+  vertexBuffer->set(test_vertices, 4 * 4);
 
-  wg::VertexBuffer<float> textureCoordBuffer = wg.createVertexBuffer<float>(4 * 2);
-  textureCoordBuffer.set(texture_coords, 4 * 2);
+  wg::VertexBuffer<float>* textureCoordBuffer = wg.createVertexBuffer<float>(4 * 2);
+  textureCoordBuffer->set(texture_coords, 4 * 2);
 
-  wg::IndexBuffer indexBuffer = wg.createIndexBuffer(3*2);
-  indexBuffer.set(test_indices, 3 * 2);
+  wg::IndexBuffer* indexBuffer = wg.createIndexBuffer(3*2);
+  indexBuffer->set(test_indices, 3 * 2);
 
   
   std::vector<wg::VertexAttribDesc> vertAttrDesc =
@@ -73,7 +73,7 @@ int main(){
   }
  
   
-  wg::Shader vertexShader = wg.createShader(wg::shaVertex, spirv_vertex);
+  wg::Shader* vertexShader = wg.createShader(wg::shaVertex, spirv_vertex);
 
   {
     using namespace spurv;
@@ -107,7 +107,7 @@ int main(){
   // printf("%d\n", spirv_vertex[i]);
   // }
 
-  wg::Shader fragmentShader = wg.createShader(wg::shaFragment, spirv_fragment);
+  wg::Shader* fragmentShader = wg.createShader(wg::shaFragment, spirv_fragment);
 
   float color = 0.2;
   float dc = 0.01;
@@ -115,19 +115,19 @@ int main(){
   std::vector<uint64_t> layout = { wg::resUniform | wg::shaFragment,
 				   wg::resTexture | wg::shaFragment };
 
-  wg::Uniform oscilUniform = wg.createUniform<float>();
+  wg::Uniform<float>* oscilUniform = wg.createUniform<float>();
   
-  wg::ResourceSet oscilSet = wg.createResourceSet(layout);
+  wg::ResourceSet* oscilSet = wg.createResourceSet(layout);
   
-  wg::Texture texture = wg.createTexture(texWidth, texHeight);
+  wg::Texture* texture = wg.createTexture(texWidth, texHeight);
   texture->set(generic_pattern);
   
-  oscilSet.set({&oscilUniform, texture});
+  oscilSet->set({oscilUniform, texture});
 
   
-  wg::Pipeline texPipeline = wg.createPipeline(vertAttrDesc,
-					       {&layout},
-					       {&vertexShader, &fragmentShader});
+  wg::Pipeline* texPipeline = wg.createPipeline(vertAttrDesc,
+					       {layout},
+					       {vertexShader, fragmentShader});
   
   
   // WinginePipeline colorPipeline = wg.createPipeline({},
@@ -135,8 +135,11 @@ int main(){
   // {WG_ATTRIB_FORMAT_4, WG_ATTRIB_FORMAT_4},
   // true);
 
-  wg::RenderFamily family = wg.createRenderFamily(texPipeline, true);
+  wg::RenderFamily* family = wg.createRenderFamily(texPipeline, true);
 
+  family->startRecording();
+  family->recordDraw({vertexBuffer, textureCoordBuffer}, indexBuffer, {oscilSet});
+  family->endRecording();
   
   clock_t start_time = clock();
   int count = 0;
@@ -149,13 +152,10 @@ int main(){
       dc *= -1;
     }
 
-    oscilUniform.set(color);
+    oscilUniform->set(color);
+
+    family->submit();
     
-    family.startRecording();
-    family.recordDraw({&vertexBuffer, &textureCoordBuffer}, indexBuffer, {oscilSet});
-    family.endRecording();
-
-
     wg.present();
     
     clock_t current_time = clock();
@@ -182,7 +182,6 @@ int main(){
 
   wg.destroy(oscilUniform);
   wg.destroy(texture);
-  wg.destroy(oscilSet);
   wg.destroy(family);
   
   return 0;
