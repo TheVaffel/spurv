@@ -1,6 +1,8 @@
 #ifndef __SPURV_SHADER
 #define __SPURV_SHADER
 
+#include <set>
+
 namespace spurv {
 
   /*
@@ -64,6 +66,8 @@ namespace spurv {
     std::vector<uint32_t> output_pointer_ids;
     std::vector<SUniformBindingBase*> uniform_bindings;
 
+    std::set<SExtension> extensions;
+
     int glsl_id;
     int entry_point_id;
     int entry_point_declaration_size_index;
@@ -87,6 +91,12 @@ namespace spurv {
     void output_shader_header_decorate_output_variables(std::vector<uint32_t>& binary, int n,
 							in1&& val, NodeTypes&&... args);
 
+    void output_shader_header_decorate_tree(std::vector<uint32_t>& binary);
+    template<typename in1, typename... NodeTypes>
+    void output_shader_header_decorate_tree(std::vector<uint32_t>& binary,
+					    in1&& val,
+					    NodeTypes&&... args);
+    
     void output_output_tree_type_definitions(std::vector<uint32_t>& binary);
 
     template<typename in1, typename... NodeTypes>
@@ -136,6 +146,10 @@ namespace spurv {
 
     void cleanup_declaration_states();
     void cleanup_decoration_states();
+
+    SUniformBindingBase* find_binding(int set_no, int binding_no);
+    template<typename BindingType>
+    BindingType& construct_binding(int set_no, int binding_no);
     
   public:
     SShader();
@@ -156,10 +170,18 @@ namespace spurv {
     auto& input();
 
     // Return an SUniformConstant if applicable, otherwise an SUniformBinding
-    template<typename... InnerTypes>
+    /* template<typename... InnerTypes>
     typename std::conditional<isUniformConstantType<InnerTypes...>,
 			      SUniformConstant<typename SUtils::NthType<0, InnerTypes...>::type>,
-			      SUniformBinding<InnerTypes...> >::type& uniformBinding(int set_no, int binding_no);
+			      SUniformBinding<InnerTypes...> >::type& uniformBinding(int set_no, int binding_no); */
+    template<typename tt>
+    SValue<tt>& uniformConstant(int set_no, int binding_no);
+    
+    template<typename... InnerTypes>
+    SUniformBinding<InnerTypes...>& uniformBinding(int set_no, int binding_no);
+
+    template<typename... InnerTypes>
+    SStorageBuffer<InnerTypes...>& storageBuffer(int set_no, int binding_no);
     
     template<typename... NodeTypes>
     void compile(std::vector<uint32_t>& res, NodeTypes&&... args);

@@ -43,7 +43,8 @@ namespace spurv {
 
   
   template<typename tt, SExprOp op, typename tt2, typename tt3>
-  void SExpr<tt, op, tt2, tt3>::ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states) {
+  void SExpr<tt, op, tt2, tt3>::ensure_type_defined(std::vector<uint32_t>& res,
+						    std::vector<SDeclarationState*>& declaration_states) {
     if(this->v1) {
       this->v1->ensure_type_defined(res, declaration_states);
     }
@@ -54,6 +55,21 @@ namespace spurv {
 
     tt::ensure_defined(res, declaration_states);
   }
+
+  template<typename tt, SExprOp op, typename tt2, typename tt3>
+  void SExpr<tt, op, tt2, tt3>::ensure_type_decorated(std::vector<uint32_t>& res,
+						      std::vector<bool*>& decoration_states) {
+    if(this->v1) {
+      this->v1->ensure_type_decorated(res, decoration_states);
+    }
+
+    if(this->v2) {
+      this->v2->ensure_type_decorated(res, decoration_states);
+    }
+
+    tt::ensure_decorated(res, decoration_states);
+  }
+  
 
   /*
    * Utility functions for the expression define() function
@@ -171,7 +187,7 @@ namespace spurv {
       SUtils::add(res, this->v1->getID());
       SUtils::add(res, this->v2->getID());
       
-    } else if(d1 == d2 && d2 == d3) {
+    } else if(d1 == d2 && d2 == d3 && op != EXPR_DOT) {
       if (d1_comp.kind == STypeKind::KIND_INT) {
 	if constexpr(op == EXPR_ADDITION) {
 	    opcode = 128;
@@ -302,7 +318,27 @@ namespace spurv {
 	      SUtils::add(res, this->v2->getID());
 	    
 	    }
-	  } else {
+	  } else if(d2.kind == STypeKind::KIND_ARR ||
+		    d2.kind == STypeKind::KIND_RUN_ARR) {
+	    int temp_id = SUtils::getNewID();
+	    
+	    // OpAccessChain <result_pointer_type> <result_id> <array_pointer> <index>
+	    SUtils::add(res, (5 << 16) | 65);
+	    SUtils::add(res, SPointer<(SStorageClass)tt2::getArg0(),
+	       typename tt2::firstInnerType>::getID()); 
+	    /* SUtils::add(res, SPointer<STORAGE_STORAGE_BUFFER,
+	       typename tt2::firstInnerType>::getID()); */
+	    SUtils::add(res, temp_id);
+	    SUtils::add(res, this->v1->getID());
+	    SUtils::add(res, this->v2->getID());
+
+	    // OpLoad
+	    SUtils::add(res, (4 << 16) | 61);
+	    SUtils::add(res, tt2::firstInnerType::getID());
+	    SUtils::add(res, this->getID());
+	    SUtils::add(res, temp_id);
+	    
+	  }else {
 	    printf("Expression lookup operation not yet implemented\n");
 	    exit(-1);
 	  }
@@ -547,13 +583,15 @@ namespace spurv {
    */
 
   template<typename tt>
+  template<typename ti>
   SValue<typename lookup_result<tt>::type>&
-  SValue<tt>::operator[](SValue<typename lookup_index<tt>::type >& index) {
+  SValue<tt>::operator[](SValue<ti>& index) {
 
+    static_assert(is_lookup_index<tt, ti>::value, "Value cannnot be used as index into this datatype");
     SExpr<typename lookup_result<tt>::type, EXPR_LOOKUP,
-	  tt, typename lookup_index<tt>::type >* ex  =
+	  tt, ti>* ex  =
       SUtils::allocate<SExpr<typename lookup_result<tt>::type, EXPR_LOOKUP,
-			     tt, typename lookup_index<tt>::type > >(); 
+			     tt, ti> >(); 
     ex->register_left_node(*this);
     ex->register_right_node(index);
     return *ex;
@@ -562,11 +600,12 @@ namespace spurv {
   template<typename tt>
   SValue<typename lookup_result<tt>::type>& SValue<tt>::operator[](int index) {
 
+    static_assert(is_lookup_index<tt, SInt<32, 1> >::value, "Integer value cannot be used as index into this datatype");
     Constant<int>* c = SUtils::allocate<Constant<int> >(index);
     SExpr<typename lookup_result<tt>::type, EXPR_LOOKUP,
-	  tt, typename lookup_index<tt>::type >* ex  =
+	  tt, SInt<32, 1> >* ex  =
       SUtils::allocate<SExpr<typename lookup_result<tt>::type, EXPR_LOOKUP,
-			     tt, typename lookup_index<tt>::type > >(); 
+			     tt, SInt<32, 1> > >(); 
     ex->register_left_node(*this);
     ex->register_right_node(*c);
 

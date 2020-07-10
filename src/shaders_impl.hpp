@@ -123,6 +123,24 @@ namespace spurv {
     output_shader_header_decorate_output_variables(bin, n + 1, args...); 
   }
 
+
+  template<SShaderType type, typename... InputTypes>
+  void SShader<type, InputTypes...>::output_shader_header_decorate_tree(std::vector<uint32_t>& bin) {
+    return;
+  }
+  
+  template<SShaderType type, typename... InputTypes>
+  template<typename in1, typename... NodeTypes>
+  void SShader<type, InputTypes...>::output_shader_header_decorate_tree(std::vector<uint32_t>& bin,
+									in1&& arg0, NodeTypes&&... args) {
+    using t_in1 = typename std::remove_reference<in1>::type;
+    if constexpr(is_spurv_value<t_in1>::value) {
+	arg0.ensure_type_decorated(bin,
+				   this->decoration_states);
+      }
+  }
+  
+
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_used_builtin_ids(std::vector<uint32_t>& bin) {
     if(this->builtin_vec4_0) {
@@ -201,6 +219,13 @@ namespace spurv {
     // capability Shader
     SUtils::add(bin, (2 << 16) | 17);
     SUtils::add(bin, 1);
+
+    for(SExtension ext : this->extensions) {
+      // OpExtensions
+      int num_words = SUtils::stringWordLength(shaderExtensions[ext]);
+      SUtils::add(bin, ((1 + num_words) << 16) | 10);
+      SUtils::add(bin, shaderExtensions[ext]);
+    }
 
     // GLSL = ext_inst_import "GLSL.std.450"
     std::string glsl_import_str = "GLSL.std.450";
@@ -345,9 +370,11 @@ namespace spurv {
 
     // Put decorations on uniforms
     for(unsigned int i = 0; i < uniform_bindings.size(); i++) {
-      
+
+      // This could be handled through the recursive tree decoration
+      // but it's safer to do it here as well
       uniform_bindings[i]->decorateType(bin,
-					this->decoration_states);
+					this->decoration_states); 
 
       // Decorate <uniform_binding> DescriptorSet <num>
       SUtils::add(bin, (4 << 16) | 71);
@@ -744,45 +771,51 @@ namespace spurv {
   }
 
   template<SShaderType type, typename... InputTypes>
-  template<typename... InnerTypes>
-  typename std::conditional<isUniformConstantType<InnerTypes...>,
-			    SUniformConstant<typename SUtils::NthType<0, InnerTypes...>::type>,
-			    SUniformBinding<InnerTypes...> >::type
-  &SShader<type, InputTypes...>::uniformBinding(int set_no, int binding_no) {
-
-    // Check if this is just a uniform constant, not a struct
-    if constexpr(isUniformConstantType<InnerTypes...>) {
-
-	using Type = typename SUtils::NthType<0, InnerTypes...>::type;
-	
-	for(unsigned int i = 0; i < this->uniform_bindings.size(); i++) {
-	  if(this->uniform_bindings[i]->getSetNo() == set_no &&
-	     this->uniform_bindings[i]->getBindingNo() == binding_no) {
-	    return *(SUniformConstant<Type>*)uniform_bindings[i];
-	  }
-	}
-
-	SUniformConstant<Type>* pp = SUtils::allocate<SUniformConstant<Type> >(set_no, binding_no);
-
-	this->uniform_bindings.push_back((SUniformBindingBase*)pp);
-	return *pp;
-	
-      } else {
-    
-      // O(n^2).. But hopefully nobody cares
-      for(unsigned int i = 0; i < this->uniform_bindings.size(); i++) {
-	if(this->uniform_bindings[i]->getSetNo() == set_no &&
-	   this->uniform_bindings[i]->getBindingNo() == binding_no) {
-	  return *(SUniformBinding<InnerTypes...>*)uniform_bindings[i];
-	}
+  SUniformBindingBase* SShader<type, InputTypes...>::find_binding(int set, int binding) {
+    for(unsigned int i = 0; i < this->uniform_bindings.size(); i++) {
+      if(this->uniform_bindings[i]->getSetNo() == set &&
+	 this->uniform_bindings[i]->getBindingNo() == binding) {
+	return uniform_bindings[i];
       }
-
-      SUniformBinding<InnerTypes...>* pp = SUtils::allocate<SUniformBinding<InnerTypes...> >(set_no, binding_no);
-
-      this->uniform_bindings.push_back((SUniformBindingBase*)pp);
-      return *pp;
     }
+
+    return nullptr;
+  }
+
+  template<SShaderType type, typename... InputTypes>
+  template<typename BindingType>
+  BindingType& SShader<type, InputTypes...>::construct_binding(int set, int binding) {
+    SUniformBindingBase* sb = find_binding(set, binding);
     
+    if(sb != nullptr) {
+      return *(BindingType*)sb;
+    }
+
+    BindingType* pp = SUtils::allocate<BindingType>(set, binding);
+    this->uniform_bindings.push_back((SUniformBindingBase*)pp);
+    return *pp;
+  }
+
+  template<SShaderType type, typename... InputTypes>
+  template<typename tt>
+  SValue<tt>& SShader<type, InputTypes...>::uniformConstant(int set_no, int binding_no) {
+    return construct_binding<SUniformConstant<tt> >(set_no, binding_no);
+  }
+
+  template<SShaderType type, typename... InputTypes>
+  template<typename... InnerTypes>
+  SUniformBinding<InnerTypes...>&
+  SShader<type, InputTypes...>::uniformBinding(int set_no, int binding_no) {
+    return construct_binding<SUniformBinding<InnerTypes...> >(set_no, binding_no);
+  }
+
+  template<SShaderType type, typename... InputTypes>
+  template<typename... InnerTypes>
+  SStorageBuffer<InnerTypes...>&
+  SShader<type, InputTypes...>::storageBuffer(int set_no, int binding_no) {
+    this->extensions.insert(SExtension::EXTENSION_STORAGE_BUFFER);
+    
+    return construct_binding<SStorageBuffer<InnerTypes...> >(set_no, binding_no);
   }
 
   template<SShaderType type, typename... InputTypes>
@@ -807,6 +840,7 @@ namespace spurv {
 
     this->output_shader_header_decorate_begin(res);
     this->output_shader_header_decorate_output_variables(res, 0, args...);
+    this->output_shader_header_decorate_tree(res, args...);
 
     this->output_output_tree_type_definitions(res, args...);
     this->output_builtin_tree_type_definitions(res);

@@ -39,6 +39,11 @@ namespace spurv {
     tt::ensure_defined(res, declaration_states);
   }
 
+  template<typename tt>
+  void SValue<tt>::ensure_type_decorated(std::vector<uint32_t>& bin, std::vector<bool*>& decoration_states) {
+    tt::ensure_decorated(bin, decoration_states);
+  }
+
 
   /*
    * Constant member functions
@@ -108,18 +113,22 @@ namespace spurv {
   template<typename tt, SStorageClass storage>
   void SPointerVar<tt, storage>::ensure_type_defined(std::vector<uint32_t>& res,
 						std::vector<SDeclarationState*>& declaration_states) {
-    tt::ensure_defined(res, declaration_states);
     SPointer<storage, tt>::ensure_defined(res, declaration_states);
   }
-  
+
+  template<typename tt, SStorageClass storage>
+  void SPointerVar<tt, storage>::ensure_type_decorated(std::vector<uint32_t>& res,
+						       std::vector<bool*>& decoration_states) {
+    SPointer<storage, tt>::ensure_decorated(res, decoration_states);
+  }
   
   /*
    * SUniformVar member functions
    */
   
-  template<typename tt>
-  SUniformVar<tt>::SUniformVar(int s, int b, int m,
-			       int pointer_id, int parent_struct_id) : SPointerVar<tt, STORAGE_UNIFORM>(pointer_id) {
+  template<SStorageClass storage, typename tt>
+  SUniformVar<storage, tt>::SUniformVar(int s, int b, int m,
+			       int pointer_id, int parent_struct_id) : SPointerVar<tt, storage>(pointer_id) {
     this->set_no = s;
     this->bind_no = b;
     this->member_no = m;
@@ -128,31 +137,41 @@ namespace spurv {
     this->member_index = SUtils::allocate<Constant<int> >(this->member_no);
   }
 
-  template<typename tt>
-  void SUniformVar<tt>::define(std::vector<uint32_t>& res) {
+  template<SStorageClass storage, typename tt>
+  void SUniformVar<storage, tt>::define(std::vector<uint32_t>& res) {
 
-    int individual_pointer_id = SUtils::getNewID();
+    // If the variable is an array, we don't load from it, only return pointer
+    if(tt::getKind() == STypeKind::KIND_ARR ||
+       tt::getKind() == STypeKind::KIND_RUN_ARR) {
+      // OpAccessChain
+      SUtils::add(res, (5 << 16) | 65);
+      SUtils::add(res, SPointer<storage, tt>::getID());
+      SUtils::add(res, this->id);
+      SUtils::add(res, this->parent_struct_id);
+      SUtils::add(res, SConstantRegistry::getIDInteger(32, 1, this->member_no));
+    } else {
+      int individual_pointer_id = SUtils::getNewID();
     
-    // OpAccessChain
-    SUtils::add(res, (5 << 16) | 65);
-    SUtils::add(res, SPointer<STORAGE_UNIFORM, tt>::getID());
-    SUtils::add(res, individual_pointer_id);
-    SUtils::add(res, this->parent_struct_id);
-    SUtils::add(res, SConstantRegistry::getIDInteger(32, 1, this->member_no)); 
+      // OpAccessChain
+      SUtils::add(res, (5 << 16) | 65);
+      SUtils::add(res, SPointer<storage, tt>::getID());
+      SUtils::add(res, individual_pointer_id);
+      SUtils::add(res, this->parent_struct_id);
+      SUtils::add(res, SConstantRegistry::getIDInteger(32, 1, this->member_no)); 
     
-    // OpLoad
-    SUtils::add(res, (4 << 16) | 61);
-    SUtils::add(res, tt::getID());
-    SUtils::add(res, this->id);
-    SUtils::add(res, individual_pointer_id);
+      // OpLoad
+      SUtils::add(res, (4 << 16) | 61);
+      SUtils::add(res, tt::getID());
+      SUtils::add(res, this->id);
+      SUtils::add(res, individual_pointer_id);
+    }
   }
 
-  template<typename tt>
-  void SUniformVar<tt>::ensure_type_defined(std::vector<uint32_t>& res,
+  template<SStorageClass storage, typename tt>
+  void SUniformVar<storage, tt>::ensure_type_defined(std::vector<uint32_t>& res,
 					    std::vector<SDeclarationState*>& declaration_states) {
 
-    tt::ensure_defined(res, declaration_states);
-    SPointer<STORAGE_UNIFORM, tt>::ensure_defined(res, declaration_states);
+    SPointer<storage, tt>::ensure_defined(res, declaration_states);
 
     this->member_index->ensure_type_defined(res, declaration_states);
   }
@@ -296,6 +315,15 @@ namespace spurv {
     this->condition->ensure_type_defined(res, declaration_states);
     this->val_true->ensure_type_defined(res, declaration_states);
     this->val_false->ensure_type_defined(res, declaration_states);
+  }
+
+  template<typename tt>
+  void SelectConstruct<tt>::ensure_type_decorated(std::vector<uint32_t>& res,
+						  std::vector<bool*>& decoration_states) {
+    SPointer<STORAGE_FUNCTION, tt>::ensure_decorated(res, decoration_states);
+    this->condition->ensure_type_decorated(res, decoration_states);
+    this->val_true->ensure_type_decorated(res, decoration_states);
+    this->val_false->ensure_type_decorated(res, decoration_states);
   }
 
   

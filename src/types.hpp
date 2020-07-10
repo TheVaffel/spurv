@@ -74,6 +74,9 @@ namespace spurv {
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
+
+    static void ensure_decorated(std::vector<uint32_t>& bin,
+				 std::vector<bool*>& decoration_states);
     
     static void getDSType(DSType* type);
 
@@ -186,8 +189,8 @@ namespace spurv {
    * SArr - Representation of arrays
    */
   
-  template<int n, typename tt>
-  class SArr : public SType<STypeKind::KIND_ARR, n, 0, 0, 0, 0, tt >  {
+  template<int n, SStorageClass storage, typename tt>
+  class SArr : public SType<STypeKind::KIND_ARR, storage, n, 0, 0, 0, tt >  {
     constexpr SArr() {
       static_assert(is_spurv_type<tt>::value, "Inner type of SArr must be a spurv type");
     }
@@ -196,8 +199,32 @@ namespace spurv {
     static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
 					    std::vector<SDeclarationState*>& declaration_states);
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
+    static void ensure_decorated(std::vector<uint32_t>& bin,
+				 std::vector<bool*>& decoration_states);
     static void define(std::vector<uint32_t>& bin);
     static constexpr int getSize();
+  };
+  
+
+  /*
+   * SRunArr - Array with runtime-specified length
+   */
+  
+  template<SStorageClass storage, typename tt>
+  class SRunArr : public SType<STypeKind::KIND_RUN_ARR, storage, 0, 0, 0, 0, tt> {
+    constexpr SRunArr() {
+      static_assert(is_spurv_type<tt>::value, "Inner type of SRunArr must be a spurv type");
+    }
+    
+    static bool is_decorated;
+    
+  public:
+    static void ensure_defined_dependencies(std::vector<uint32_t>& bin,
+					    std::vector<SDeclarationState*>& declaration_states);
+    static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
+    static void define(std::vector<uint32_t>& bin);
+    static void ensure_decorated(std::vector<uint32_t>& bin,
+				 std::vector<bool*>& decoration_states);
   };
   
 
@@ -212,6 +239,8 @@ namespace spurv {
 					    std::vector<SDeclarationState*>& declaration_states);
     static void ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states);
     static void define(std::vector<uint32_t>& bin);
+    static void ensure_decorated(std::vector<uint32_t>& bin,
+				 std::vector<bool*>& decoration_states);
   };
 
 
@@ -231,12 +260,12 @@ namespace spurv {
     static void define(std::vector<uint32_t>& bin);
     static void ensure_decorated(std::vector<uint32_t>& bin,
 				 std::vector<bool*>& decoration_states);
-    static void decorate_member_offsets(std::vector<uint32_t>& bin);
+    static void decorate_members(std::vector<uint32_t>& bin);
     
     static constexpr int getSize();
 
     template<int member_no, int start_size, typename First, typename... Types>
-    static void decorate_member_offsets(std::vector<uint32_t>& bin);
+    static void decorate_members(std::vector<uint32_t>& bin);
   };
 
 
@@ -276,8 +305,8 @@ namespace spurv {
   template<typename>
   struct is_spurv_mat_type : std::false_type {};
   
-  template<int n, typename tt>
-  struct is_spurv_type<SArr<n, tt> > : std::true_type { static_assert(is_spurv_type<tt>::value); };
+  template<int n, SStorageClass storage, typename tt>
+  struct is_spurv_type<SArr<n, storage, tt> > : std::true_type { static_assert(is_spurv_type<tt>::value); };
 
   template<SStorageClass storage, typename tt>
   struct is_spurv_type<SPointer<storage, tt> > : std::true_type { static_assert(is_spurv_type<tt>::value); };
@@ -287,6 +316,9 @@ namespace spurv {
   
   template<int d>
   struct is_spurv_type<STexture<d> > : std::true_type {} ;
+
+  template<SStorageClass storage, typename tt>
+  struct is_spurv_type<SRunArr<storage, tt> > : std::true_type {};
 
   template<int n, int m, typename inner>
   struct is_spurv_mat_type<SMat<n, m, inner> > : std::true_type {};
@@ -337,7 +369,16 @@ namespace spurv {
   typedef SMat<2, 1, float_s> vec2_s;
   typedef SMat<3, 1, float_s> vec3_s;
   typedef SMat<4, 1, float_s> vec4_s;
-  typedef SArr<1, float_s> arr_1_float_s;
+  typedef SArr<1, STORAGE_INPUT, float_s> arr_1_float_s;
+  
+  typedef SRunArr<STORAGE_STORAGE_BUFFER, float_s> float_sarr_s;
+  typedef SRunArr<STORAGE_STORAGE_BUFFER, mat2_s> mat2_sarr_s;
+  typedef SRunArr<STORAGE_STORAGE_BUFFER, mat3_s> mat3_sarr_s;
+  typedef SRunArr<STORAGE_STORAGE_BUFFER, mat4_s> mat4_sarr_s;
+  typedef SRunArr<STORAGE_STORAGE_BUFFER, vec2_s> vec2_sarr_s;
+  typedef SRunArr<STORAGE_STORAGE_BUFFER, vec3_s> vec3_sarr_s;
+  typedef SRunArr<STORAGE_STORAGE_BUFFER, vec4_s> vec4_sarr_s;
+  
   typedef STexture<2> texture2D_s;
 
   

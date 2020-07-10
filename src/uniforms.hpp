@@ -34,18 +34,18 @@ namespace spurv {
   };
 
 
-  /*
-   * SUniformBinding - represents a single uniform binding of a descriptor set
-   */
   
-  template<typename... InnerTypes>
-  class SUniformBinding : public SUniformBindingBase {
-    
-  private:
+  /*
+   * SStructBinding - Base for bindings using structs (uniforms and 
+   */
+
+  template<SStorageClass store_ind, typename... InnerTypes>
+  class SStructBinding : public SUniformBindingBase {
+  protected:
     std::vector<void*> value_pointers;
     
   public:  
-    SUniformBinding(int sn, int bn);
+    SStructBinding(int sn, int bn);
     
     template<int n>
     SValue<typename SUtils::NthType<n, InnerTypes...>::type >& member();
@@ -56,6 +56,28 @@ namespace spurv {
 			      std::vector<bool*>& decoration_states);
   };
 
+  
+  /*
+   * SUniformBinding - represents a single uniform binding of a descriptor set
+   */
+  
+  template<typename... InnerTypes>
+  class SUniformBinding : public SStructBinding<SStorageClass::STORAGE_UNIFORM, InnerTypes...> {
+    SUniformBinding(int sn, int bn);
+
+    friend class SUtils;
+  };
+
+  /*
+   * SStorageBuffer - represents storage buffers
+   */
+
+  template<typename... InnerTypes>
+  class SStorageBuffer : public SStructBinding<SStorageClass::STORAGE_STORAGE_BUFFER, InnerTypes...> {
+    SStorageBuffer(int sn, int bn);
+
+    friend class SUtils;
+  };
   
   /*
    * SUniformConstant - for uniforms that don't need structs - like textures
@@ -73,7 +95,7 @@ namespace spurv {
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
   };
-  
+
 
 };
 

@@ -29,25 +29,35 @@ namespace spurv {
     using type = inner;
   };
 
+  template<int n, SStorageClass storage, typename inner>
+  struct lookup_result<SArr<n, storage, inner> > {
+    using type = inner;
+  };
+
+  template<SStorageClass storage, typename inner>
+  struct lookup_result<SRunArr<storage, inner> > {
+    using type = inner;
+  };
+
   
   /*
    * Utility for determining result type of lookups
    */
   
-  template<typename tt>
-  struct lookup_index {
-    using type = void_s;
-  };
+  template<typename tt, typename ti>
+  struct is_lookup_index : std::false_type {};
 
   template<int n>
-  struct lookup_index<STexture<n> > {
-    using type = SMat<n, 1, float_s>;
-  };
+  struct is_lookup_index<STexture<n>, SMat<n, 1, float_s>  > : std::true_type {};
 
-  template<int n, typename inner>
-  struct lookup_index<SMat<n, 1, inner> > {
-    using type = int_s;
-  };
+  template<int n, typename inner, int iw, int is>
+  struct is_lookup_index<SMat<n, 1, inner>, SInt<iw, is> > : std::true_type {};
+  
+  template<int n, SStorageClass storage, typename inner, int iw, int is>
+  struct is_lookup_index<SArr<n, storage, inner>, SInt<iw, is> > : std::true_type {};
+
+  template<SStorageClass storage, typename inner, int iw, int is>
+  struct is_lookup_index<SRunArr<storage, inner>, SInt<iw, is> > : std::true_type {};
 
   
   /*
@@ -72,13 +82,17 @@ namespace spurv {
     int getID() const;
     
     void ensure_defined(std::vector<uint32_t>& res);
+
+    virtual void ensure_type_decorated(std::vector<uint32_t>& bin,
+				       std::vector<bool*>& decoration_states);
     
     virtual void define(std::vector<uint32_t>& res) = 0;
 
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
 
-    SValue<typename lookup_result<tt>::type>& operator[](SValue<typename lookup_index<tt>::type >& index);
+    template<typename ti>
+    SValue<typename lookup_result<tt>::type>& operator[](SValue<ti>& index);
     
     SValue<typename lookup_result<tt>::type>& operator[](int s); // Lookup operator that requires constants
     
@@ -119,6 +133,8 @@ namespace spurv {
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
+    virtual void ensure_type_decorated(std::vector<uint32_t>& bin,
+				       std::vector<bool*>& decoration_states);
 
     friend class SUtils;
   };
@@ -128,8 +144,8 @@ namespace spurv {
    * SUniformVar - Represents uniforms (duh)
    */
   
-  template<typename tt> // n is element number within binding
-  class SUniformVar : public SPointerVar<tt, STORAGE_UNIFORM> {
+  template<SStorageClass storage, typename tt> // n is element number within binding
+  class SUniformVar : public SPointerVar<tt, storage> {
     int set_no, bind_no, member_no;
     int pointer_id, parent_struct_id;
 
@@ -192,6 +208,8 @@ namespace spurv {
     virtual void print_nodes_post_order(std::ostream& str) const ;
     virtual void ensure_type_defined(std::vector<uint32_t>& res, std::vector<SDeclarationState*>& declaration_states);
     virtual void define(std::vector<uint32_t>& res);
+    virtual void ensure_type_decorated(std::vector<uint32_t>& bin,
+				       std::vector<bool*>& decoration_states);
 
       void register_left_node(SValue<tt2>& node);
       void register_right_node(SValue<tt3>& node);
@@ -242,6 +260,8 @@ namespace spurv {
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
+    virtual void ensure_type_decorated(std::vector<uint32_t>& bin,
+				       std::vector<bool*>& decoration_states);
     
     friend class SUtils;
   };
@@ -279,6 +299,14 @@ namespace spurv {
   typedef SValue<vec4_s>&        vec4_v;
   typedef SValue<arr_1_float_s>& arr_1_float_v;
   typedef SValue<texture2D_s>&   texture2D_v;
+
+  typedef SValue<float_sarr_s>&   float_sarr_v;
+  typedef SValue<mat2_sarr_s>&    mat2_sarr_v;
+  typedef SValue<mat3_sarr_s>&    mat3_sarr_v;
+  typedef SValue<mat4_sarr_s>&    mat4_sarr_v;
+  typedef SValue<vec2_sarr_s>&    vec2_sarr_v;
+  typedef SValue<vec3_sarr_s>&    vec3_sarr_v;
+  typedef SValue<vec4_sarr_s>&    vec4_sarr_v;
 
 };
 

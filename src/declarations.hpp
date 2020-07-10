@@ -20,6 +20,7 @@ namespace spurv {
     KIND_FLOAT,
     KIND_MAT,
     KIND_ARR,
+    KIND_RUN_ARR,
     KIND_POINTER,
     KIND_STRUCT,
     KIND_IMAGE,
@@ -37,6 +38,7 @@ namespace spurv {
     STORAGE_UNIFORM = 2,
     STORAGE_OUTPUT = 3,
     STORAGE_FUNCTION = 7,
+    STORAGE_STORAGE_BUFFER = 12,
     // ... There are more, but perhaps not needed just now
   };
   
@@ -72,7 +74,16 @@ namespace spurv {
     BUILTIN_VERTEX_INDEX,
     BUILTIN_FRAG_COORD
   };
+  
+  enum SExtension {
+    EXTENSION_STORAGE_BUFFER = 0,
+    EXTENSION_END
+  };
 
+  
+  std::string shaderExtensions[EXTENSION_END] = {
+    "SPV_KHR_storage_buffer_storage_class"
+  };
 
   /*
    * Classes - declared to ease dependency graph
@@ -97,8 +108,11 @@ namespace spurv {
   template<int n, int m, typename inner>
   class SMat;
 
-  template<int n, typename inner>
+  template<int n, SStorageClass str, typename inner>
   class SArr;
+
+  template<SStorageClass str, typename inner>
+  class SRunArr;
 
   class SBool;
 
@@ -114,10 +128,13 @@ namespace spurv {
 
   class SUniformBindingBase;
 
+  template<SStorageClass storage, typename... InnerTypes>
+  class SStructBinding;
+  
   template<typename... InnerTypes>
   class SUniformBinding;
 
-  template<typename tt>
+  template<SStorageClass storage, typename tt>
   class SUniformVar;
 
   template<typename... InnerTypes>

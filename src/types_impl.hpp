@@ -44,6 +44,10 @@ namespace spurv {
     return declarationState.id;
   }
 
+  template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerType>
+  void SType<kind, arg0, arg1, arg2, arg3, arg4, InnerType...>::ensure_decorated(std::vector<uint32_t>& bin,
+										  std::vector<bool*>& decoration_states) { }
+
   template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
   bool SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::isDefined() {
     return declarationState.is_defined;
@@ -226,37 +230,99 @@ namespace spurv {
    * Arr member functions
    */
   
-  template<int n, typename tt>
-  void SArr<n, tt>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
+  template<int n, SStorageClass storage, typename tt>
+  void SArr<n, storage, tt>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
 						    std::vector<SDeclarationState*>& declaration_states) {
     tt::ensure_defined(bin, declaration_states);
+    SPointer<storage, tt>::ensure_defined(bin, declaration_states);
   }
 
-  template<int n, typename tt>
-  void SArr<n, tt>::ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states) {
-    if( !SArr<n, tt>::isDefined()) {
+  template<int n, SStorageClass storage, typename tt>
+  void SArr<n, storage, tt>::ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states) {
+    if( !SArr<n, storage, tt>::isDefined()) {
 	ensure_defined_dependencies(bin, declaration_states);
 	define(bin);
-	declaration_states.push_back(&(SArr<n, tt>::declarationState));
+	declaration_states.push_back(&(SArr<n, storage, tt>::declarationState));
       }
     }
   
-  template<int n, typename tt>
-  void SArr<n, tt>::define(std::vector<uint32_t>& bin) {
-    SArr<n, tt>::ensureInitID();
-    SArr<n, tt>::declareDefined();
+  template<int n, SStorageClass storage, typename tt>
+  void SArr<n, storage, tt>::define(std::vector<uint32_t>& bin) {
+    SArr<n, storage, tt>::ensureInitID();
+    SArr<n, storage, tt>::declareDefined();
     
     SUtils::add(bin, (4 << 16) | 28);
-    SUtils::add(bin, SArr<n, tt>::declarationState.id);
+    SUtils::add(bin, SArr<n, storage, tt>::declarationState.id);
     SUtils::add(bin, tt::getID());
     SUtils::add(bin, n);
   }
 
-  template<int n, typename tt>
-  constexpr int SArr<n, tt>::getSize() {
+  template<int n, SStorageClass storage, typename tt>
+  void SArr<n, storage, tt>::ensure_decorated(std::vector<uint32_t>& bin,
+				     std::vector<bool*>& decoration_states) {
+    tt::ensure_decorated(bin,
+			 decoration_states);
+  }
+
+  template<int n, SStorageClass storage, typename tt>
+  constexpr int SArr<n, storage, tt>::getSize() {
     return n * tt::getSize(); // Assume perfectly aligned
   }
 
+
+  /*
+   * RunArr member functions
+   */
+
+  template<SStorageClass storage, typename tt>
+  void SRunArr<storage, tt>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
+					       std::vector<SDeclarationState*>& declaration_states) {
+    tt::ensure_defined(bin, declaration_states);
+    SPointer<storage, tt>::ensure_defined(bin, declaration_states);
+  }
+
+  template<SStorageClass storage, typename tt>
+  void SRunArr<storage, tt>::ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states) {
+    if( !SRunArr<storage, tt>::isDefined()) {
+      ensure_defined_dependencies(bin, declaration_states);
+      define(bin);
+      declaration_states.push_back(&(SRunArr<storage, tt>::declarationState));
+    }
+  }
+
+  template<SStorageClass storage, typename tt>
+  void SRunArr<storage, tt>::define(std::vector<uint32_t>& bin) {
+    SRunArr<storage, tt>::ensureInitID();
+    SRunArr<storage, tt>::declareDefined();
+
+    SUtils::add(bin, (3 << 16) | 29);
+    SUtils::add(bin, SRunArr<storage, tt>::declarationState.id);
+    SUtils::add(bin, tt::getID());
+  }
+
+  template<SStorageClass storage, typename tt>
+  void SRunArr<storage, tt>::ensure_decorated(std::vector<uint32_t>& bin,
+				     std::vector<bool*>& decoration_states) {
+    if( is_decorated) {
+      return;
+    }
+    
+    tt::ensure_decorated(bin,
+			 decoration_states);
+
+    
+    SRunArr<storage, tt>::ensureInitID();
+    
+    is_decorated = true;
+    decoration_states.push_back(&is_decorated);
+
+    // OpDecorate <type_id> ArrayStride <type_size>
+    SUtils::add(bin, (4 << 16) | 71);
+    SUtils::add(bin, SRunArr<storage, tt>::declarationState.id);
+    SUtils::add(bin, 6); // ArrayStride
+    SUtils::add(bin, tt::getSize());
+  }
+  
   
   /*
    * Pointer member functions
@@ -289,7 +355,15 @@ namespace spurv {
 
   }
 
+  template<SStorageClass storage, typename tt>
+  void SPointer<storage, tt>::ensure_decorated(std::vector<uint32_t>& bin,
+					       std::vector<bool*>& decoration_states) {
+    // Most input/output variable decorations are handled in shader, only decorate inner types here
+    tt::ensure_decorated(bin, decoration_states);
+  }
+
   // No getSize function defined for pointers
+
   
   /*
    * Struct member variables
@@ -297,7 +371,10 @@ namespace spurv {
 
   template<typename... InnerTypes>
   bool SStruct<InnerTypes...>::is_decorated = false;
-  
+
+  template<SStorageClass storage, typename inner>
+  bool SRunArr<storage, inner>::is_decorated = false;
+
   
   /*
    * Struct member functions
@@ -337,7 +414,7 @@ namespace spurv {
   
   template<typename... InnerTypes>
   template<int member_no, int start_size, typename First, typename... Types>
-  void SStruct<InnerTypes...>::decorate_member_offsets(std::vector<uint32_t>& bin) {
+  void SStruct<InnerTypes...>::decorate_members(std::vector<uint32_t>& bin) {
 
     
     if constexpr( is_spurv_mat_type<First>::value ) {
@@ -362,8 +439,19 @@ namespace spurv {
     SUtils::add(bin, 35);
     SUtils::add(bin, start_size);
 
+    // When using structs as uniform inputs (as is the only use per now),
+    // one must declare each member as non-writable (readonly), or the
+    // device is required to use the vertexPipelineStoresAndAtomics feature
+
+    // MemberDecorate <struct_id> <member_no> NonWritable
+    SUtils::add(bin, (4 << 16) | 72);
+    SUtils::add(bin, SStruct<InnerTypes...>::getID());
+    SUtils::add(bin, member_no);
+    SUtils::add(bin, 24);
+    
+
     if constexpr( sizeof...(Types) > 0) {
-        decorate_member_offsets<member_no + 1,
+        decorate_members<member_no + 1,
 					     start_size + First::getSize(),
 					     Types...>(bin);
       }	       
@@ -387,7 +475,7 @@ namespace spurv {
     SUtils::add(bin, 2);
 
     SStruct<InnerTypes...>::
-      decorate_member_offsets<0, 0, InnerTypes...>(bin);
+      decorate_members<0, 0, InnerTypes...>(bin);
   }
 
   

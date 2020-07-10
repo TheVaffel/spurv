@@ -128,12 +128,6 @@ int main(){
   wg::Pipeline* texPipeline = wg.createPipeline(vertAttrDesc,
 					       {layout},
 					       {vertexShader, fragmentShader});
-  
-  
-  // WinginePipeline colorPipeline = wg.createPipeline({},
-  // {vertexShader, fragmentShader},
-  // {WG_ATTRIB_FORMAT_4, WG_ATTRIB_FORMAT_4},
-  // true);
 
   wg::RenderFamily* family = wg.createRenderFamily(texPipeline, true);
 

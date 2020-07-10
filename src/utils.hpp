@@ -76,8 +76,11 @@ namespace spurv {
     template<int n, int m, typename inner>
     friend class SMat;
 
-    template<int n, typename inner>
+    template<int n, SStorageClass storage, typename inner>
     friend class SArr;
+
+    template<SStorageClass storage, typename inner>
+    friend class SRunArr;
 
     template<SStorageClass n, typename inn>
     friend class SPointer;
@@ -98,13 +101,16 @@ namespace spurv {
 
     friend class SConstantRegistry;
 
+    template<SStorageClass storage, typename... InnerTypes>
+    friend class SStructBinding;
+    
     template<typename... InnerTypes>
     friend class SUniformBinding;
 
     template<typename tt>
     friend class SUniformConstant;
 
-    template<typename tt>
+    template<SStorageClass storage, typename tt>
     friend class SUniformVar;
 
     template<typename... InnerTypes>
