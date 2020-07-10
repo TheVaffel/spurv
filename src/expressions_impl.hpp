@@ -187,7 +187,9 @@ namespace spurv {
       SUtils::add(res, this->v1->getID());
       SUtils::add(res, this->v2->getID());
       
-    } else if(d1 == d2 && d2 == d3 && op != EXPR_DOT) {
+    } else if(d1 == d2 && d2 == d3 &&
+	      !(tt2::getKind() == STypeKind::KIND_MAT && // Make sure not a matrix
+		tt2::getArg1() > 1 && tt2::getArg0() > 1)) {
       if (d1_comp.kind == STypeKind::KIND_INT) {
 	if constexpr(op == EXPR_ADDITION) {
 	    opcode = 128;
