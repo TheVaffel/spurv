@@ -131,7 +131,7 @@ namespace spurv {
 	} else {
 	  if(d2.a1 == 0 && d3.a1 == 0) {
 	    if constexpr(op == EXPR_LESSTHAN) {
-	      opcode = 176;
+		opcode = 176;
 	      } else if(op == EXPR_GREATERTHAN) {
 	      opcode = 172;
 	    } else if(op == EXPR_LESSOREQUAL) {
@@ -290,55 +290,53 @@ namespace spurv {
 	    SUtils::add(res, this->v2->getID());
 	  }
 	} else if constexpr(op == EXPR_LOOKUP) {
-	  if(d2.kind == STypeKind::KIND_TEXTURE) {
-	    // OpImageSampleExplicitLod
-	    SUtils::add(res, (7 << 16) | 88);
-	    SUtils::add(res, vec4_s::getID());
-	    SUtils::add(res, this->getID());
-	    SUtils::add(res, this->v1->getID());
-	    SUtils::add(res, this->v2->getID());
-	    SUtils::add(res, 2); // LoD
-	    SUtils::add(res, SConstantRegistry::getIDFloat(32, 0.0f));
-	  } else if(d2.kind == STypeKind::KIND_MAT) {
-	    
-	    if (d2.a1 == 1) {
-	      // OpVectorExtractDynamic <result_type> <result_id> <vector> <index>
-	      SUtils::add(res, (5 << 16) | 77);
-	      SUtils::add(res, float_s::getID());
+	  if constexpr (tt2::getKind() == STypeKind::KIND_TEXTURE) {
+	      // OpImageSampleExplicitLod
+	      SUtils::add(res, (7 << 16) | 88);
+	      SUtils::add(res, vec4_s::getID());
 	      SUtils::add(res, this->getID());
 	      SUtils::add(res, this->v1->getID());
 	      SUtils::add(res, this->v2->getID());
+	      SUtils::add(res, 2); // LoD
+	      SUtils::add(res, SConstantRegistry::getIDFloat(32, 0.0f));
+	    } else if constexpr (tt2::getKind() == STypeKind::KIND_MAT) {
+	    
+	      if (d2.a1 == 1) {
+		// OpVectorExtractDynamic <result_type> <result_id> <vector> <index>
+		SUtils::add(res, (5 << 16) | 77);
+		SUtils::add(res, float_s::getID());
+		SUtils::add(res, this->getID());
+		SUtils::add(res, this->v1->getID());
+		SUtils::add(res, this->v2->getID());
 	      
-	    } else {
-	      // OpCompositeExtract <result_type> <result_id> <matrix> <index>
-	      SUtils::add(res, (5 << 16) | 81);
-	      SUtils::add(res, SMat<tt2::getArg0(), 1, typename tt2::firstInnerType>::getID());
-	      SUtils::add(res, this->getID());
+	      } else {
+		// OpCompositeExtract <result_type> <result_id> <matrix> <index>
+		SUtils::add(res, (5 << 16) | 81);
+		SUtils::add(res, SMat<tt2::getArg0(), 1, typename tt2::firstInnerType>::getID());
+		SUtils::add(res, this->getID());
+		SUtils::add(res, this->v1->getID());
+		SUtils::add(res, this->v2->getID());
+	    
+	      }
+	    } else if constexpr (tt2::getKind() == STypeKind::KIND_ARR ||
+				 tt2::getKind() == STypeKind::KIND_RUN_ARR) {
+	      int temp_id = SUtils::getNewID();
+	    
+	      // OpAccessChain <result_pointer_type> <result_id> <array_pointer> <index>
+	      SUtils::add(res, (5 << 16) | 65);
+	      SUtils::add(res, SPointer<(SStorageClass)tt2::getArg0(),
+			  typename tt2::firstInnerType>::getID()); 
+	      SUtils::add(res, temp_id);
 	      SUtils::add(res, this->v1->getID());
 	      SUtils::add(res, this->v2->getID());
-	    
-	    }
-	  } else if(d2.kind == STypeKind::KIND_ARR ||
-		    d2.kind == STypeKind::KIND_RUN_ARR) {
-	    int temp_id = SUtils::getNewID();
-	    
-	    // OpAccessChain <result_pointer_type> <result_id> <array_pointer> <index>
-	    SUtils::add(res, (5 << 16) | 65);
-	    SUtils::add(res, SPointer<(SStorageClass)tt2::getArg0(),
-	       typename tt2::firstInnerType>::getID()); 
-	    /* SUtils::add(res, SPointer<STORAGE_STORAGE_BUFFER,
-	       typename tt2::firstInnerType>::getID()); */
-	    SUtils::add(res, temp_id);
-	    SUtils::add(res, this->v1->getID());
-	    SUtils::add(res, this->v2->getID());
 
-	    // OpLoad
-	    SUtils::add(res, (4 << 16) | 61);
-	    SUtils::add(res, tt2::firstInnerType::getID());
-	    SUtils::add(res, this->getID());
-	    SUtils::add(res, temp_id);
+	      // OpLoad
+	      SUtils::add(res, (4 << 16) | 61);
+	      SUtils::add(res, tt2::firstInnerType::getID());
+	      SUtils::add(res, this->getID());
+	      SUtils::add(res, temp_id);
 	    
-	  }else {
+	    }else {
 	    printf("Expression lookup operation not yet implemented\n");
 	    exit(-1);
 	  }

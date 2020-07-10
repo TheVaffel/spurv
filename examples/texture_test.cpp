@@ -86,7 +86,7 @@ int main(){
     float_v coo = float_s::cons(0.5f);
     float_v factor = select(coo < oscil, coo, oscil);
     
-    texture2D_v tex = shader.uniformBinding<texture2D_s>(0, 1);
+    texture2D_v tex = shader.uniformConstant<texture2D_s>(0, 1);
 
     vec2_v coord = shader.input<0>();
 
