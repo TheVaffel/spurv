@@ -31,6 +31,9 @@ namespace spurv {
     static void addIDsRecursive(std::vector<uint32_t>& bin);
 
     template<typename First, typename... Types>
+    static constexpr int sum_num_elements(First&& ft, Types&&... args);
+
+    template<typename First, typename... Types>
     static constexpr bool isSTypeRecursive();
 
     template<typename First, typename... Types>

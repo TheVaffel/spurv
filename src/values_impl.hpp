@@ -193,7 +193,7 @@ namespace spurv {
   template<int n, int m, typename inner>
   template<typename... Types>
   ConstructMatrix<n, m, inner>::ConstructMatrix(Types&&... args) {
-    static_assert(sizeof...(args) == n * m,
+    static_assert(SUtils::sum_num_elements(args...) ==  n * m, // sizeof...(args) == n * m,
 		  "Number of arguments to matrix construction does not match number of components in matrix");
     insertComponents(0, args...);
   }
@@ -202,7 +202,7 @@ namespace spurv {
   template<typename t1, typename... trest>
   void ConstructMatrix<n, m, inner>::insertComponents(int u, t1&& first, trest&&... rest) {
 
-    this->components[u] = &SValueWrapper::unwrap_to<t1, SFloat<32> >(first);
+    this->components[u] = &SValueWrapper::unwrap_to<t1, inner>(first);
     if constexpr(sizeof...(rest) > 0) {
 	insertComponents(u + 1, rest...);
       }
@@ -214,14 +214,39 @@ namespace spurv {
       this->components[i]->ensure_defined(res);
     }
 
-    // OpCompositeConstruct <result type> <resul id> <components...>
-    SUtils::add(res, ((3 + n * m) << 16) | 80);
-    SUtils::add(res, SMat<n, m, inner>::getID());
-    SUtils::add(res, this->id);
+    if (m == 1) {
 
-    for(int i = 0; i < m; i++) { // Output in col-major order
-      for(int j = 0; j < n; j++) {
-	SUtils::add(res, this->components[j * m + i]->getID()); // Think this is right?
+      // OpCompositeConstruct <result type> <result id> <components...>
+      SUtils::add(res, ((3 + n * m) << 16) | 80);
+      SUtils::add(res, SMat<n, m, inner>::getID());
+      SUtils::add(res, this->id);
+      
+      for(int i = 0; i < n; i++) {
+	SUtils::add(res, this->components[i]->getID());
+      }
+    } else {
+      std::vector<int> col_ids(m);
+      for(int i = 0; i < m; i++) { // Output in col-major order
+	col_ids[i] = SUtils::getNewID();
+	
+	// OpCompositeConstruct <vector type> <result id>
+	SUtils::add(res, ((3 + n) << 16) | 80);
+	SUtils::add(res, SMat<n, 1, inner>::getID());
+	SUtils::add(res, col_ids[i]);
+	
+	for(int j = 0; j < n; j++) {
+	  
+	  SUtils::add(res, this->components[j * m + i]->getID()); // Think this is right?
+	}
+      }
+
+      // OpCompositeConstruct <result type> <result id> <components...>
+      SUtils::add(res, ((3 + m) << 16) | 80);
+      SUtils::add(res, SMat<n, m, inner>::getID());
+      SUtils::add(res, this->id);
+      
+      for(int i = 0; i < m; i++) {
+	SUtils::add(res, col_ids[i]);
       }
     }
   }

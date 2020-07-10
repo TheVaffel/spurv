@@ -32,6 +32,41 @@ namespace spurv {
       }
   }
 
+
+  template<typename tt>
+  struct is_falg_mat : std::false_type {};
+
+  template<int n, int m>
+  struct is_falg_mat<falg::Matrix<n, m> > : std::true_type {};
+
+  template<int n, int m>
+  static int dims(falg::Matrix<n, m>& mat) {
+    return n * m;
+  }
+  
+  template<typename FirstType, typename... InnerTypes>
+  constexpr int SUtils::sum_num_elements(FirstType&& ft, InnerTypes&&... args) {
+    int s = 0;
+    if constexpr (sizeof...(InnerTypes) > 0) {
+	s = sum_num_elements(args...);
+      }
+    
+    if constexpr(is_spurv_value<FirstType>::value) {
+	using tt = typename FirstType::type;
+	if constexpr(tt::getKind() == STypeKind::KIND_MAT) {
+	    return s + tt::getArg0() * tt::getArg1();
+	  } else {
+	  return s + 1;
+	}
+      } else if constexpr(is_falg_mat<FirstType>::value) {
+	return s + dims(ft);
+      } else {
+
+      return s + 1;
+    }
+  }
+
+
   template<typename FirstType, typename... InnerTypes>
   constexpr bool SUtils::isSTypeRecursive() {
     if constexpr(is_spurv_type<FirstType>::value == false) {
