@@ -225,18 +225,25 @@ namespace spurv {
   template<int n, int m, typename inner>
   class ConstructMatrix : public SValue<SMat<n, m, inner> > {
   protected:
+
+    bool using_columns();
+    
     template<typename... Types>
     ConstructMatrix(Types&&... args);
     
     template<typename t1, typename... trest>
     void insertComponents(int u, t1&& first, trest&&... args);
 
+    template<typename t1, typename... trest>
+    void insertColumns(int u, t1&& first, trest&&... args);
+
+    std::vector<void*> components; // Values in row-major order
+
   public:
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
 
-    SValue<inner>* components[n * m]; // Values in row-major order
     
     friend class SUtils;
   };
@@ -276,6 +283,9 @@ namespace spurv {
   
   template<typename T>
   struct is_spurv_value<SValue<T> > : std::true_type {};
+
+  template<typename T>
+  struct is_spurv_value<SValue<T>& > : std::true_type {};
 
   template<typename t1, SExprOp op, typename t2, typename t3>
   struct is_spurv_value<SExpr<t1, op, t2, t3> > : std::true_type {};

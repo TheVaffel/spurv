@@ -32,6 +32,9 @@ namespace spurv {
       }
   }
 
+  /*
+   * Utilities for counting number of elements in values
+   */
 
   template<typename tt>
   struct is_falg_mat : std::false_type {};
@@ -43,30 +46,54 @@ namespace spurv {
   static int dims(falg::Matrix<n, m>& mat) {
     return n * m;
   }
+
+  template<typename t1>
+  constexpr int SUtils::num_elements(t1&& ft) {
+    if constexpr(is_spurv_value<t1>::value) {
+	using tt = typename std::remove_reference<t1>::type::type;
+	if constexpr(tt::getKind() == STypeKind::KIND_MAT) {
+	    return tt::getArg0() * tt::getArg1();
+	  } else {
+	  return 1;
+	}
+      } else if constexpr(is_falg_mat<t1>::value) {
+	return dims(ft);
+      } else {
+
+      return 1;
+    }
+  }
+
+  template<typename First, typename... InnerTypes>
+  constexpr bool SUtils::has_only_1_comps(First&& ft, InnerTypes&&... args) {
+    bool s = true;
+    if constexpr(sizeof...(InnerTypes) > 0) {
+	s = SUtils::has_only_1_comps(args...);
+      }
+    
+    return (SUtils::num_elements(ft) == 1) && s;
+  }
+
+  template<typename First, typename... InnerTypes>
+  constexpr bool SUtils::has_only_n_comps(int n, First&& ft, InnerTypes&&... args) {
+    bool s = true;
+    if constexpr(sizeof...(InnerTypes) > 0) {
+	s = SUtils::has_only_n_comps(n, args...);
+      }
+
+    return (SUtils::num_elements(ft) == n) && s;
+  }
   
   template<typename FirstType, typename... InnerTypes>
   constexpr int SUtils::sum_num_elements(FirstType&& ft, InnerTypes&&... args) {
     int s = 0;
     if constexpr (sizeof...(InnerTypes) > 0) {
-	s = sum_num_elements(args...);
+	s = SUtils::sum_num_elements(args...);
       }
-    
-    if constexpr(is_spurv_value<FirstType>::value) {
-	using tt = typename FirstType::type;
-	if constexpr(tt::getKind() == STypeKind::KIND_MAT) {
-	    return s + tt::getArg0() * tt::getArg1();
-	  } else {
-	  return s + 1;
-	}
-      } else if constexpr(is_falg_mat<FirstType>::value) {
-	return s + dims(ft);
-      } else {
-
-      return s + 1;
-    }
+    return s + SUtils::num_elements(ft);
   }
 
-
+  
   template<typename FirstType, typename... InnerTypes>
   constexpr bool SUtils::isSTypeRecursive() {
     if constexpr(is_spurv_type<FirstType>::value == false) {

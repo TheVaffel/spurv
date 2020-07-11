@@ -185,58 +185,111 @@ namespace spurv {
   InputVar<tt>::InputVar(int n, int pointer_id) : SPointerVar<tt, STORAGE_INPUT>(pointer_id) {
     this->input_no = n;
   }
+
   
   /*
    * ConstructMatrix member functions
    */
 
   template<int n, int m, typename inner>
+  bool ConstructMatrix<n, m, inner>::using_columns() {
+    return (n > 1 && m > 1 && this->components.size() == m);
+  }
+
+  template<int n, int m, typename inner>
   template<typename... Types>
   ConstructMatrix<n, m, inner>::ConstructMatrix(Types&&... args) {
-    static_assert(SUtils::sum_num_elements(args...) ==  n * m, // sizeof...(args) == n * m,
-		  "Number of arguments to matrix construction does not match number of components in matrix");
-    insertComponents(0, args...);
+    constexpr int num = SUtils::sum_num_elements(args...);
+    static_assert(num  ==  n * m, // sizeof...(args) == n * m,
+    		  "Number of arguments to matrix construction does not match number of components in matrix, nums were ");
+
+    // Only vectors can be constructed with concatenating other vectors
+    // Matrices, on the other hand, must be given every element explicitly, or constructed from columns only
+    static_assert((m == 1 || n == 1) || SUtils::has_only_1_comps(args...) || SUtils::has_only_n_comps(n, args...),
+		  "Matrices must be constructed with every element explicitly, or from columns exclusively");
+
+    if constexpr (m == 1 || n == 1 || SUtils::has_only_1_comps(args...)) {
+	this->components.resize(n * m);
+	insertComponents(0, args...);
+      } else {
+      this->components.resize(m);
+      insertColumns(0, args...);
+    }
   }
 
   template<int n, int m, typename inner>
   template<typename t1, typename... trest>
   void ConstructMatrix<n, m, inner>::insertComponents(int u, t1&& first, trest&&... rest) {
-
-    this->components[u] = &SValueWrapper::unwrap_to<t1, inner>(first);
+    int plus = 1;
+    if constexpr(is_spurv_value<t1>::value) {
+	using in_t = typename std::remove_reference<t1>::type::type;
+	if constexpr(is_spurv_mat_type<in_t>::value) {
+	    for(int i = 0; i < in_t::getArg0() * in_t::getArg1(); i++) {
+	      this->components[u + i] = (void*)&SValueWrapper::unwrap_to<SValue<inner>, inner>(first[i]);
+	    }
+	    plus = in_t::getArg0() * in_t::getArg1();
+	  } else {
+	  this->components[u] = (void*)&SValueWrapper::unwrap_to<t1, inner>(first);
+	}
+      } else {
+    
+      this->components[u] = (void*)&SValueWrapper::unwrap_to<t1, inner>(first);
+    }
     if constexpr(sizeof...(rest) > 0) {
-	insertComponents(u + 1, rest...);
+	insertComponents(u + plus, rest...);
+      }
+  }
+
+  template<int n, int m, typename inner>
+  template<typename t1, typename... trest>
+  void ConstructMatrix<n, m, inner>::insertColumns(int u, t1&& first, trest&&... rest) {
+    this->components[u] = (void*)&SValueWrapper::unwrap_to<t1, SMat<n, 1, inner> >(first);
+
+    if constexpr(sizeof...(rest) > 0) {
+	insertColumns(u + 1, rest...);
       }
   }
 
   template<int n, int m, typename inner>
   void ConstructMatrix<n, m, inner>::define(std::vector<uint32_t>& res) {
-    for(int i = 0; i < n * m; i++) {
-      this->components[i]->ensure_defined(res);
+    for(unsigned int i = 0; i < this->components.size(); i++) {
+      ((SValue<inner>*)this->components[i])->ensure_defined(res);
     }
 
-    if (m == 1) {
+    if (m == 1 || n == 1) {
 
       // OpCompositeConstruct <result type> <result id> <components...>
       SUtils::add(res, ((3 + n * m) << 16) | 80);
       SUtils::add(res, SMat<n, m, inner>::getID());
       SUtils::add(res, this->id);
       
-      for(int i = 0; i < n; i++) {
-	SUtils::add(res, this->components[i]->getID());
+      for(unsigned int i = 0; i < this->components.size(); i++) {
+	SUtils::add(res, ((SValue<inner>*)this->components[i])->getID());
+      }
+    } else if(this->components.size() == m) {
+      // This is a matrix, and components contain columns
+
+      // OpCompositeContsruct <matrix_type> <result_id> <components...>
+      SUtils::add(res, ((3 + m) << 16) | 80);
+      SUtils::add(res, SMat<n, m, inner>::getID());
+      SUtils::add(res, this->id);
+
+      for(int i = 0; i < m; i++) {
+	SUtils::add(res, ((SValue<SMat<n, 1, inner> >*)this->components[i])->getID());
       }
     } else {
       std::vector<int> col_ids(m);
       for(int i = 0; i < m; i++) { // Output in col-major order
 	col_ids[i] = SUtils::getNewID();
 	
-	// OpCompositeConstruct <vector type> <result id>
+	// OpCompositeConstruct <vector type> <result id> <components...>
 	SUtils::add(res, ((3 + n) << 16) | 80);
 	SUtils::add(res, SMat<n, 1, inner>::getID());
 	SUtils::add(res, col_ids[i]);
 	
 	for(int j = 0; j < n; j++) {
 	  
-	  SUtils::add(res, this->components[j * m + i]->getID()); // Think this is right?
+	  SUtils::add(res, ((SValue<inner>*)this->components[j * m + i])->getID()); // Think this is right?
 	}
       }
 
@@ -256,9 +309,14 @@ namespace spurv {
 						  std::vector<SDeclarationState*>& declaration_states) {
     // A bit hacky but oh well
     SMat<n, m, inner>::ensure_defined(res, declaration_states);
-    for(int i = 0; i < n * m; i++) {
-      this->components[i]->ensure_type_defined(res,
-					       declaration_states);
+    for(unsigned int i = 0; i < this->components.size(); i++) {
+      if(this->using_columns()) {
+	((SValue<SMat<n, 1, inner> >*)this->components[i])->ensure_type_defined(res,
+										declaration_states);
+      } else {
+	((SValue<inner>*)this->components[i])->ensure_type_defined(res,
+								   declaration_states);
+      }
     }
   }
 
