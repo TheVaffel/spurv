@@ -2,7 +2,6 @@
 #define __SPURV_SHADERS_IMPL
 
 #include "shaders.hpp"
-#include "variable_registry.hpp"
 
 namespace spurv {
   
@@ -414,19 +413,6 @@ namespace spurv {
     SUtils::add(res, (2 << 16) | 248);
     SUtils::add(res, SUtils::getNewID());
     
-  }
-
-  template<SShaderType type, typename... InputTypes>
-  void SShader<type, InputTypes...>::output_main_function_variables(std::vector<uint32_t>& res) {
-    std::vector<VariableEntry>* entries = SVariableRegistry::getVector();
-
-    for(VariableEntry& entr : *entries) {
-      // OpVariables <result_type> <result_id> Function
-      SUtils::add(res, (4 << 16) | 59);
-      SUtils::add(res, entr.type_id);
-      SUtils::add(res, entr.variable_id);
-      SUtils::add(res, 7);
-    }
   }
 
   template<SShaderType type, typename... InputTypes>
@@ -851,7 +837,6 @@ namespace spurv {
     this->output_used_builtin_pointers(res);
 
     this->output_main_function_begin(res);
-    this->output_main_function_variables(res);
     
     this->output_output_definitions(res, 0, args...);
     this->output_builtin_output_definitions(res);

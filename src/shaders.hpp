@@ -106,7 +106,6 @@ namespace spurv {
     void output_builtin_tree_type_definitions(std::vector<uint32_t>& binary);
 
     void output_main_function_begin(std::vector<uint32_t>& res);
-    void output_main_function_variables(std::vector<uint32_t>& res);
     
     void output_main_function_end(std::vector<uint32_t>& res);
     
@@ -169,11 +168,7 @@ namespace spurv {
     template<int n>
     auto& input();
 
-    // Return an SUniformConstant if applicable, otherwise an SUniformBinding
-    /* template<typename... InnerTypes>
-    typename std::conditional<isUniformConstantType<InnerTypes...>,
-			      SUniformConstant<typename SUtils::NthType<0, InnerTypes...>::type>,
-			      SUniformBinding<InnerTypes...> >::type& uniformBinding(int set_no, int binding_no); */
+    
     template<typename tt>
     SValue<tt>& uniformConstant(int set_no, int binding_no);
     

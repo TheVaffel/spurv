@@ -2,7 +2,6 @@
 #define __SPURV_NODES_IMPL
 
 #include "values.hpp"
-#include "variable_registry.hpp"
 #include "constant_registry_impl.hpp"
 
 namespace spurv {
