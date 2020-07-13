@@ -177,6 +177,59 @@ namespace spurv {
     friend class SUtils;
   };
 
+
+  /* 
+   * SLocal - represents a pointer to local variable
+   */
+  
+  template<typename tt>
+  class SLocal : public SValue<SPointer<STORAGE_FUNCTION, tt> > {
+  public:
+
+    virtual void define(std::vector<uint32_t>& res);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res,
+				     std::vector<SDeclarationState*>& declaration_states);
+
+    SLocal();
+    
+    SLoadedVal<tt>& load();
+    void store(SValue<tt>& val);
+
+    friend class SUtils;
+  };
+
+  
+  /*
+   * SLoadedVal - represents a value loaded from a local pointer (SLocal)
+   */
+
+  template<typename tt>
+  class SLoadedVal : public SValue< tt > {
+    SLocal<tt>* pointer;
+    
+    SLoadEvent<tt>* event;
+
+    SLoadedVal(SLocal<tt>* pointer, SLoadEvent<tt>* event);
+    
+    virtual void define(std::vector<uint32_t>& res);
+    virtual void ensure_type_defined(std::vector<uint32_t>& res,
+				     std::vector<SDeclarationState*>& declaration_states);
+
+    friend class SUtils;
+  };
+
+  
+  /*
+   * SCustomVal - values that have a custom initialization routine
+   */
+
+  template<typename tt>
+  class SCustomVal : public SValue<tt> {
+    virtual void define(std::vector<uint32_t>& res);
+
+    friend class SUtils;
+  };
+    
   
   /*
    * SExpr - Nodes that represent branches of the syntax tree
@@ -280,18 +333,23 @@ namespace spurv {
 
   template<typename>
   struct is_spurv_value : std::false_type {};
+
   
   template<typename T>
   struct is_spurv_value<SValue<T> > : std::true_type {};
 
-  template<typename T>
-  struct is_spurv_value<SValue<T>& > : std::true_type {};
-
+  // template<typename T>
+  // struct is_spurv_value<SValue<T>& > : std::true_type {};
+  
   template<typename t1, SExprOp op, typename t2, typename t3>
   struct is_spurv_value<SExpr<t1, op, t2, t3> > : std::true_type {};
 
   template<int n, int m, typename inner>
   struct is_spurv_value<ConstructMatrix<n, m, inner> > : std::true_type {};
+
+  template<typename T>
+  struct is_spurv_value<T&> : is_spurv_value<typename std::remove_reference<T>::type> {};
+  
   
   /*
    * SValue node types defined by default
@@ -317,6 +375,16 @@ namespace spurv {
   typedef SValue<vec2_sarr_s>&    vec2_sarr_v;
   typedef SValue<vec3_sarr_s>&    vec3_sarr_v;
   typedef SValue<vec4_sarr_s>&    vec4_sarr_v;
+
+  typedef SLocal<float_s>&       float_lv;
+  typedef SLocal<int_s>&         int_lv;
+  typedef SLocal<uint_s>&        uint_lv;
+  typedef SLocal<mat2_s>&        mat2_lv;
+  typedef SLocal<mat3_s>&        mat3_lv;
+  typedef SLocal<mat4_s>&        mat4_lv;
+  typedef SLocal<vec2_s>&        vec2_lv;
+  typedef SLocal<vec3_s>&        vec3_lv;
+  typedef SLocal<vec4_s>&        vec4_lv;
 
 };
 

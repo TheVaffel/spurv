@@ -142,12 +142,33 @@ namespace spurv {
 
     template<typename tt, SStorageClass storage>
     friend class SPointerVar;
+
+    template<typename tt>
+    friend class SLocal;
+
+    template<typename tt>
+    friend class SLoadedVal;
+
+    friend class SEventRegistry;
+
+    template<typename tt>
+    friend class SLoadEvent;
+
+    template<typename tt>
+    friend class SStoreEvent;
+
+    friend class SForBeginEvent;
+    
+    friend class SForEndEvent;
+    
+    friend class SForLoop;
+
     
   public:
 
     // So that it can be accessed by global operaters
     template<typename tt, typename... Types>
-    static tt* allocate(Types&... args);
+    static tt* allocate(Types&&... args);
   
     // Utility to get nth type from a parameter pack of types
     template<int n, typename...Types>

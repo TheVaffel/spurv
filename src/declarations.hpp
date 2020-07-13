@@ -79,11 +79,7 @@ namespace spurv {
     EXTENSION_STORAGE_BUFFER = 0,
     EXTENSION_END
   };
-
   
-  std::string shaderExtensions[EXTENSION_END] = {
-    "SPV_KHR_storage_buffer_storage_class"
-  };
 
   /*
    * Classes - declared to ease dependency graph
@@ -141,6 +137,18 @@ namespace spurv {
   class SStruct;
 
   template<typename tt>
+  class SLoadEvent;
+
+  template<typename tt>
+  class SStoreEvent;
+
+  template<typename tt>
+  class SLocal;
+
+  template<typename tt>
+  class SLoadedVal;
+
+  template<typename tt>
   class Constant;
   
   template<int n, int m, typename inner>
@@ -152,6 +160,15 @@ namespace spurv {
   class SDeclarationState;
   
   class SConstantRegistry;
+
+  class SForLoop;
+
+  class SVariableRegistry;
+
+  class SVariableEntryBase;
+
+  template<typename tt>
+  class SVariableEntry;
   
   class SUtils;
   

@@ -185,6 +185,91 @@ namespace spurv {
     this->input_no = n;
   }
 
+
+  /*
+   * SLocal member functions
+   */
+
+  template<typename tt>
+  SLocal<tt>::SLocal() {
+    SVariableRegistry::add_variable(this);
+  }
+
+  template<typename tt>
+  void SLocal<tt>::ensure_type_defined(std::vector<uint32_t>& res,
+				       std::vector<SDeclarationState*>& declaration_states) {
+    SPointer<STORAGE_FUNCTION, tt>::ensure_defined(res,
+						   declaration_states);
+  }
+
+  template<typename tt>
+  void SLocal<tt>::define(std::vector<uint32_t>& res) {
+    // OpVariable 
+    SUtils::add(res, (4 << 16) | 59);
+    SUtils::add(res, SPointer<STORAGE_FUNCTION, tt>::getID());
+    SUtils::add(res, this->id);
+    SUtils::add(res, STORAGE_FUNCTION);
+  }
+
+  template<typename tt>
+  SLoadedVal<tt>& SLocal<tt>::load() {
+
+    
+    SLoadEvent<tt> *ev = SEventRegistry::addLoad<tt>(this->id);
+    SLoadedVal<tt>* val = SUtils::allocate<SLoadedVal<tt> >(this, ev);
+    ev->val_p = val;
+    // REMEMBER TO REGISTER LOAD EVENT AND IMPLEMENT ORDER ENFORCEMENT!
+
+    
+    return *val;
+  }
+
+  template<typename tt>
+  void SLocal<tt>::store(SValue<tt>& val) {
+    SStoreEvent<tt> *ev = SEventRegistry::addStore<tt>(this);
+    ev->val_p = &val;
+  }
+
+
+  /*
+   * SLoadedVal member functions
+   */
+
+  template<typename tt>
+  SLoadedVal<tt>::SLoadedVal(SLocal<tt>* pointer, SLoadEvent<tt>* ev) {
+    this->pointer = pointer;
+    this->event = ev;
+  }
+
+  template<typename tt>
+  void SLoadedVal<tt>::ensure_type_defined(std::vector<uint32_t>& res,
+					   std::vector<SDeclarationState*>& declaration_states) {
+    this->pointer->ensure_type_defined(res, declaration_states);
+    
+    tt::ensure_defined(res, declaration_states);
+  }
+
+  template<typename tt>
+  void SLoadedVal<tt>::define(std::vector<uint32_t>& res) {
+    this->pointer->ensure_defined(res);
+
+    // OpLoad
+    SUtils::add(res, (4 << 16) | 61);
+    SUtils::add(res, tt::getID());
+    SUtils::add(res, this->id);
+    SUtils::add(res, this->pointer->getID());
+  }
+
+  
+  /*
+   * SCustomVal member functions
+   */
+
+  template<typename tt>
+  void SCustomVal<tt>::define(std::vector<uint32_t>& res) {
+    // We do nothing and cross fingers the implementor knows what's up
+  }
+  
   
   /*
    * ConstructMatrix member functions

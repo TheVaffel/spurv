@@ -805,6 +805,28 @@ namespace spurv {
   }
 
   template<SShaderType type, typename... InputTypes>
+  template<typename tt>
+  SLocal<tt>& SShader<type, InputTypes...>::local() {
+    return *SUtils::allocate<SLocal<tt> >();
+  }
+
+  template<SShaderType type, typename... InputTypes>
+  SValue<int_s>& SShader<type, InputTypes...>::forLoop(int arg0, int arg1) {
+    SForLoop* fl = SUtils::allocate<SForLoop>(arg0, arg1);
+    this->loop_stack.push(fl);
+    SEventRegistry::addForBegin(fl);
+
+    return *fl->iterator_val;
+  }
+
+  template<SShaderType type, typename... InputTypes>
+  void SShader<type, InputTypes...>::endLoop() {
+    SForLoop* fl = this->loop_stack.top();
+    this->loop_stack.pop();
+    SEventRegistry::addForEnd(fl);
+  }
+
+  template<SShaderType type, typename... InputTypes>
   template<typename... NodeTypes>
   void SShader<type, InputTypes...>::compile(std::vector<uint32_t>& res, NodeTypes&&... args) {
 
@@ -828,6 +850,8 @@ namespace spurv {
     this->output_shader_header_decorate_output_variables(res, 0, args...);
     this->output_shader_header_decorate_tree(res, args...);
 
+    SEventRegistry::write_type_definitions(res,
+					   this->defined_type_declaration_states);
     this->output_output_tree_type_definitions(res, args...);
     this->output_builtin_tree_type_definitions(res);
     
@@ -837,6 +861,10 @@ namespace spurv {
     this->output_used_builtin_pointers(res);
 
     this->output_main_function_begin(res);
+
+    SVariableRegistry::write_variable_definitions(res);
+
+    SEventRegistry::write_events(res);
     
     this->output_output_definitions(res, 0, args...);
     this->output_builtin_output_definitions(res);
@@ -851,6 +879,8 @@ namespace spurv {
     SUtils::resetID();
     SUtils::clearAllocations();
     SConstantRegistry::resetRegistry();
+    SEventRegistry::clear();
+    SVariableRegistry::clear();
   }
 };
 #endif // __SPURV_SHADERS_IMPL

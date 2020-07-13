@@ -378,6 +378,17 @@ namespace spurv {
   typedef SRunArr<STORAGE_STORAGE_BUFFER, vec2_s> vec2_sarr_s;
   typedef SRunArr<STORAGE_STORAGE_BUFFER, vec3_s> vec3_sarr_s;
   typedef SRunArr<STORAGE_STORAGE_BUFFER, vec4_s> vec4_sarr_s;
+
+  // Local variables
+  typedef SPointer<STORAGE_FUNCTION, float_s> float_ls;
+  typedef SPointer<STORAGE_FUNCTION, int_s> int_ls;
+  typedef SPointer<STORAGE_FUNCTION, uint_s> uint_ls;
+  typedef SPointer<STORAGE_FUNCTION, mat2_s> mat2_ls;
+  typedef SPointer<STORAGE_FUNCTION, mat3_s> mat3_ls;
+  typedef SPointer<STORAGE_FUNCTION, mat4_s> mat4_ls;
+  typedef SPointer<STORAGE_FUNCTION, vec2_s> vec2_ls;
+  typedef SPointer<STORAGE_FUNCTION, vec3_s> vec3_ls;
+  typedef SPointer<STORAGE_FUNCTION, vec4_s> vec4_ls;
   
   typedef STexture<2> texture2D_s;
 

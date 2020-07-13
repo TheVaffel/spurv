@@ -1,7 +1,10 @@
 #ifndef __SPURV_SHADER
 #define __SPURV_SHADER
 
+#include "control_flow.hpp"
+
 #include <set>
+#include <stack>
 
 namespace spurv {
 
@@ -39,9 +42,15 @@ namespace spurv {
    */
   
   template<SShaderType type, typename... InputTypes>
-  class SShader {
-    
+  class SShader {    
 
+    
+  
+    const std::string shaderExtensions[EXTENSION_END] =
+      {
+       "SPV_KHR_storage_buffer_storage_class"
+      };
+    
     struct InputVariableEntry {
       int id;
       DSType ds;
@@ -65,6 +74,9 @@ namespace spurv {
     std::vector<InputVariableEntry> input_entries;
     std::vector<uint32_t> output_pointer_ids;
     std::vector<SUniformBindingBase*> uniform_bindings;
+
+    // Keeps track of the most recent loop, so we know which one to close
+    std::stack<SForLoop*> loop_stack;
 
     std::set<SExtension> extensions;
 
@@ -178,8 +190,17 @@ namespace spurv {
     template<typename... InnerTypes>
     SStorageBuffer<InnerTypes...>& storageBuffer(int set_no, int binding_no);
     
+    template<typename tt>
+    SLocal<tt>& local();
+
+    // One argument means 0 - arg0, two arguments means arg0 - arg1
+    SValue<int_s>& forLoop(int arg0, int arg1 = 0);
+
+    void endLoop();
+    
     template<typename... NodeTypes>
     void compile(std::vector<uint32_t>& res, NodeTypes&&... args);
+
   };
   
   

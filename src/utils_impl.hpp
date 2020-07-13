@@ -2,6 +2,7 @@
 #define __SPURV_UTILS_IMPL
 
 #include "utils.hpp"
+#include "values.hpp"
 
 namespace spurv {
   /*
@@ -49,8 +50,9 @@ namespace spurv {
 
   template<typename t1>
   constexpr int SUtils::num_elements(t1&& ft) {
-    if constexpr(is_spurv_value<t1>::value) {
-	using tt = typename std::remove_reference<t1>::type::type;
+    using rt = typename std::remove_reference<t1>::type;
+    if constexpr(is_spurv_value<rt>::value) {
+	using tt = typename rt::type;
 	if constexpr(tt::getKind() == STypeKind::KIND_MAT) {
 	    return tt::getArg0() * tt::getArg1();
 	  } else {
@@ -125,7 +127,7 @@ namespace spurv {
   }
 
   template<typename tt, typename... Types>
-  tt* SUtils::allocate(Types&... args) {
+  tt* SUtils::allocate(Types&&... args) {
     PWrapper<tt>* p = new PWrapper<tt>;
     p->pp = new tt(args...);
     SUtils::allocated_values.push_back(p);
