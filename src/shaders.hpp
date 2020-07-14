@@ -43,8 +43,6 @@ namespace spurv {
   
   template<SShaderType type, typename... InputTypes>
   class SShader {    
-
-    
   
     const std::string shaderExtensions[EXTENSION_END] =
       {
@@ -76,7 +74,7 @@ namespace spurv {
     std::vector<SUniformBindingBase*> uniform_bindings;
 
     // Keeps track of the most recent loop, so we know which one to close
-    std::stack<SForLoop*> loop_stack;
+    std::stack<SControlStructureBase*> block_stack;
 
     std::set<SExtension> extensions;
 
@@ -197,6 +195,13 @@ namespace spurv {
     SValue<int_s>& forLoop(int arg0, int arg1 = 0);
 
     void endLoop();
+
+    void ifThen(SValue<bool_s>& condition);
+    void elseThen();
+    void endIf();
+
+    void breakLoop();
+    void continueLoop();
     
     template<typename... NodeTypes>
     void compile(std::vector<uint32_t>& res, NodeTypes&&... args);

@@ -811,9 +811,52 @@ namespace spurv {
   }
 
   template<SShaderType type, typename... InputTypes>
+  void SShader<type, InputTypes...>::ifThen(SValue<bool_s>& condition) {
+    SIfThen* it = SUtils::allocate<SIfThen>(&condition);
+    this->block_stack.push(it);
+    SEventRegistry::addIf(it);
+  }
+
+  template<SShaderType type, typename... InputTypes>
+  void SShader<type, InputTypes...>::elseThen() {
+    if(this->block_stack.size() == 0) {
+      printf("[spurv] Else not matched to an if\n");
+      exit(-1);
+    }
+    if(this->block_stack.top()->getControlType() != CONTROL_IF) {
+      printf("[spurv] Else cannot be used here, there is another unclosed block\n");
+      exit(-1);
+    }
+
+    if(((SIfThen*)this->block_stack.top())->has_else()) {
+      printf("[spurv] Tried to give to define a second else of for an if-statement\n");
+      exit(-1);
+    }
+
+    ((SIfThen*)this->block_stack.top())->add_else();
+
+    SEventRegistry::addElse((SIfThen*)this->block_stack.top());
+  }
+
+  template<SShaderType type, typename... InputTypes>
+  void SShader<type, InputTypes...>::endIf() {
+    if(this->block_stack.size() == 0) {
+      printf("[spurv] EndIf not matched to an if\n");
+      exit(-1);
+    }
+    if(this->block_stack.top()->getControlType() != CONTROL_IF) {
+      printf("[spurv] EndIfcannot be used here, there is another unclosed block\n");
+      exit(-1);
+    }
+
+    SEventRegistry::addEndIf((SIfThen*)this->block_stack.top());
+    this->block_stack.pop();
+  }
+  
+  template<SShaderType type, typename... InputTypes>
   SValue<int_s>& SShader<type, InputTypes...>::forLoop(int arg0, int arg1) {
     SForLoop* fl = SUtils::allocate<SForLoop>(arg0, arg1);
-    this->loop_stack.push(fl);
+    this->block_stack.push(fl);
     SEventRegistry::addForBegin(fl);
 
     return *fl->iterator_val;
@@ -821,9 +864,23 @@ namespace spurv {
 
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::endLoop() {
-    SForLoop* fl = this->loop_stack.top();
-    this->loop_stack.pop();
+    if(this->block_stack.size() == 0) {
+      printf("[spurv] Tried to end loop when no loop is active\n");
+      exit(-1);
+    }
+    if(this->block_stack.top()->getControlType() != CONTROL_FOR) {
+      printf("[spurv] Cannot end for-loop, as there are other unclosed blocks\n");
+      exit(-1);
+    }
+    
+    SForLoop* fl = (SForLoop*)this->block_stack.top();
+    this->block_stack.pop();
     SEventRegistry::addForEnd(fl);
+  }
+
+  template<SShaderType type, typename... InputTypes>
+  void SShader<type, InputTypes...>::breakLoop() {
+
   }
 
   template<SShaderType type, typename... InputTypes>

@@ -3,6 +3,7 @@
 
 #include "values.hpp"
 #include "constant_registry_impl.hpp"
+#include "event_registry_impl.hpp"
 
 namespace spurv {
     

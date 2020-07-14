@@ -74,6 +74,11 @@ namespace spurv {
     BUILTIN_VERTEX_INDEX,
     BUILTIN_FRAG_COORD
   };
+
+  enum SControlType {
+    CONTROL_IF,
+    CONTROL_FOR
+  };
   
   enum SExtension {
     EXTENSION_STORAGE_BUFFER = 0,
@@ -161,6 +166,8 @@ namespace spurv {
   
   class SConstantRegistry;
 
+  class SIfThen;
+  
   class SForLoop;
 
   class SVariableRegistry;

@@ -4,6 +4,80 @@
 #include "control_flow.hpp"
 
 namespace spurv {
+
+  /*
+   * SIfThen member functions
+   */
+
+  SIfThen::SIfThen(SValue<bool_s>* cond) {
+    this->cond = cond;
+    this->hasElse = false;
+
+    this->ifthen_label = SUtils::getNewID();
+    this->else_label = SUtils::getNewID();
+    this->merge_label = SUtils::getNewID();
+  }
+
+  void SIfThen::write_type_definitions(std::vector<uint32_t>& bin,
+				       std::vector<SDeclarationState*>& declaration_states) {
+    SBool::ensure_defined(bin, declaration_states);
+    this->cond->ensure_type_defined(bin, declaration_states);
+  }
+  
+  void SIfThen::write_begin(std::vector<uint32_t>& bin) {
+    this->cond->ensure_defined(bin);
+
+    // OpSelectionMerge <merge_point> None
+    SUtils::add(bin, (3 << 16) | 247);
+    SUtils::add(bin, this->merge_label);
+    SUtils::add(bin, 0);
+
+    // OpBranchConditional <cond> <ifthen> <else/end>
+    SUtils::add(bin, (4 << 16) | 250);
+    SUtils::add(bin, this->cond->getID());
+    SUtils::add(bin, this->ifthen_label);
+    SUtils::add(bin, this->hasElse ?
+		this->else_label :
+		this->merge_label);
+
+    // OpLabel <ifthen>
+    SUtils::add(bin, (2 << 16) | 248);
+    SUtils::add(bin, this->ifthen_label);
+  }
+  
+  void SIfThen::write_else(std::vector<uint32_t>& bin) {
+    // OpBranch <end>
+    SUtils::add(bin, (2 << 16) | 249);
+    SUtils::add(bin, this->merge_label);
+
+    // OpLabel <else>
+    SUtils::add(bin, (2 << 16) | 248);
+    SUtils::add(bin, this->else_label);
+  }
+  
+  void SIfThen::write_end(std::vector<uint32_t>& bin) {
+    // OpBranch <end>
+    SUtils::add(bin, (2 << 16) | 249);
+    SUtils::add(bin, this->merge_label);
+
+    // OpLabel <merge>
+    SUtils::add(bin, (2 << 16) | 248);
+    SUtils::add(bin, this->merge_label);
+  }
+
+  bool SIfThen::has_else() {
+    return this->hasElse;
+  }
+  
+  void SIfThen::add_else() {
+    this->hasElse = true;
+  }
+
+  SControlType SIfThen::getControlType() {
+    return CONTROL_IF;
+  }
+  
+  
   /*
    * SForLoop member functions
    */
@@ -140,6 +214,10 @@ namespace spurv {
     // OpLabel <post>
     SUtils::add(bin, (2 << 16) | 248);
     SUtils::add(bin, this->label_post);
+  }
+
+  SControlType SForLoop::getControlType() {
+    return CONTROL_FOR;
   }
 
 };

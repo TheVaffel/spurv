@@ -157,6 +157,8 @@ namespace spurv {
     template<typename tt>
     friend class SStoreEvent;
 
+    friend class SIfThen;
+    
     friend class SForBeginEvent;
     
     friend class SForEndEvent;
