@@ -232,6 +232,8 @@ namespace spurv {
     SUtils::add(bin, ((2 + length) << 16) | 11);
     
     this->glsl_id = SUtils::getNewID();
+    SUtils::setGLSLID(this->glsl_id);
+    
     SUtils::add(bin, this->glsl_id);
     SUtils::add(bin, glsl_import_str);
 

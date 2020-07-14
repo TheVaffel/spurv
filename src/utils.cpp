@@ -59,4 +59,13 @@ namespace spurv {
     SUtils::add(binary, *(int32_t*)last_int);
   }
 
+  int SUtils::GLSL_id = -1;
+  
+  int SUtils::getGLSLID() {
+    return SUtils::GLSL_id;
+  }
+
+  void SUtils::setGLSLID(int id) {
+    SUtils::GLSL_id = id;
+  }
 };

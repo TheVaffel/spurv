@@ -440,12 +440,12 @@ namespace spurv {
   }
     
 
-  // Just a shorthand (It is actually needed pretty badly for readability
+  /*// Just a shorthand (It is actually needed pretty badly for readability
   template<typename a, typename b>
   requires RequireOneSpurvValue<a, b>
   struct uwr { using type =
       typename SValueWrapper::unambiguous_unwrapped_require_spurv_type<a, b>::type;
-  };
+      }; */
   
   // Additions
   template<typename in1_t, typename in2_t>

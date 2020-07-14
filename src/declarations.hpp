@@ -84,6 +84,51 @@ namespace spurv {
     EXTENSION_STORAGE_BUFFER = 0,
     EXTENSION_END
   };
+
+
+  // These are not implemented functions, but a list of
+  // easily implementable ones. They may be implemented
+  // at a later point
+  enum GLSLFunction {
+    GLSL_ROUND = 1,
+    GLSL_ROUND_EVEN,
+    GLSL_TRUNC,
+    GLSL_FABS,
+    GLSL_SABS,
+    GLSL_FSIGN,
+    GLSL_SSIGN,
+    GLSL_FLOOR,
+    GLSL_CEIL,
+    GLSL_FRACT,
+    GLSL_RADIANS,
+    GLSL_DEGREES,
+    GLSL_SIN,
+    GLSL_COS,
+    GLSL_TAN,
+    GLSL_ASIN,
+    GLSL_ACOS,
+    GLSL_ATAN,
+    GLSL_SINH,
+    GLSL_COSH,
+    GLSL_TANH,
+    GLSL_ASINH,
+    GLSL_ACOSH,
+    GLSL_ATANH,
+    GLSL_ATAN2,
+    GLSL_POW,
+    GLSL_EXP,
+    GLSL_LOG,
+    GLSL_EXP2,
+    GLSL_LOG2,
+    GLSL_SQRT,
+    GLSL_INVSQRT,
+    GLSL_FMIN = 37,
+    GLSL_UMIN,
+    GLSL_SMIN,
+    GLSL_FMAX,
+    GLSL_UMAX,
+    GLSL_SMAX
+  };
   
 
   /*

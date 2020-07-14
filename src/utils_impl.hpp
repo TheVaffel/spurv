@@ -4,6 +4,8 @@
 #include "utils.hpp"
 #include "values.hpp"
 
+#include "value_wrapper.hpp"
+
 namespace spurv {
   /*
    * Global util functions
@@ -139,6 +141,14 @@ namespace spurv {
   void SUtils::PWrapper<tt>::exterminate() {
     delete this->pp;
   }
+
+  
+  // Just a shorthand (It is actually needed pretty badly for readability
+  template<typename a, typename b>
+  requires RequireOneSpurvValue<a, b>
+  struct uwr { using type =
+      typename SValueWrapper::unambiguous_unwrapped_require_spurv_type<a, b>::type;
+  };
   
 };
 

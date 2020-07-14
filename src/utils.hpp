@@ -71,6 +71,11 @@ namespace spurv {
     
     static int global_id_counter;
 
+    static int GLSL_id;
+
+    static int getGLSLID();
+    static void setGLSLID(int id);
+
     template<STypeKind kind, int n, int m, int l, int k, int j, typename... InnerTypes>
     friend class SType;
     
@@ -148,6 +153,9 @@ namespace spurv {
 
     template<typename tt>
     friend class SLoadedVal;
+
+    template<typename tt>
+    friend class SGLSLHomoFun;
 
     friend class SEventRegistry;
 

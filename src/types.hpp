@@ -337,6 +337,12 @@ namespace spurv {
   struct is_spurv_int_type<SInt<n, s> > : std::true_type {};
 
   template<typename>
+  struct is_spurv_signed_int_type : std::false_type {};
+  
+  template<int n>
+  struct is_spurv_signed_int_type<SInt<n, 1> > : std::true_type {};
+  
+  template<typename>
   struct is_spurv_texture_type : std::false_type {};
 
   template<int n>

@@ -266,6 +266,36 @@ namespace spurv {
     SUtils::add(res, this->pointer->getID());
   }
 
+
+  /*
+   * SGLSLHomoFun member functions
+   */
+
+  template<typename tt>
+  SGLSLHomoFun<tt>::SGLSLHomoFun(GLSLFunction opcode, const std::vector<SValue<tt>*>& vec) {
+    this->args = vec;
+    this->opcode = opcode;
+  }
+
+  template<typename tt>
+  void SGLSLHomoFun<tt>::define(std::vector<uint32_t>& bin) {
+    for(SValue<tt>* vv : this->args) {
+      vv->ensure_defined(bin);
+    }
+
+    // OpExtInst <result_type> <result_id> <glsl_inst> <instruction> <operands...>
+    
+    SUtils::add(bin, ((5 + this->args.size()) << 16) | 12);
+    SUtils::add(bin, tt::getID());
+    SUtils::add(bin, this->getID());
+    SUtils::add(bin, SUtils::getGLSLID());
+    SUtils::add(bin, this->opcode);
+
+    for(SValue<tt>* vv : this->args) {
+      SUtils::add(bin, vv->getID());
+    } 
+  }
+
   
   /*
    * SCustomVal member functions
@@ -522,6 +552,146 @@ namespace spurv {
 							     SValueWrapper::unwrap_to<t3, unwrapped_res_type>(false_val));
     return *v;
   }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& round(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to round must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_ROUND, v);
+  }
+
+  template<typename tt>
+  SGLSLHomoFun<tt>& round_even(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to round_even must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_ROUND_EVEN, v);
+  }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& trunc(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to trunc must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_TRUNC, v);
+  }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& fabs(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to fabs must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_FABS, v);
+  }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& sabs(SValue<tt>& v1) {
+    static_assert(is_spurv_signed_int_type<tt>::value, "Input to sabs must be a signed int value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_SABS, v);
+  }
+
+  template<typename tt>
+  SGLSLHomoFun<tt>& floor(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to floor must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_FLOOR, v);
+  }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& ceil(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to ceil must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_CEIL, v);
+  }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& fract(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to fract must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_FRACT, v);
+  }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& sin(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to sin must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_SIN, v);
+  }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& cos(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to cos must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_COS, v);
+  }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& tan(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to tan must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_TAN, v);
+  }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& asin(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to asin must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_ASIN, v);
+  }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& acos(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to acos must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_ACOS, v);
+  }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& atan(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to atan must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_ATAN, v);
+  }
+  
+  template<typename tt>
+  SGLSLHomoFun<tt>& exp(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to exp must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_EXP, v);
+  }
+
+  template<typename tt>
+  SGLSLHomoFun<tt>& log(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to log must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_LOG, v);
+  }
+
+  template<typename tt>
+  SGLSLHomoFun<tt>& sqrt(SValue<tt>& v1) {
+    static_assert(is_spurv_float_type<tt>::value, "Input to sqrt must be a floating point value");
+    std::vector<SValue<tt>*> v = {&v1};
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_SQRT, v);
+  }
+
+  template<typename t1, typename t2>
+  SGLSLHomoFun<typename uwr<t1, t2>::type>& atan2(t1&& in1, t2&& in2) {
+    using tt = typename uwr<t1, t2>::type;
+    static_assert(is_spurv_float_type<tt>::value, "Input to atan2 must be floating point value");
+    std::vector<SValue<tt>*> v = {&SValueWrapper::unwrap_to<t1, tt>(in1),
+				  &SValueWrapper::unwrap_to<t1, tt>(in2)};
+    
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_ATAN2, v);
+  }
+  
+  template<typename t1, typename t2>
+  SGLSLHomoFun<typename uwr<t1, t2>::type>& pow(t1&& in1, t2&& in2) {
+    using tt = typename uwr<t1, t2>::type;
+    static_assert(is_spurv_float_type<tt>::value, "Input to pow must be floating point value");
+    std::vector<SValue<tt>*> v = {&SValueWrapper::unwrap_to<t1, tt>(in1),
+				  &SValueWrapper::unwrap_to<t1, tt>(in2)};
+    
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_POW, v);
+  }
+  
   
 };
 

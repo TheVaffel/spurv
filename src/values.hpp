@@ -229,7 +229,29 @@ namespace spurv {
 
     friend class SUtils;
   };
+
+
+  /*
+   * SGLSLHomoFun - Nodes representing "homogenous" functions (domain and range are
+   * of equal type) in GLSL
+   */
+
+  template<typename tt>
+  class SGLSLHomoFun : public SValue<tt> {
+    static_assert(is_spurv_type<tt>::value);
+
+    GLSLFunction opcode;
+    std::vector<SValue<tt>* > args;
     
+    SGLSLHomoFun(GLSLFunction opcode, const std::vector<SValue<tt>* >& args);
+    
+
+  public:
+    virtual void define(std::vector<uint32_t>& res);
+
+    friend class SUtils;
+  };
+  
   
   /*
    * SExpr - Nodes that represent branches of the syntax tree
@@ -346,6 +368,9 @@ namespace spurv {
 
   template<int n, int m, typename inner>
   struct is_spurv_value<ConstructMatrix<n, m, inner> > : std::true_type {};
+
+  template<typename tt>
+  struct is_spurv_value<SGLSLHomoFun<tt> > : std::true_type {};
 
   template<typename T>
   struct is_spurv_value<T&> : is_spurv_value<typename std::remove_reference<T>::type> {};
