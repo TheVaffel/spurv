@@ -38,6 +38,27 @@ namespace spurv {
 
   
   /*
+   * SDeclarationEvent member functions
+   */
+
+  template<typename tt>
+  SDeclarationEvent<tt>::SDeclarationEvent(int event_num, SValue<tt>* val) : STimeEventBase(event_num) {
+    this->value = val;
+  }
+
+  template<typename tt>
+  void SDeclarationEvent<tt>::ensure_type_defined(std::vector<uint32_t>& bin,
+					      std::vector<SDeclarationState*>& declaration_states) {
+    this->value->ensure_type_defined(bin, declaration_states);
+  }
+
+  template<typename tt>
+  void SDeclarationEvent<tt>::write_binary(std::vector<uint32_t>& bin) {
+    this->value->ensure_defined(bin);
+  }
+
+  
+  /*
    * SLoadEvent member functions
    */
 
@@ -115,7 +136,11 @@ namespace spurv {
     return sl;
   }
 
- 
+  template<typename tt>
+  void SEventRegistry::addDeclaration(SValue<tt>* pointer) {
+    SDeclarationEvent<tt>* de = new SDeclarationEvent(SEventRegistry::events.size(), pointer);
+    SEventRegistry::events.push_back(de);
+  }
   
   template<typename tt>
   void SEventRegistry::ensure_predecessor_written(SLoadEvent<tt>* load,

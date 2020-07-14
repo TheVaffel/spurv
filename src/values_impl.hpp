@@ -22,7 +22,12 @@ namespace spurv {
   }
 
   template<typename tt>
-  SValue<tt>::SValue() { this->id = SUtils::getNewID(); this->ref_count = 0; this->defined = false; }
+  SValue<tt>::SValue() {
+    this->id = SUtils::getNewID();
+    this->ref_count = 0;
+    this->defined = false;
+    SEventRegistry::addDeclaration<tt>(this);
+  }
   
   template<typename tt>
   void SValue<tt>::ensure_defined(std::vector<uint32_t>& res)  {

@@ -33,6 +33,24 @@ namespace spurv {
 
 
   /*
+   * SDeclarationEvent - Represents a variable declaration / definition
+   */
+
+  template<typename tt>
+  class SDeclarationEvent : public STimeEventBase {
+    SValue<tt>* value;
+
+    SDeclarationEvent(int event_num, SValue<tt> *val);
+    
+    virtual void ensure_type_defined(std::vector<uint32_t>& bin,
+				     std::vector<SDeclarationState*>& declaration_states);
+    virtual void write_binary(std::vector<uint32_t>& bin);
+
+    friend class SEventRegistry;
+  };
+  
+
+  /*
    * SLoadEvent - Represents a load event (duh)
    */
   
@@ -189,6 +207,9 @@ namespace spurv {
     template<typename tt>
     static SStoreEvent<tt>* addStore(SLocal<tt>* pointer);
 
+    template<typename tt>
+    static void addDeclaration(SValue<tt>* pointer);
+    
     static void addIf(SIfThen* ifthen);
     static void addElse(SIfThen* ifthen);
     static void addEndIf(SIfThen* ifthen);
