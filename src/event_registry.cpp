@@ -85,6 +85,32 @@ namespace spurv {
     loop->write_end(bin);
   }
 
+
+  /*
+   * SBreakFor member functions
+   */
+
+  SBreakEvent::SBreakEvent(int evnum, SForLoop* loop) : STimeEventBase(evnum) {
+    this->loop = loop;
+  }
+
+  void SBreakEvent::write_binary(std::vector<uint32_t>& bin) {
+    loop->write_break(bin);
+  }
+
+
+  /*
+   * SContinueFor member functions
+   */
+
+  SContinueEvent::SContinueEvent(int evnum, SForLoop* loop) : STimeEventBase(evnum) {
+    this->loop = loop;
+  }
+
+  void SContinueEvent::write_binary(std::vector<uint32_t>& bin) {
+    loop->write_continue(bin);
+  }
+
   
   /*
    * SEventRegistry member functions
@@ -113,6 +139,16 @@ namespace spurv {
   void SEventRegistry::addForEnd(SForLoop* loop) {
     SForEndEvent* fb = new SForEndEvent(SEventRegistry::events.size(), loop);
     SEventRegistry::events.push_back(fb);
+  }
+
+  void SEventRegistry::addBreak(SForLoop* loop) {
+    SBreakEvent* be = new SBreakEvent(SEventRegistry::events.size(), loop);
+    SEventRegistry::events.push_back(be);
+  }
+
+  void SEventRegistry::addContinue(SForLoop* loop) {
+    SContinueEvent* ce = new SContinueEvent(SEventRegistry::events.size(), loop);
+    SEventRegistry::events.push_back(ce);
   }
 
 

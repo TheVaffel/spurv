@@ -74,6 +74,9 @@ namespace spurv {
     void write_start(std::vector<uint32_t>& bin);
     void write_end(std::vector<uint32_t>& bin);
 
+    void write_break(std::vector<uint32_t>& bin);
+    void write_continue(std::vector<uint32_t>& bin);
+
     virtual SControlType getControlType();
     
     template<SShaderType type, typename... InputTypes>
@@ -81,6 +84,9 @@ namespace spurv {
 
     friend class SForBeginEvent;
     friend class SForEndEvent;
+
+    friend class SBreakEvent;
+    friend class SContinueEvent;
 
     friend class SUtils;
     

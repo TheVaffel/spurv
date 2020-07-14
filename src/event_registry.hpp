@@ -191,6 +191,37 @@ namespace spurv {
     friend class SEventRegistry;
   };
 
+
+  /*
+   * SBreakFor - Represents a break statement
+   */
+
+  class SBreakEvent : public STimeEventBase {
+    SForLoop* loop;
+
+    SBreakEvent(int evnum, SForLoop* loop);
+
+    virtual void write_binary(std::vector<uint32_t>& bin);
+
+    friend class SUtils;
+    friend class SEventRegistry;
+  };
+
+    
+  /*
+   * SContinueFor - Represents a continue statement
+   */
+
+  class SContinueEvent : public STimeEventBase {
+    SForLoop* loop;
+    SContinueEvent(int evnum, SForLoop* loop);
+
+    virtual void write_binary(std::vector<uint32_t>& bin);
+
+    friend class SUtils;
+    friend class SEventRegistry;
+  };
+
   
   /*
    * SEventRegistry - Keeps track of load and store operations (primarily on local variables). This is important 
@@ -217,6 +248,9 @@ namespace spurv {
     static void addForBegin(SForLoop* loop);
 
     static void addForEnd(SForLoop* loop);
+
+    static void addBreak(SForLoop* loop);
+    static void addContinue(SForLoop* loop);
 
     static void write_type_definitions(std::vector<uint32_t>& bin,
 				       std::vector<SDeclarationState*>& declaration_states);

@@ -216,6 +216,33 @@ namespace spurv {
     SUtils::add(bin, this->label_post);
   }
 
+  void SForLoop::write_break(std::vector<uint32_t>& bin) {
+    // OpBranch <post_label>
+    SUtils::add(bin, (2 << 16) | 249);
+    SUtils::add(bin, this->label_post);
+
+    // We add a new label to make the block from the break and to the end of
+    // the parent block valid
+
+    int new_label = SUtils::getNewID();
+    
+    // OpLabel <new_label>
+    SUtils::add(bin, (2 << 16) | 248);
+    SUtils::add(bin, new_label);
+  }
+
+  void SForLoop::write_continue(std::vector<uint32_t>& bin) {
+    // OpBranch <increment>
+    SUtils::add(bin, (2 << 16) | 249);
+    SUtils::add(bin, this->label_increment);
+
+    int new_label = SUtils::getNewID();
+    
+    // OpLabel <new_label>
+    SUtils::add(bin, (2 << 16) | 248);
+    SUtils::add(bin, new_label);
+  }
+
   SControlType SForLoop::getControlType() {
     return CONTROL_FOR;
   }

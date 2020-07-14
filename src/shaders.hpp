@@ -74,7 +74,7 @@ namespace spurv {
     std::vector<SUniformBindingBase*> uniform_bindings;
 
     // Keeps track of the most recent loop, so we know which one to close
-    std::stack<SControlStructureBase*> block_stack;
+    std::vector<SControlStructureBase*> block_stack;
 
     std::set<SExtension> extensions;
 
