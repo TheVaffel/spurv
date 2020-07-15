@@ -193,7 +193,9 @@ namespace spurv {
     SLocal();
     
     SLoadedVal<tt>& load();
-    void store(SValue<tt>& val);
+
+    template<typename t1>
+    void store(t1&& val);
 
     friend class SUtils;
   };
@@ -371,6 +373,30 @@ namespace spurv {
 
   template<typename tt>
   struct is_spurv_value<SGLSLHomoFun<tt> > : std::true_type {};
+
+  template<typename tt>
+  struct is_spurv_value<InputVar<tt> > : std::true_type {};
+
+  template<typename tt>
+  struct is_spurv_value<Constant<tt> > : std::true_type {};
+
+  template<typename tt, SStorageClass storage>
+  struct is_spurv_value<SPointerVar<tt, storage> > : std::true_type {};
+
+  template<SStorageClass storage, typename tt>
+  struct is_spurv_value<SUniformVar<storage, tt> > : std::true_type {};
+
+  template<typename tt>
+  struct is_spurv_value<SLocal<tt> > : std::true_type {};
+
+  template<typename tt>
+  struct is_spurv_value<SLoadedVal<tt> > : std::true_type {};
+
+  template<typename tt>
+  struct is_spurv_value<SCustomVal<tt> > : std::true_type {};
+
+  template<typename tt>
+  struct is_spurv_value<SelectConstruct<tt> > : std::true_type {};
 
   template<typename T>
   struct is_spurv_value<T&> : is_spurv_value<typename std::remove_reference<T>::type> {};

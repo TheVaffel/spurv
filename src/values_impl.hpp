@@ -231,9 +231,12 @@ namespace spurv {
   }
 
   template<typename tt>
-  void SLocal<tt>::store(SValue<tt>& val) {
+  template<typename t1>
+  void SLocal<tt>::store(t1&& val) {
+    static_assert(SValueWrapper::does_wrap<t1, tt>::value,
+		  "Cannot convert store value to desired value");
     SStoreEvent<tt> *ev = SEventRegistry::addStore<tt>(this);
-    ev->val_p = &val;
+    ev->val_p = &SValueWrapper::unwrap_to<t1, tt>(val);
   }
 
 

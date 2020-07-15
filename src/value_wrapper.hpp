@@ -100,12 +100,35 @@ namespace spurv {
     struct unwrapped_type<ConstructMatrix<n, m, inner> > { using type = SMat<n, m, inner>; };
 
     template<typename T1, typename T2, typename T3, SExprOp s>
-    struct unwrapped_type<SExpr<T1, s, T2, T3> > {
-      using type = T1;
-    };
+    struct unwrapped_type<SExpr<T1, s, T2, T3> > { using type = T1; };
+
+    template<typename tt>
+    struct unwrapped_type<SGLSLHomoFun<tt> > { using type = tt; };
 
     template<typename tt>
     struct unwrapped_type<InputVar<tt> > { using type = tt; };
+
+    template<typename tt>
+    struct unwrapped_type<Constant<tt> > { using type = typename MapSType<tt>::type; };
+
+    template<typename tt, SStorageClass storage>
+    struct unwrapped_type<SPointerVar<tt, storage> > { using type = tt; };
+
+    template<SStorageClass storage, typename tt>
+    struct unwrapped_type<SUniformVar<storage, tt> > { using type = tt; };
+
+    template<typename tt>
+    struct unwrapped_type<SLocal<tt> > { using type = tt; };
+
+    template<typename tt>
+    struct unwrapped_type<SLoadedVal<tt> > { using type = tt; };
+
+    template<typename tt>
+    struct unwrapped_type<SCustomVal<tt> > { using type = tt; };
+
+    template<typename tt>
+    struct unwrapped_type<SelectConstruct<tt> > { using type = tt; };
+
     
     // Accessible functions
   
@@ -147,6 +170,8 @@ namespace spurv {
     
     /*
      * ToType: Converts SValue<T> to T and primitives (i.e. float) to their SType counterparts (SFloat<32>)
+     * - Really wish I knew a better way of doing this... (Especially since this is mostly a copy of the
+     *   code above)
      */
     
     template<typename S>
@@ -157,10 +182,56 @@ namespace spurv {
       using type = S;
     };
 
+    template<int n, int m, typename inner>
+    struct ToType<ConstructMatrix<n, m, inner> > {
+      using type = SMat<n, m, inner>;
+    };
+
+    template<typename T1, typename T2, typename T3, SExprOp s>
+    struct ToType<SExpr<T1, s, T2, T3> > {
+      using type = T1;
+    };
+
+    template<typename tt>
+    struct ToType<SGLSLHomoFun<tt> > {
+      using type = tt;
+    };
+
+    template<typename tt>
+    struct ToType<InputVar<tt> > { using type = tt; };
+
+    template<typename tt>
+    struct ToType<Constant<tt> > { using type = typename MapSType<tt>::type; };
+
+    template<typename tt, SStorageClass storage>
+    struct ToType<SPointerVar<tt, storage> > { using type = tt; };
+
+    template<SStorageClass storage, typename tt>
+    struct ToType<SUniformVar<storage, tt> > { using type = tt; };
+
+    template<typename tt>
+    struct ToType<SLocal<tt> > { using type = tt; };
+
+    template<typename tt>
+    struct ToType<SLoadedVal<tt> > { using type = tt; };
+
+    template<typename tt>
+    struct ToType<SCustomVal<tt> > { using type = tt; };
+
+    template<typename tt>
+    struct ToType<SelectConstruct<tt> > { using type = tt; };
+
     template<typename S>
     struct ToType {
       using type = typename MapSType<S>::type;
-    };
+      }; 
+
+    /* template<typename S>
+    struct ToType {
+      using type = typename std::conditional<is_spurv_value<S>::value,
+					     typename unwrapped_type<S>::type,
+					     typename MapSType<S>::type>::type;
+					     }; */
 
     // Get unwrapped type where we accept both primitives and spurv values
     template<typename S, typename T>
