@@ -632,7 +632,7 @@ namespace spurv {
   template<typename t1, typename t2, SExprOp op>
   static SExpr<SBool, op,
 	       typename uwr<t1, t2>::type,
-	       typename uwr<t1, t2>::type>& construct_comparison_val(t1&& v1, t2&& v2) {
+	       typename uwr<t1, t2>::type>& construct_comparison_val(t1 v1, t2 v2) {
     using tt = typename uwr<t1, t2>::type;
     static_assert(is_spurv_int_type<tt>::value || is_spurv_float_type<tt>::value,
 		  "Comparison not yet defined for non-scalar types");
@@ -640,8 +640,8 @@ namespace spurv {
     SExpr<SBool, op, tt, tt>* ex =
       SUtils::allocate<SExpr<SBool, op, tt, tt> >();
 
-    ex->register_left_node(v1);
-    ex->register_right_node(v2);
+    ex->register_left_node(SValueWrapper::unwrap_to<t1, tt>(v1));
+    ex->register_right_node(SValueWrapper::unwrap_to<t2, tt>(v2));
     return *ex;
   }
   
