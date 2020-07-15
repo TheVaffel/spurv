@@ -922,6 +922,11 @@ namespace spurv {
   template<typename... NodeTypes>
   void SShader<type, InputTypes...>::compile(std::vector<uint32_t>& res, NodeTypes&&... args) {
 
+    if(this->block_stack.size()) {
+      printf("[spurv] There were unfinished loops/if statements in shader\n");
+      exit(-1);
+    }
+
     this->output_preamble(res);
     this->output_shader_header_begin(res);
     
