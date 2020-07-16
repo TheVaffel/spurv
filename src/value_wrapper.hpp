@@ -83,7 +83,8 @@ namespace spurv {
       
       static constexpr bool value =
 	std::is_base_of<SValue<tt>, ss>::value ||
-	std::is_convertible<ss, typename InvMapSType<tt>::type>::value;
+	(std::is_fundamental<typename InvMapSType<tt>::type>::value &&
+	 std::is_convertible<ss, typename InvMapSType<tt>::type>::value);
     };
     
     // unwrapped_type - the type of an unwrapped value
@@ -128,6 +129,9 @@ namespace spurv {
 
     template<typename tt>
     struct unwrapped_type<SelectConstruct<tt> > { using type = tt; };
+
+    template<typename tt>
+    struct unwrapped_type<tt&> { using type = typename unwrapped_type<tt>::type; };
 
     
     // Accessible functions
@@ -221,10 +225,14 @@ namespace spurv {
     template<typename tt>
     struct ToType<SelectConstruct<tt> > { using type = tt; };
 
+    template<typename tt>
+    struct ToType<tt&> { using type = typename ToType<tt>::type; };
+    
     template<typename S>
     struct ToType {
       using type = typename MapSType<S>::type;
-      }; 
+      };
+
 
     /* template<typename S>
     struct ToType {

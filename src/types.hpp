@@ -156,6 +156,10 @@ namespace spurv {
 
     template<typename... Types>
     static ConstructMatrix<n, m, inner>& cons(Types&&... args);
+
+    using inner_type = inner;
+    static constexpr int nn = n;
+    static constexpr int mm = m;
   };
 
   

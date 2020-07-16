@@ -118,6 +118,7 @@ namespace spurv {
 
     const DSType& d1_comp = get_comp_type(d1);
     const DSType& d2_comp = get_comp_type(d2);
+    const DSType& d3_comp = get_comp_type(d3);
     
     int opcode = 0;
     if(d1.kind == STypeKind::KIND_BOOL) {
@@ -237,7 +238,7 @@ namespace spurv {
 
     } else {
       if constexpr(op == EXPR_MULTIPLICATION) {
-	  if (d2.kind == STypeKind::KIND_MAT && d3.kind == STypeKind::KIND_FLOAT) {
+	  if (d2.kind == STypeKind::KIND_MAT && d3.kind == d2_comp.kind) {
 	    // Differ between vector and matrix
 	    if (d2.a1 == 1) {
 	      SUtils::add(res, (5 << 16) | 142);
@@ -249,7 +250,7 @@ namespace spurv {
 	    SUtils::add(res, this->getID());
 	    SUtils::add(res, this->v1->getID());
 	    SUtils::add(res, this->v2->getID());
-	  } else if(d2.kind == STypeKind::KIND_FLOAT && d3.kind == STypeKind::KIND_MAT) {
+	  } else if(d2.kind == d3_comp.kind && d3.kind == STypeKind::KIND_MAT) {
 	    if (d3.a1 == 1) {
 	      SUtils::add(res, (5 << 16) | 142);
 	    } else {
@@ -497,50 +498,153 @@ namespace spurv {
     return *ex;
   }
   
+
+  /*
+   * Multiplication overrides - matrix multiplication, matrix scaling, element-wise multiplication
+   */
   
   template<typename tt1, typename tt2>
-  SExpr<typename multiplication_res_type<tt1, tt2>::type, EXPR_MULTIPLICATION, tt1, tt2>&
-  operator*(SValue<tt1>& v1, SValue< tt2 >& v2) {
-    // Don't mix integers and floats and don't allow matrix multiplication here
-    static_assert((is_spurv_int_type<tt1>::value && is_spurv_int_type<tt2>::value) ||
-		  (is_spurv_float_type<tt1>::value && is_spurv_float_type<tt2>::value) ||
-		  (is_spurv_float_type<tt1>::value && is_spurv_mat_type<tt2>::value) ||
-		  (is_spurv_mat_type<tt1>::value && is_spurv_float_type<tt2>::value));
-    
-    typedef typename multiplication_res_type<tt1, tt2>::type res_type;
-    SExpr<res_type, EXPR_MULTIPLICATION, tt1, tt2>* ex = SUtils::allocate<SExpr<res_type, EXPR_MULTIPLICATION, tt1, tt2> >();
-    ex->register_left_node(v1);
-    ex->register_right_node(v2);
-    return *ex;
-  }
+  BOOL_CONCEPT MultiplicableSpurvMatrices =
+    (RequireOneSpurvValue<tt1, tt2> &&
+     is_spurv_mat_type<typename SValueWrapper::ToType<tt1>::type>::value &&
+    is_spurv_mat_type<typename SValueWrapper::ToType<tt2>::type>::value &&
+     (SValueWrapper::ToType<tt1>::type::mm == SValueWrapper::ToType<tt2>::type::nn) &&
+    (std::is_same<typename SValueWrapper::ToType<tt1>::type::inner_type,
+     typename SValueWrapper::ToType<tt2>::type::inner_type>::value));
 
+  template<typename t1, typename t2>
+  struct matrix_multiplication_res_type {};
+  
   template<int n, int m, int a, int b, typename inner>
-  SExpr<SMat<n, b, inner>, EXPR_DOT, SMat<n, m, inner>, SMat<a, b, inner> >&
-  operator*(SValue<SMat<n, m, inner> >& v1, SValue<SMat<a, b, inner> >& v2) {
-    static_assert(m == a || (m == 1 && b == 1));
-    SExpr<SMat<n, b, inner>, EXPR_DOT, SMat<n, m, inner>, SMat<a, b, inner> >* ex = SUtils::allocate<SExpr<SMat<n, b, inner>, EXPR_DOT, SMat<n, m, inner>, SMat<a, b, inner> > >();
-    ex->register_left_node(v1);
-    ex->register_right_node(v2);
+  struct matrix_multiplication_res_type<SMat<n, m, inner>, SMat<a, b, inner> > {
+    static_assert(m == a);
+    using type = SMat<n, b, inner>;
+  };
+
+  // Matrix multiplication
+  template<typename tt1, typename tt2>
+  requires MultiplicableSpurvMatrices<typename std::remove_reference<tt1>::type, 
+				      typename std::remove_reference<tt2>::type>
+  SExpr<typename matrix_multiplication_res_type<typename SValueWrapper::unwrapped_type<tt1>::type,
+						typename SValueWrapper::unwrapped_type<tt2>::type>::type,
+	EXPR_DOT,
+	typename SValueWrapper::unwrapped_type<tt1>::type,
+	typename SValueWrapper::unwrapped_type<tt2>::type>& operator*(tt1&& ml, tt2&& mr) {
+    using matl = typename SValueWrapper::ToType<tt1>::type;
+    using matr = typename SValueWrapper::ToType<tt2>::type;
+    using matres = typename matrix_multiplication_res_type<typename SValueWrapper::ToType<tt1>::type,
+							   typename SValueWrapper::ToType<tt2>::type>::type;
+
+    SExpr<matres, EXPR_DOT, matl, matr>* ex = SUtils::allocate<SExpr<matres, EXPR_DOT, matl, matr> >();
+
+    ex->register_left_node(SValueWrapper::unwrap_to<tt1, matl>(ml));
+    ex->register_right_node(SValueWrapper::unwrap_to<tt2, matr>(mr));
     return *ex;
   }
 
-  template<typename tt1>
-  SExpr<tt1, EXPR_MULTIPLICATION, tt1, float_s>& operator*(SValue<tt1>& v1, const float& f) {
-    static_assert(is_spurv_mat_type<tt1>::value || is_spurv_float_type<tt1>::value);
+  template<typename mtt, typename stt>
+  BOOL_CONCEPT MatrixScalable =
+    RequireOneSpurvValue<mtt, stt> &&
+    is_spurv_mat_type<typename SValueWrapper::unwrapped_type<mtt>::type>::value &&
+    SValueWrapper::does_wrap<stt, typename SValueWrapper::unwrapped_type<mtt>::type::inner_type>::value;
+
+  template<typename tt1, typename tt2>
+  struct matrix_type {
+    using rtt1 = typename std::remove_reference<tt1>::type;
+    using rtt2 = typename std::remove_reference<tt2>::type;
+
+    using it1 = typename SValueWrapper::unwrapped_type<rtt1>::type;
+    using it2 = typename SValueWrapper::unwrapped_type<rtt2>::type;
+
+    using type = typename std::conditional<is_spurv_mat_type<it1>::value,
+					   it1, it2>::type;
+  };
+
+  // Assuming one gives a matrix type
+  template<typename tt1, typename tt2>
+  struct scalar_type {
+    using rtt1 = typename std::remove_reference<tt1>::type;
+    using rtt2 = typename std::remove_reference<tt2>::type;
+
+    using it1 = typename SValueWrapper::unwrapped_type<rtt1>::type;
+    using it2 = typename SValueWrapper::unwrapped_type<rtt2>::type;
+
+    using type = typename std::conditional<is_spurv_mat_type<it1>::value,
+					   it2, it1>::type;
+  };
+
+  // Matrix / vector scaling
+  template<typename tt1, typename tt2>
+  requires (MatrixScalable<typename std::remove_reference<tt1>::type,
+	    typename std::remove_reference<tt2>::type> ||
+	    MatrixScalable<typename std::remove_reference<tt2>::type,
+	    typename std::remove_reference<tt1>::type>)
+    SExpr<typename matrix_type<tt1, tt2>::type,
+	  EXPR_MULTIPLICATION,
+	  typename matrix_type<tt1, tt2>::type,
+	  typename matrix_type<tt1, tt2>::type::inner_type>& operator*(tt1&& ml, tt2&& mr) {
+    using comp_type = typename matrix_type<tt1, tt2>::type::inner_type;
+    using mat_type = typename matrix_type<tt1, tt2>::type;
     
-    Constant<float>* c = SUtils::allocate<Constant<float> >(f);
-    SExpr<tt1, EXPR_MULTIPLICATION, tt1, float_s>* ex = SUtils::allocate< SExpr<tt1, EXPR_MULTIPLICATION, tt1, float_s> >();
 
-    ex->register_left_node(v1);
-    ex->register_right_node(*c);
+    SExpr<mat_type, EXPR_MULTIPLICATION, mat_type, comp_type>* ex =
+      SUtils::allocate<SExpr<mat_type, EXPR_MULTIPLICATION, mat_type, comp_type> >();
+
+    ex->register_left_node(SValueWrapper::unwrap_to<tt1, mat_type>(ml));
+    ex->register_right_node(SValueWrapper::unwrap_to<tt2, comp_type>(mr));
+    return *ex;
+    }
+
+  template<typename tt1, typename tt2>
+  requires (MatrixScalable<typename std::remove_reference<tt2>::type,
+	    typename std::remove_reference<tt1>::type>)
+    SExpr<typename matrix_type<tt1, tt2>::type,
+	  EXPR_MULTIPLICATION,
+	  typename matrix_type<tt1, tt2>::type,
+	  typename matrix_type<tt1, tt2>::type::inner_type>& operator*(tt1&& ml, tt2&& mr) {
+    return mr * ml;
+  }
+
+  template<typename tt1, typename tt2>
+  struct get_spurv_value { using type = typename std::conditional<is_spurv_value<tt1>::value,
+								  tt1, tt2>::type; };
+
+  // Just returns the second type if the first is a spurv value
+  template<typename tt1, typename tt2>
+  struct get_not_spurv_value { using type = typename std::conditional<is_spurv_value<tt1>::value,
+								     tt2, tt1>::type; };
+  
+  template<typename tt1, typename tt2>
+  BOOL_CONCEPT HasSameType =
+    RequireOneSpurvValue<tt1, tt2> &&
+    SValueWrapper::does_wrap<typename std::remove_reference<typename get_not_spurv_value<tt1, tt2>::type>::type,
+			     typename std::remove_reference<typename SValueWrapper::ToType<typename get_spurv_value<tt1, tt2>::type>::type>::type>::value;
+
+  template<typename tt1, typename tt2>
+  struct get_common_type {
+    using type = typename SValueWrapper::ToType<typename get_spurv_value<tt1, tt2>::type>::type;
+  };
+  
+  // Elementwise multiplication
+  template<typename tt1, typename tt2>
+  requires HasSameType<typename std::remove_reference<tt1>::type,
+		       typename std::remove_reference<tt2>::type>
+  SExpr<typename get_common_type<tt1, tt2>::type,
+	EXPR_MULTIPLICATION,
+	typename get_common_type<tt1, tt2>::type,
+	typename get_common_type<tt1, tt2>::type>& operator*(tt1&& el, tt2&& er) {
+
+    using sptype = typename get_common_type<tt1, tt2>::type;
+    
+    SExpr<sptype, EXPR_MULTIPLICATION, sptype, sptype>* ex =
+      SUtils::allocate<SExpr<sptype, EXPR_MULTIPLICATION, sptype, sptype> >();
+
+    ex->register_left_node(SValueWrapper::unwrap_to<tt1, sptype>(el));
+    ex->register_right_node(SValueWrapper::unwrap_to<tt2, sptype>(er));
+
     return *ex;
   }
-
-  template<typename tt1>
-  SExpr<tt1, EXPR_MULTIPLICATION, tt1, float_s>& operator*(const float& f, SValue<tt1>& v1) {
-    return v1 * f;
-  }
-
+  
   // Mod and Rem
   template<typename in1_t, typename in2_t>
   SExpr<typename uwr<in1_t, in2_t>::type,
