@@ -47,7 +47,7 @@ namespace spurv {
   template<typename S>
   BOOL_CONCEPT NoSpurvValue =
     !is_spurv_value<typename std::remove_reference<S>::type>::value;
-
+    
 
   /*
    * Concept seeing if two spurv values are the same
@@ -67,6 +67,19 @@ namespace spurv {
     is_spurv_type<T>::value &&
     is_spurv_value<typename std::remove_reference<S>::type>::value &&
     std::is_base_of<SValue<T>, typename std::remove_reference<S>::type>::value;
+
+  /*
+   * Some utils used in expression_impl and values_impl
+   */
+
+  template<typename tt1, typename tt2>
+  struct get_spurv_value { using type = typename std::conditional<is_spurv_value<tt1>::value,
+								  tt1, tt2>::type; };
+
+  // Just returns the second type if the first is a spurv value
+  template<typename tt1, typename tt2>
+  struct get_not_spurv_value { using type = typename std::conditional<is_spurv_value<tt1>::value, tt2, tt1>::type; };
+
   
   /*
    * Value wrapping - Simplifying handling primitive input constants and input SValues the same way

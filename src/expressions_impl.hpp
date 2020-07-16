@@ -455,14 +455,7 @@ namespace spurv {
     ex->register_left_node(v1);
     return *ex;
   }
-    
-
-  /*// Just a shorthand (It is actually needed pretty badly for readability
-  template<typename a, typename b>
-  requires RequireOneSpurvValue<a, b>
-  struct uwr { using type =
-      typename SValueWrapper::unambiguous_unwrapped_require_spurv_type<a, b>::type;
-      }; */
+  
   
   // Additions
   template<typename in1_t, typename in2_t>
@@ -620,15 +613,7 @@ namespace spurv {
 	  typename matrix_type<tt1, tt2>::type::inner_type>& operator*(tt1&& ml, tt2&& mr) {
     return mr * ml;
   }
-
-  template<typename tt1, typename tt2>
-  struct get_spurv_value { using type = typename std::conditional<is_spurv_value<tt1>::value,
-								  tt1, tt2>::type; };
-
-  // Just returns the second type if the first is a spurv value
-  template<typename tt1, typename tt2>
-  struct get_not_spurv_value { using type = typename std::conditional<is_spurv_value<tt1>::value,
-								     tt2, tt1>::type; };
+  
   
   template<typename tt1, typename tt2>
   BOOL_CONCEPT HasSameType =

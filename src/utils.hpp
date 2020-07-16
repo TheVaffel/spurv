@@ -14,7 +14,6 @@ namespace spurv {
    */
   
   class SUtils {
-    
     static int getNewID();
     static int getCurrentID();
     static void resetID();
