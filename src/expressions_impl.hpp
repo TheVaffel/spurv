@@ -121,7 +121,24 @@ namespace spurv {
     const DSType& d3_comp = get_comp_type(d3);
     
     int opcode = 0;
-    if(d1.kind == STypeKind::KIND_BOOL) {
+
+    if(op == EXPR_NEGATIVE) {
+      if(d1_comp.kind == STypeKind::KIND_INT &&
+	 d1_comp.a1 == 1) {
+	opcode = 126;
+      } else if(d1_comp.kind == STypeKind::KIND_FLOAT) {
+	opcode = 127;
+      } else {
+	printf("[spurv] Negating operator not defined for given type\n");
+	exit(-1);
+      }
+
+      SUtils::add(res, (4 << 16) | opcode);
+      SUtils::add(res, tt::getID());
+      SUtils::add(res, this->getID());
+      SUtils::add(res, this->v1->getID());
+	
+    } else if(d1.kind == STypeKind::KIND_BOOL) {
       if (d2.kind == STypeKind::KIND_INT &&
 	  d3.kind == STypeKind::KIND_INT) {
 	
@@ -435,8 +452,7 @@ namespace spurv {
   template<typename tt>
   SExpr<tt, EXPR_NEGATIVE, tt, void_s>& operator-(SValue<tt>& v1) {
     SExpr<tt, EXPR_NEGATIVE, tt, void_s>* ex = SUtils::allocate<SExpr<tt, EXPR_NEGATIVE, tt, void_s> >();
-    ex->v1 = (&v1);
-    ex->v2 = nullptr;
+    ex->register_left_node(v1);
     return *ex;
   }
     
