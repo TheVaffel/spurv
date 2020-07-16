@@ -694,6 +694,96 @@ namespace spurv {
     
     return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_POW, v);
   }
+
+  // Check that has a spurv float value and the other value casts to float
+  /* template<typename t1, typename t2>
+  BOOL_CONCEPT UnambWrapsFloat =
+    (RequireOneSpurvValue<t1, t2> &&
+     is_spurv_float_type<typename SValueWrapper::unwrapped_type<typename get_spurv_value<t1, t2>::type>::type>::value &&
+     SValueWrapper::does_wrap<typename get_not_spurv_value<t1, t2>, typename SValueWrapper::unwrapped_type<typename get_spurv_value<t1, t2>::type>::type>::value);
+
+    
+  template<typename t1, typename t2>
+  requires UnambWrapsFloat<typename std::remove_reference<t1>::type,
+			   typename std::remove_reference<t2>::type>
+  SGLSLHomoFun<typename uwr<t1, t2>::type>& max(t1&& in1, t2&& in2) {
+    using tt = typename uwr<t1, t2>
+    return *SUtils::allocate<SGLSLHomoFun<tt
+    } */
+
+  /*
+   * Utility functions for function differing on types function
+   */
+  
+  // Returns component type (which is the type itself if scalar)
+  /* static const DSType& get_comp_type(const DSType& ds) {
+    if(ds.kind == STypeKind::KIND_MAT || ds.kind == STypeKind::KIND_ARR) {
+      return *ds.inner_types;
+    }
+
+    return ds;
+    } */
+
+  template<typename t1, typename t2>
+  SGLSLHomoFun<typename uwr<t1, t2>::type>& max(t1&& in1, t2&& in2) {
+    using tt = typename uwr<t1, t2>::type;
+
+    std::vector<SValue<tt>* > v = {&SValueWrapper::unwrap_to<t1, tt>(in1),
+				   &SValueWrapper::unwrap_to<t2, tt>(in2)};
+
+    DSType dt;
+    tt::getDSType(&dt);
+
+    const DSType& dt_comp = get_comp_type(dt);
+
+    GLSLFunction ft;
+    
+    if(dt_comp.kind == STypeKind::KIND_FLOAT) {
+      ft = GLSL_FMAX;
+    } else if(dt_comp.kind == STypeKind::KIND_INT &&
+	      dt_comp.a1 == 0) {
+      ft = GLSL_UMAX;
+    } else if(dt_comp.kind == STypeKind::KIND_INT &&
+	      dt_comp.a1 == 1) {
+      ft = GLSL_SMAX;
+    } else {
+      printf("[spurv] Could not determine correct overload of max() function\n");
+      exit(-1);
+    }
+
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(ft, v);
+  }
+
+  template<typename t1, typename t2>
+  SGLSLHomoFun<typename uwr<t1, t2>::type>& min(t1&& in1, t2&& in2) {
+    using tt = typename uwr<t1, t2>::type;
+
+    std::vector<SValue<tt>* > v = {&SValueWrapper::unwrap_to<t1, tt>(in1),
+				   &SValueWrapper::unwrap_to<t2, tt>(in2)};
+
+    DSType dt;
+    tt::getDSType(&dt);
+
+    const DSType& dt_comp = get_comp_type(dt);
+
+    GLSLFunction ft;
+    
+    if(dt_comp.kind == STypeKind::KIND_FLOAT) {
+      ft = GLSL_FMIN;
+    } else if(dt_comp.kind == STypeKind::KIND_INT &&
+	      dt_comp.a1 == 0) {
+      ft = GLSL_UMIN;
+    } else if(dt_comp.kind == STypeKind::KIND_INT &&
+	      dt_comp.a1 == 1) {
+      ft = GLSL_SMIN;
+    } else {
+      printf("[spurv] Could not determine correct overload of min() function\n");
+      exit(-1);
+    }
+
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(ft, v);
+  }
+     
   
   
 };
