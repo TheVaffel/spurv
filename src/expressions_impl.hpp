@@ -625,11 +625,16 @@ namespace spurv {
   struct get_common_type {
     using type = typename SValueWrapper::ToType<typename get_spurv_value<tt1, tt2>::type>::type;
   };
+
+  template<typename tt1>
+  BOOL_CONCEPT NotWideMatrix =
+    !is_spurv_mat_type<tt1>::value || tt1::getArg1() == 1;
   
   // Elementwise multiplication
   template<typename tt1, typename tt2>
-  requires HasSameType<typename std::remove_reference<tt1>::type,
-		       typename std::remove_reference<tt2>::type>
+  requires (HasSameType<typename std::remove_reference<tt1>::type,
+		       typename std::remove_reference<tt2>::type> &&
+	    NotWideMatrix<typename get_common_type<tt1, tt2>::type>)
   SExpr<typename get_common_type<tt1, tt2>::type,
 	EXPR_MULTIPLICATION,
 	typename get_common_type<tt1, tt2>::type,
