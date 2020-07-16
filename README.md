@@ -127,7 +127,6 @@ Result:
 
 ![Rendering of an area of the MandelbrotSet](mandelbrot.png)
 
-Future work includes making use of constants more streamlined (with less need for the "`::cons`" syntax)
 
 ## Warning
 
