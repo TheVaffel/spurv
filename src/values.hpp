@@ -320,8 +320,7 @@ namespace spurv {
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
-
-    
+  
     friend class SUtils;
   };
 

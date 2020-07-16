@@ -645,6 +645,34 @@ namespace spurv {
 
     return *ex;
   }
+
+
+  template<typename tt1, typename tt2>
+  BOOL_CONCEPT AreDottable =
+    (RequireOneSpurvValue<tt1, tt2> &&
+     HasSameType<typename std::remove_reference<tt1>::type,
+     typename std::remove_reference<tt2>::type> &&
+     is_spurv_mat_type<typename SValueWrapper::unwrapped_type<tt1>::type>::value &&
+     SValueWrapper::unwrapped_type<tt1>::type::mm == 1);
+     
+
+  template<typename tt1, typename tt2>
+  requires AreDottable<tt1, tt2>
+  SExpr<typename get_common_type<tt1, tt2>::type::inner_type,
+	EXPR_DOT,
+	typename get_common_type<tt1, tt2>::type,
+	typename get_common_type<tt1, tt2>::type>& dot(tt1&& el, tt2&& er) {
+    using sptype = typename get_common_type<tt1, tt2>::type;
+
+    SExpr<typename sptype::inner_type, EXPR_DOT, sptype, sptype>* ex =
+      SUtils::allocate<SExpr<typename sptype::inner_type, EXPR_DOT, sptype, sptype> >();
+
+    ex->register_left_node(SValueWrapper::unwrap_to<tt1, sptype>(el));
+    ex->register_right_node(SValueWrapper::unwrap_to<tt2, sptype>(er));
+
+    return *ex;
+  }
+
   
   // Mod and Rem
   template<typename in1_t, typename in2_t>
