@@ -680,7 +680,7 @@ namespace spurv {
     using tt = typename uwr<t1, t2>::type;
     static_assert(is_spurv_float_type<tt>::value, "Input to atan2 must be floating point value");
     std::vector<SValue<tt>*> v = {&SValueWrapper::unwrap_to<t1, tt>(in1),
-				  &SValueWrapper::unwrap_to<t1, tt>(in2)};
+				  &SValueWrapper::unwrap_to<t2, tt>(in2)};
     
     return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_ATAN2, v);
   }
@@ -690,39 +690,10 @@ namespace spurv {
     using tt = typename uwr<t1, t2>::type;
     static_assert(is_spurv_float_type<tt>::value, "Input to pow must be floating point value");
     std::vector<SValue<tt>*> v = {&SValueWrapper::unwrap_to<t1, tt>(in1),
-				  &SValueWrapper::unwrap_to<t1, tt>(in2)};
+				  &SValueWrapper::unwrap_to<t2, tt>(in2)};
     
     return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_POW, v);
   }
-
-  // Check that has a spurv float value and the other value casts to float
-  /* template<typename t1, typename t2>
-  BOOL_CONCEPT UnambWrapsFloat =
-    (RequireOneSpurvValue<t1, t2> &&
-     is_spurv_float_type<typename SValueWrapper::unwrapped_type<typename get_spurv_value<t1, t2>::type>::type>::value &&
-     SValueWrapper::does_wrap<typename get_not_spurv_value<t1, t2>, typename SValueWrapper::unwrapped_type<typename get_spurv_value<t1, t2>::type>::type>::value);
-
-    
-  template<typename t1, typename t2>
-  requires UnambWrapsFloat<typename std::remove_reference<t1>::type,
-			   typename std::remove_reference<t2>::type>
-  SGLSLHomoFun<typename uwr<t1, t2>::type>& max(t1&& in1, t2&& in2) {
-    using tt = typename uwr<t1, t2>
-    return *SUtils::allocate<SGLSLHomoFun<tt
-    } */
-
-  /*
-   * Utility functions for function differing on types function
-   */
-  
-  // Returns component type (which is the type itself if scalar)
-  /* static const DSType& get_comp_type(const DSType& ds) {
-    if(ds.kind == STypeKind::KIND_MAT || ds.kind == STypeKind::KIND_ARR) {
-      return *ds.inner_types;
-    }
-
-    return ds;
-    } */
 
   template<typename t1, typename t2>
   SGLSLHomoFun<typename uwr<t1, t2>::type>& max(t1&& in1, t2&& in2) {
@@ -783,7 +754,54 @@ namespace spurv {
 
     return *SUtils::allocate<SGLSLHomoFun<tt> >(ft, v);
   }
-     
+
+
+  template<typename t1>
+  BOOL_CONCEPT IsFloatVector =
+    (is_spurv_mat_type<t1>::value && is_spurv_float_type<typename t1::inner_type>::value &&
+     t1::mm == 1);
+
+  template<typename t1>
+  BOOL_CONCEPT Has3Columns =
+    (is_spurv_mat_type<t1>::value && (t1::nn == 3));
+  
+  template<typename t1, typename t2>
+  requires (IsFloatVector<typename uwr<t1, t2>::type> &&
+	    Has3Columns<typename uwr<t1, t2>::type>)
+  SGLSLHomoFun<typename uwr<t1, t2>::type>& cross(t1&& in1, t2&& in2) {
+    using tt = typename uwr<t1, t2>::type;
+
+    std::vector<SValue<tt>* > v = {&SValueWrapper::unwrap_to<t1, tt>(in1),
+				   &SValueWrapper::unwrap_to<t2, tt>(in2)};
+
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_CROSS, v);
+  }
+
+  template<typename t1>
+  BOOL_CONCEPT IsFloatScalar =
+    (is_spurv_float_type<t1>::value);
+
+  template<typename t1>
+  requires (IsFloatScalar<typename SValueWrapper::unwrapped_type<t1>::type> ||
+	    IsFloatVector<typename SValueWrapper::unwrapped_type<t1>::type>)
+    SGLSLHomoFun<typename SValueWrapper::unwrapped_type<t1>::type>& normalize(t1&& in1) {
+    using tt = typename SValueWrapper::unwrapped_type<t1>::type;
+
+    std::vector<SValue<tt>* > v = {&in1};
+
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_NORMALIZE, v);
+  }
+
+  template<typename t1, typename t2>
+  requires (IsFloatScalar<typename uwr<t1, t2>::type> ||
+	    IsFloatVector<typename uwr<t1, t2>::type>)
+    SGLSLHomoFun<typename uwr<t1, t2>::type>& reflect(t1&& in1, t2&& in2) {
+    using tt = typename uwr<t1, t2>::type;
+
+    std::vector<SValue<tt>* > v = {&SValueWrapper::unwrap_to<t1, tt>(in1),
+				   &SValueWrapper::unwrap_to<t2, tt>(in2) };
+    return *SUtils::allocate<SGLSLHomoFun<tt> >(GLSL_REFLECT, v);
+  }
   
   
 };

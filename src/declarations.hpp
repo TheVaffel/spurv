@@ -127,7 +127,10 @@ namespace spurv {
     GLSL_SMIN,
     GLSL_FMAX,
     GLSL_UMAX,
-    GLSL_SMAX
+    GLSL_SMAX,
+    GLSL_CROSS = 68,
+    GLSL_NORMALIZE,
+    GLSL_REFLECT = 71,
   };
   
 
