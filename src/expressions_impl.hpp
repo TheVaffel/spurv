@@ -526,7 +526,6 @@ namespace spurv {
   
   template<int n, int m, int a, int b, typename inner>
   struct matrix_multiplication_res_type<SMat<n, m, inner>, SMat<a, b, inner> > {
-    static_assert(m == a);
     using type = SMat<n, b, inner>;
   };
 
