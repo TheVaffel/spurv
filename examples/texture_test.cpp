@@ -62,8 +62,8 @@ int main(){
   
   {
     using namespace spurv;
-    
-    SShader<SShaderType::SHADER_VERTEX, vec4_s, vec2_s> shader;
+     
+    VertexShader<vec4_s, vec2_s> shader;
     vec4_v position = shader.input<0>();
     vec2_v tex_coord = shader.input<1>();
     
@@ -78,7 +78,7 @@ int main(){
   {
     using namespace spurv;
     
-    SShader<SShaderType::SHADER_FRAGMENT, vec2_s> shader;
+    FragmentShader<vec2_s> shader;
 
     SUniformBinding<float_s> b0 = shader.uniformBinding<float_s>(0, 0);
     float_v oscil = b0.member<0>();

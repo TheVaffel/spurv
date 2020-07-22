@@ -43,7 +43,8 @@ namespace spurv {
   
   template<SShaderType type, typename... InputTypes>
   class SShader {    
-  
+  protected:
+    
     const std::string shaderExtensions[EXTENSION_END] =
       {
        "SPV_KHR_storage_buffer_storage_class"
@@ -208,7 +209,13 @@ namespace spurv {
 
   };
   
-  
+
+  template<typename... InputTypes>
+  class VertexShader : public SShader<SShaderType::SHADER_VERTEX, InputTypes...> { };
+
+  template<typename... InputTypes>
+  class FragmentShader : public SShader<SShaderType::SHADER_FRAGMENT, InputTypes...> { };
 };
+
 
 #endif // __SPURV_SHADER
