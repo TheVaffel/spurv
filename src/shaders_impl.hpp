@@ -19,7 +19,7 @@ namespace spurv {
     builtin_uint32_0 = nullptr;
     builtin_uint32_1 = nullptr;
 
-    input_entries = std::vector<InputVariableEntry>(sizeof...(InputTypes)); 
+    input_entries = std::vector<InputVariableEntry*>(sizeof...(InputTypes), nullptr); 
   }
   
   
@@ -722,7 +722,7 @@ namespace spurv {
     return this->input<n, 0, InputTypes...>();
   }
 
-  template<SShaderType type, typename... InputTypes>
+  /* template<SShaderType type, typename... InputTypes>
   template<int n, typename First>
    auto& SShader<type, InputTypes...>::input() {
     using input_type = First;
@@ -743,6 +743,16 @@ namespace spurv {
     } else {
       return *(InputVar<input_type>*)input_entries[n].value_node; // Sketchy, but oh well
     }
+    } */
+
+  template<SShaderType type, typename... InputTypes>
+  template<int n, typename itt>
+  auto& SShader<type, InputTypes...>::input() {
+    if(input_entries[n] == nullptr) {
+      input_entries[n] = SUtils::allocate<InputVariableEntry<itt> >(n);
+    }
+
+    return input_entries[n]->getVal();
   }
   
   template<SShaderType type, typename... InputTypes>

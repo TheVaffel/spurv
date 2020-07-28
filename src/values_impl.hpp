@@ -24,7 +24,6 @@ namespace spurv {
   template<typename tt>
   SValue<tt>::SValue() {
     this->id = SUtils::getNewID();
-    this->ref_count = 0;
     this->defined = false;
     SEventRegistry::addDeclaration<tt>(this);
   }
@@ -95,37 +94,38 @@ namespace spurv {
   }
 
 
-  /*
-   * SPointerVar member functions
-   */
+  // /*
+  //  * SPointerVar member functions
+  //  */
 
-  template<typename tt, SStorageClass storage>
-  SPointerVar<tt, storage>::SPointerVar(int pointer_id) : pointer_id(pointer_id) { }
+  // template<typename tt, SStorageClass storage>
+  // SPointerVar<tt, storage>::SPointerVar(int pointer_id) : pointer_id(pointer_id) { }
 
-  template<typename tt, SStorageClass storage>
-  void SPointerVar<tt, storage>::define(std::vector<uint32_t>& res) {
-    // This default implementation assumes the pointer itself has already
-    // been defined somewhere else (which is the case for input vars, builtins),
-    // and only loads from the pointer
+  // template<typename tt, SStorageClass storage>
+  // void SPointerVar<tt, storage>::define(std::vector<uint32_t>& res) {
+  //   // This default implementation assumes the pointer itself has already
+  //   // been defined somewhere else (which is the case for input vars, builtins),
+  //   // and only loads from the pointer
     
-    // OpLoad
-    SUtils::add(res, (4 << 16) | 61);
-    SUtils::add(res, tt::getID());
-    SUtils::add(res, this->id);
-    SUtils::add(res, this->pointer_id);
-  }
+  //   // OpLoad
+  //   SUtils::add(res, (4 << 16) | 61);
+  //   SUtils::add(res, tt::getID());
+  //   SUtils::add(res, this->id);
+  //   SUtils::add(res, this->pointer_id);
+  // }
 
-  template<typename tt, SStorageClass storage>
-  void SPointerVar<tt, storage>::ensure_type_defined(std::vector<uint32_t>& res,
-						std::vector<SDeclarationState*>& declaration_states) {
-    SPointer<storage, tt>::ensure_defined(res, declaration_states);
-  }
+  // template<typename tt, SStorageClass storage>
+  // void SPointerVar<tt, storage>::ensure_type_defined(std::vector<uint32_t>& res,
+  // 						std::vector<SDeclarationState*>& declaration_states) {
+  //   SPointer<storage, tt>::ensure_defined(res, declaration_states);
+  // }
 
-  template<typename tt, SStorageClass storage>
-  void SPointerVar<tt, storage>::ensure_type_decorated(std::vector<uint32_t>& res,
-						       std::vector<bool*>& decoration_states) {
-    SPointer<storage, tt>::ensure_decorated(res, decoration_states);
-  }
+  // template<typename tt, SStorageClass storage>
+  // void SPointerVar<tt, storage>::ensure_type_decorated(std::vector<uint32_t>& res,
+  // 						       std::vector<bool*>& decoration_states) {
+  //   SPointer<storage, tt>::ensure_decorated(res, decoration_states);
+  // }
+  
   
   /*
    * SUniformVar member functions
@@ -187,87 +187,87 @@ namespace spurv {
    */
   
   template<typename tt>
-  InputVar<tt>::InputVar(int n, int pointer_id) : SPointerVar<tt, STORAGE_INPUT>(pointer_id) {
+  InputVar<tt>::InputVar(int n) {
     this->input_no = n;
   }
 
 
-  /*
-   * SLocal member functions
-   */
+  // /*
+  //  * SLocal member functions
+  //  */
 
-  template<typename tt>
-  SLocal<tt>::SLocal() {
-    SVariableRegistry::add_variable(this);
-  }
+  // template<typename tt>
+  // SLocal<tt>::SLocal() {
+  //   SVariableRegistry::add_variable(this);
+  // }
 
-  template<typename tt>
-  void SLocal<tt>::ensure_type_defined(std::vector<uint32_t>& res,
-				       std::vector<SDeclarationState*>& declaration_states) {
-    SPointer<STORAGE_FUNCTION, tt>::ensure_defined(res,
-						   declaration_states);
-  }
+  // template<typename tt>
+  // void SLocal<tt>::ensure_type_defined(std::vector<uint32_t>& res,
+  // 				       std::vector<SDeclarationState*>& declaration_states) {
+  //   SPointer<STORAGE_FUNCTION, tt>::ensure_defined(res,
+  // 						   declaration_states);
+  // }
 
-  template<typename tt>
-  void SLocal<tt>::define(std::vector<uint32_t>& res) {
-    // OpVariable 
-    SUtils::add(res, (4 << 16) | 59);
-    SUtils::add(res, SPointer<STORAGE_FUNCTION, tt>::getID());
-    SUtils::add(res, this->id);
-    SUtils::add(res, STORAGE_FUNCTION);
-  }
+  // template<typename tt>
+  // void SLocal<tt>::define(std::vector<uint32_t>& res) {
+  //   // OpVariable 
+  //   SUtils::add(res, (4 << 16) | 59);
+  //   SUtils::add(res, SPointer<STORAGE_FUNCTION, tt>::getID());
+  //   SUtils::add(res, this->id);
+  //   SUtils::add(res, STORAGE_FUNCTION);
+  // }
 
-  template<typename tt>
-  SLoadedVal<tt>& SLocal<tt>::load() {
-
-    
-    SLoadEvent<tt> *ev = SEventRegistry::addLoad<tt>(this->id);
-    SLoadedVal<tt>* val = SUtils::allocate<SLoadedVal<tt> >(this, ev);
-    ev->val_p = val;
-    // REMEMBER TO REGISTER LOAD EVENT AND IMPLEMENT ORDER ENFORCEMENT!
+  // template<typename tt>
+  // SLoadedVal<tt>& SLocal<tt>::load() {
 
     
-    return *val;
-  }
+  //   SLoadEvent<tt> *ev = SEventRegistry::addLoad<tt>(this->id);
+  //   SLoadedVal<tt>* val = SUtils::allocate<SLoadedVal<tt> >(this, ev);
+  //   ev->val_p = val;
+  //   // REMEMBER TO REGISTER LOAD EVENT AND IMPLEMENT ORDER ENFORCEMENT!
 
-  template<typename tt>
-  template<typename t1>
-  void SLocal<tt>::store(t1&& val) {
-    static_assert(SValueWrapper::does_wrap<t1, tt>::value,
-		  "Cannot convert store value to desired value");
-    SStoreEvent<tt> *ev = SEventRegistry::addStore<tt>(this);
-    ev->val_p = &SValueWrapper::unwrap_to<t1, tt>(val);
-  }
-
-
-  /*
-   * SLoadedVal member functions
-   */
-
-  template<typename tt>
-  SLoadedVal<tt>::SLoadedVal(SLocal<tt>* pointer, SLoadEvent<tt>* ev) {
-    this->pointer = pointer;
-    this->event = ev;
-  }
-
-  template<typename tt>
-  void SLoadedVal<tt>::ensure_type_defined(std::vector<uint32_t>& res,
-					   std::vector<SDeclarationState*>& declaration_states) {
-    this->pointer->ensure_type_defined(res, declaration_states);
     
-    tt::ensure_defined(res, declaration_states);
-  }
+  //   return *val;
+  // }
 
-  template<typename tt>
-  void SLoadedVal<tt>::define(std::vector<uint32_t>& res) {
-    this->pointer->ensure_defined(res);
+  // template<typename tt>
+  // template<typename t1>
+  // void SLocal<tt>::store(t1&& val) {
+  //   static_assert(SValueWrapper::does_wrap<t1, tt>::value,
+  // 		  "Cannot convert store value to desired value");
+  //   SStoreEvent<tt> *ev = SEventRegistry::addStore<tt>(this);
+  //   ev->val_p = &SValueWrapper::unwrap_to<t1, tt>(val);
+  // }
 
-    // OpLoad
-    SUtils::add(res, (4 << 16) | 61);
-    SUtils::add(res, tt::getID());
-    SUtils::add(res, this->id);
-    SUtils::add(res, this->pointer->getID());
-  }
+
+  // /*
+  //  * SLoadedVal member functions
+  //  */
+
+  // template<typename tt>
+  // SLoadedVal<tt>::SLoadedVal(SLocal<tt>* pointer, SLoadEvent<tt>* ev) {
+  //   this->pointer = pointer;
+  //   this->event = ev;
+  // }
+
+  // template<typename tt>
+  // void SLoadedVal<tt>::ensure_type_defined(std::vector<uint32_t>& res,
+  // 					   std::vector<SDeclarationState*>& declaration_states) {
+  //   this->pointer->ensure_type_defined(res, declaration_states);
+    
+  //   tt::ensure_defined(res, declaration_states);
+  // }
+
+  // template<typename tt>
+  // void SLoadedVal<tt>::define(std::vector<uint32_t>& res) {
+  //   this->pointer->ensure_defined(res);
+
+  //   // OpLoad
+  //   SUtils::add(res, (4 << 16) | 61);
+  //   SUtils::add(res, tt::getID());
+  //   SUtils::add(res, this->id);
+  //   SUtils::add(res, this->pointer->getID());
+  // }
 
 
   /*

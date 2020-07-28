@@ -70,7 +70,6 @@ namespace spurv {
   protected:
     unsigned int id;
     bool defined;
-    unsigned int ref_count;
   public:
 
     typedef tt type;
@@ -118,26 +117,27 @@ namespace spurv {
     friend class SUtils;
   };
 
-  /*
-   * SPointerVar - Base class for pointer-based values (input attributes, uniforms, builtins etc.)
-   * NB: Currently, since it only contains one ID from SValue, it only supports loading once. 
-   * Yeah... It is a bit of a mess
-   */
+  
+  // /*
+  //  * SPointerVar - Base class for pointer-based values (input attributes, uniforms, builtins etc.)
+  //  * NB: Currently, since it only contains one ID from SValue, it only supports loading once. 
+  //  * Yeah... It is a bit of a mess
+  //  */
 
-  template<typename tt, SStorageClass storage>
-  class SPointerVar : public SValue<tt> {
-  protected:
-    int pointer_id;
-    SPointerVar(int pointer_id);
-  public:
-    virtual void define(std::vector<uint32_t>& res);
-    virtual void ensure_type_defined(std::vector<uint32_t>& res,
-				     std::vector<SDeclarationState*>& declaration_states);
-    virtual void ensure_type_decorated(std::vector<uint32_t>& bin,
-				       std::vector<bool*>& decoration_states);
+  // template<typename tt, SStorageClass storage>
+  // class SPointerVar : public SValue<tt> {
+  // protected:
+  //   int pointer_id;
+  //   SPointerVar(int pointer_id);
+  // public:
+  //   virtual void define(std::vector<uint32_t>& res);
+  //   virtual void ensure_type_defined(std::vector<uint32_t>& res,
+  // 				     std::vector<SDeclarationState*>& declaration_states);
+  //   virtual void ensure_type_decorated(std::vector<uint32_t>& bin,
+  // 				       std::vector<bool*>& decoration_states);
 
-    friend class SUtils;
-  };
+  //   friend class SUtils;
+  // };
 
 
   /*
@@ -169,7 +169,7 @@ namespace spurv {
   class InputVar : public SPointerVar<tt, STORAGE_INPUT> {
     int input_no;
     
-    InputVar(int n, int pointer_id);
+    InputVar(int n);
 
   public:
     // virtual void define(std::vector<uint32_t>& res);
@@ -178,47 +178,47 @@ namespace spurv {
   };
 
 
-  /* 
-   * SLocal - represents a pointer to local variable
-   */
+  // /* 
+  //  * SLocal - represents a pointer to local variable
+  //  */
   
-  template<typename tt>
-  class SLocal : public SValue<SPointer<STORAGE_FUNCTION, tt> > {
-  public:
+  // template<typename tt>
+  // class SLocal : public SValue<SPointer<STORAGE_FUNCTION, tt> > {
+  // public:
 
-    virtual void define(std::vector<uint32_t>& res);
-    virtual void ensure_type_defined(std::vector<uint32_t>& res,
-				     std::vector<SDeclarationState*>& declaration_states);
+  //   virtual void define(std::vector<uint32_t>& res);
+  //   virtual void ensure_type_defined(std::vector<uint32_t>& res,
+  // 				     std::vector<SDeclarationState*>& declaration_states);
 
-    SLocal();
+  //   SLocal();
     
-    SLoadedVal<tt>& load();
+  //   SLoadedVal<tt>& load();
 
-    template<typename t1>
-    void store(t1&& val);
+  //   template<typename t1>
+  //   void store(t1&& val);
 
-    friend class SUtils;
-  };
+  //   friend class SUtils;
+  // };
 
   
-  /*
-   * SLoadedVal - represents a value loaded from a local pointer (SLocal)
-   */
+  // /*
+  //  * SLoadedVal - represents a value loaded from a local pointer (SLocal)
+  //  */
 
-  template<typename tt>
-  class SLoadedVal : public SValue< tt > {
-    SLocal<tt>* pointer;
+  // template<typename tt>
+  // class SLoadedVal : public SValue< tt > {
+  //   SLocal<tt>* pointer;
     
-    SLoadEvent<tt>* event;
+  //   SLoadEvent<tt>* event;
 
-    SLoadedVal(SLocal<tt>* pointer, SLoadEvent<tt>* event);
+  //   SLoadedVal(SLocal<tt>* pointer, SLoadEvent<tt>* event);
     
-    virtual void define(std::vector<uint32_t>& res);
-    virtual void ensure_type_defined(std::vector<uint32_t>& res,
-				     std::vector<SDeclarationState*>& declaration_states);
+  //   virtual void define(std::vector<uint32_t>& res);
+  //   virtual void ensure_type_defined(std::vector<uint32_t>& res,
+  // 				     std::vector<SDeclarationState*>& declaration_states);
 
-    friend class SUtils;
-  };
+  //   friend class SUtils;
+  // };
 
   
   /*

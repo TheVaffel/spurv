@@ -112,6 +112,7 @@ namespace spurv {
   bool SStoreEvent<tt>::stores_to_pointer(int id) {
     return this->pointer->getID() == id;
   }  
+
   
   /*
    * SEventRegistry member functions

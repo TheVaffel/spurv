@@ -12,6 +12,7 @@
 #include "../src/event_registry.hpp"
 #include "../src/control_flow.hpp"
 #include "../src/variable_registry.hpp"
+#include "../src/pointers.hpp"
 
 #include "../src/utils_impl.hpp"
 #include "../src/expressions_impl.hpp"
@@ -23,5 +24,6 @@
 #include "../src/event_registry_impl.hpp"
 #include "../src/control_flow_impl.hpp"
 #include "../src/variable_registry_impl.hpp"
+#include "../src/pointers_impl.hpp"
 
 #endif // ndef __SPURV_SPURV

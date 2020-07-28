@@ -207,6 +207,8 @@ namespace spurv {
 				 std::vector<bool*>& decoration_states);
     static void define(std::vector<uint32_t>& bin);
     static constexpr int getSize();
+
+    using inner_type = tt;
   };
   
 

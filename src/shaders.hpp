@@ -50,7 +50,7 @@ namespace spurv {
        "SPV_KHR_storage_buffer_storage_class"
       };
     
-    struct InputVariableEntry {
+    /* struct InputVariableEntry {
       int id;
       DSType ds;
       int pointer_id;
@@ -58,6 +58,51 @@ namespace spurv {
       void* value_node;
       
       InputVariableEntry();
+      }; */
+
+    struct InputVariableBase {
+      int num;
+      
+      template<typename t1>
+      virtual InputVar<t1>& getVar() = 0;
+      
+      template<typename t1>
+      virtual SValue<t1>& getValue() = 0;
+
+      InputVariableBase(int num) {
+	this->num = num;
+      }
+      
+      int getNum() {
+	return this->num;
+      }
+    };
+
+    template<typename tt>
+    struct InputVariableEntry : public InputVariableBase {
+      InputVar<tt>* input_var;
+      SValue<tt>* val;
+
+      InputVariableEntry(int n) : InputVariableBase(n) {
+	this->input_var = SUtils::allocate<InputVar<tt> >(n);
+	this->val = nullptr;
+      }
+      
+      template<typename t1>
+      virtual InputVar<t1>* getVar() {
+	static_assert(std::is_same<t1, tt>::value, "[spurv::InputVariableEntry::getVar] No correspondence between types");
+	return *input_var;
+      }
+
+      template<typename t1>
+      virtual SValue<t1>* getVal() {
+	static_assert(std::is_same<t1, tt>::value, "[spurv::InputVariableEntry::getValue] No correspondence between types");
+	if(this->val == nullptr) {
+	  this->val = input_var->load();
+	}
+	return this->val;
+      }
+      
     };
 
     template<typename s_type>
@@ -70,7 +115,7 @@ namespace spurv {
     std::vector<SDeclarationState*> defined_type_declaration_states;
     std::vector<bool*> decoration_states;
     
-    std::vector<InputVariableEntry> input_entries;
+    std::vector<InputVariableBase*> input_entries;
     std::vector<uint32_t> output_pointer_ids;
     std::vector<SUniformBindingBase*> uniform_bindings;
 
