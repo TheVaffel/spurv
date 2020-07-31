@@ -4,6 +4,10 @@
 #include "values.hpp"
 #include "constant_registry_impl.hpp"
 #include "event_registry_impl.hpp"
+#include "variable_registry.hpp"
+#include "value_wrapper.hpp"
+#include "utils_impl.hpp"
+#include "expressions_impl.hpp"
 
 namespace spurv {
     

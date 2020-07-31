@@ -4,6 +4,37 @@
 
 namespace spurv {
 
+  /*
+   * SEventRegistry member
+   */
+
+  std::vector<STimeEventBase*> SEventRegistry::events = std::vector<STimeEventBase*>();
+  
+  
+  /*
+   * STimeEventBase member functions
+   */
+
+  STimeEventBase::STimeEventBase(int event_num) {
+    this->event_num = event_num;
+    this->is_written = false;
+  }
+
+  void STimeEventBase::ensure_type_defined(std::vector<uint32_t>& bin,
+					   std::vector<SDeclarationState*>& states) { }
+
+  void STimeEventBase::ensure_written(std::vector<uint32_t>& bin) {
+    if(!this->is_written) {
+      this->is_written = true;
+
+      this->write_binary(bin);
+    }
+  }
+
+  bool STimeEventBase::stores_to_pointer(int n) {
+    return false;
+  }
+
   
   /*
    * SIfEvent member functions

@@ -4,7 +4,6 @@
 #include "declarations.hpp"
 #include "types.hpp"
 
-
 namespace spurv {
 
   /*

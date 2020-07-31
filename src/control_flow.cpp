@@ -1,7 +1,12 @@
-#ifndef __SPURV_CONTROL_FLOW_IMPL
-#define __SPURV_CONTROL_FLOW_IMPL
 
 #include "control_flow.hpp"
+#include "values.hpp"
+#include "pointers.hpp"
+
+#include "variable_registry_impl.hpp"
+#include "values_impl.hpp"
+#include "utils_impl.hpp"
+#include "pointers_impl.hpp"
 
 namespace spurv {
 
@@ -248,4 +253,3 @@ namespace spurv {
   }
 
 };
-#endif // __SPURV_CONTROL_FLOW_IMPL

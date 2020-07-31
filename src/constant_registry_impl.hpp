@@ -3,6 +3,8 @@
 
 #include "constant_registry.hpp"
 
+#include "types_impl.hpp"
+
 namespace spurv {
   
   /*
