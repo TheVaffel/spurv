@@ -49,25 +49,15 @@ namespace spurv {
       {
        "SPV_KHR_storage_buffer_storage_class"
       };
-    
-    /* struct InputVariableEntry {
-      int id;
-      DSType ds;
-      int pointer_id;
-
-      void* value_node;
-      
-      InputVariableEntry();
-      }; */
 
     struct InputVariableBase {
+    public: 
       int num;
+
+      // I actually can't see any other way out than having these return void pointers
+      virtual void* getVar() = 0;
       
-      template<typename t1>
-      virtual InputVar<t1>& getVar() = 0;
-      
-      template<typename t1>
-      virtual SValue<t1>& getValue() = 0;
+      virtual void* getValue() = 0;
 
       InputVariableBase(int num) {
 	this->num = num;
@@ -76,6 +66,8 @@ namespace spurv {
       int getNum() {
 	return this->num;
       }
+
+      virtual int getPointerID() = 0;
     };
 
     template<typename tt>
@@ -85,30 +77,33 @@ namespace spurv {
 
       InputVariableEntry(int n) : InputVariableBase(n) {
 	this->input_var = SUtils::allocate<InputVar<tt> >(n);
-	this->val = nullptr;
-      }
-      
-      template<typename t1>
-      virtual InputVar<t1>* getVar() {
-	static_assert(std::is_same<t1, tt>::value, "[spurv::InputVariableEntry::getVar] No correspondence between types");
-	return *input_var;
+	this->val = &this->input_var->load();
       }
 
-      template<typename t1>
-      virtual SValue<t1>* getVal() {
-	static_assert(std::is_same<t1, tt>::value, "[spurv::InputVariableEntry::getValue] No correspondence between types");
-	if(this->val == nullptr) {
-	  this->val = input_var->load();
-	}
-	return this->val;
+      virtual void* getVar() {
+	return (void*)input_var;
       }
-      
+
+      virtual void* getValue() {
+	return (void*)val;
+      }
+
+      virtual int getPointerID() {
+	return input_var->getID();
+      }
     };
 
-    template<typename s_type>
+    template<typename s_type, SStorageClass storage>
     struct BuiltinEntry {
-      SValue<s_type>* value_node;
-      int pointer_id;
+      SPointerVar<s_type, storage>* pointer;
+
+      BuiltinEntry() {
+	this->pointer = SUtils::allocate<SPointerVar<s_type, storage> >();
+      }
+
+      int getPointerID() {
+	return this->pointer->getID();
+      }
     };
     
     // We use this to reset the type declaration_states (stored for each type) after compilation
@@ -169,42 +164,34 @@ namespace spurv {
 
     template<typename in1, typename... NodeType>
     void output_output_definitions(std::vector<uint32_t>& res, int n, in1&& node,
-				   NodeType&&... args);
-
-    template<int n>
-    void output_input_pointers(std::vector<uint32_t>& res);
-    
-    template<int n, typename CurrType, typename... RestTypes>
-    void output_input_pointers(std::vector<uint32_t>& res);
-
+				   NodeType&&... args);    
     void output_output_pointers(std::vector<uint32_t>& res, int n);
     
     template<typename in1, typename... NodeTypes>
     void output_output_pointers(std::vector<uint32_t>& res, int n, in1&& val, NodeTypes&&... args);
 
-    void output_uniform_pointers(std::vector<uint32_t>& res);
     
     void output_used_builtin_pointers(std::vector<uint32_t>& res);
-    
-    void output_builtin_output_definitions(std::vector<uint32_t>& res);
     
     int get_num_defined_builtins();
     
 
-    // Builtin outputs
-    BuiltinEntry<vec4_s>* builtin_vec4_0; // Vertex: Position
-    BuiltinEntry<float_s>* builtin_float_0; // Vertex: PointSize
-    BuiltinEntry<arr_1_float_s>* builtin_arr_1_float_0; // Vertex: Clip Distance
-    BuiltinEntry<arr_1_float_s>* builtin_arr_1_float_1; // Vertex: Cull Distance
-    BuiltinEntry<uint32_s>* builtin_uint32_0; // Vertex: VertexId
-    BuiltinEntry<uint32_s>* builtin_uint32_1; // Vertex: InstanceId
+    // Builtins
+    BuiltinEntry<vec4_s, SStorageClass::STORAGE_OUTPUT>* builtin_vec4_out_0; // Vertex: Position
+    BuiltinEntry<float_s, SStorageClass::STORAGE_OUTPUT>* builtin_float_out_0; // Vertex: PointSize
+    BuiltinEntry<arr_1_float_s, SStorageClass::STORAGE_OUTPUT>* builtin_arr_1_float_out_0; // Vertex: Clip Distance
+    BuiltinEntry<arr_1_float_s, SStorageClass::STORAGE_OUTPUT>* builtin_arr_1_float_out_1; // Vertex: Cull Distance
+    
+    BuiltinEntry<uint32_s, SStorageClass::STORAGE_INPUT>* builtin_uint32_in_0; // Vertex: VertexId
+    BuiltinEntry<uint32_s, SStorageClass::STORAGE_INPUT>* builtin_uint32_in_1; // Vertex: InstanceId
+    BuiltinEntry<vec4_s, SStorageClass::STORAGE_INPUT>* builtin_vec4_in_0; // Fragment: FragCoord
 
     void cleanup_declaration_states();
     void cleanup_decoration_states();
 
     SUniformBindingBase* find_binding(int set_no, int binding_no);
     template<typename BindingType>
-    BindingType& construct_binding(int set_no, int binding_no);
+    SUniformBindingBase* construct_binding(int set_no, int binding_no);
     
   public:
     SShader();
@@ -214,25 +201,18 @@ namespace spurv {
     
     template<SBuiltinVariable ind, typename tt>
     void setBuiltin(SValue<tt>& val);
-    
-    template<int n, typename First>
-    auto& input();
-    
-    template<int n, int c, typename First, typename... Rest>
-    auto& input();
-    
-    template<int n>
-    auto& input();
 
+    template<int n>
+    SValue<typename SUtils::NthType<n, InputTypes...>::type>& input();
     
     template<typename tt>
-    SValue<tt>& uniformConstant(int set_no, int binding_no);
+    SPointerVar<tt, SStorageClass::STORAGE_UNIFORM_CONSTANT>& uniformConstant(int set_no, int binding_no);
     
     template<typename... InnerTypes>
-    SUniformBinding<InnerTypes...>& uniformBinding(int set_no, int binding_no);
+    SPointerVar<SStruct<InnerTypes...>, SStorageClass::STORAGE_UNIFORM >& uniformBinding(int set_no, int binding_no);
 
     template<typename... InnerTypes>
-    SStorageBuffer<InnerTypes...>& storageBuffer(int set_no, int binding_no);
+    SPointerVar<SStruct<InnerTypes...>, SStorageClass::STORAGE_STORAGE_BUFFER>& storageBuffer(int set_no, int binding_no);
     
     template<typename tt>
     SLocal<tt>& local();
@@ -253,7 +233,6 @@ namespace spurv {
     void compile(std::vector<uint32_t>& res, NodeTypes&&... args);
 
   };
-  
 
   template<typename... InputTypes>
   class VertexShader : public SShader<SShaderType::SHADER_VERTEX, InputTypes...> { };

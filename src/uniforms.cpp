@@ -7,7 +7,7 @@ namespace spurv {
    */
   
   SUniformBindingBase::SUniformBindingBase(int ns, int nb) : set_no(ns), binding_no(nb) {
-    pointer_id = SUtils::getNewID();
+    // pointer_id = SUtils::getNewID();
   }
 
   int SUniformBindingBase::getSetNo() {
@@ -18,9 +18,9 @@ namespace spurv {
     return this->binding_no;
   }
 
-  int SUniformBindingBase::getPointerID() {
-    return this->pointer_id;
-  }
+  // int SUniformBindingBase::getPointerID() {
+  //   return this->pointer_id;
+  // }
 
   void SUniformBindingBase::decorateType(std::vector<uint32_t>& bin,
 					 std::vector<bool*>& decoration_states) { }

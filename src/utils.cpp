@@ -68,4 +68,22 @@ namespace spurv {
   void SUtils::setGLSLID(int id) {
     SUtils::GLSL_id = id;
   }
+
+  void SUtils::binaryPrettyPrint(const std::vector<uint32_t>& shader) {
+
+    printf("[spurv] Pretty print begin\n");
+    
+    int i = 5;
+    while(i < (int)shader.size()) {
+      int s = shader[i] >> 16;
+      printf("%d ", shader[i] & ((1 << 16) - 1));
+      for(int j = 1; j < s; j++) {
+	printf("%d ", shader[i + j]);
+      }
+      printf("\n");
+      i += s;
+    }
+
+    printf("[spurv] Pretty print end\n");
+  }
 };

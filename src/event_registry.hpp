@@ -66,6 +66,9 @@ namespace spurv {
     SLoadEvent(int event_num, int pointer_id);
 
     friend class SEventRegistry;
+
+    template<typename tt1, SStorageClass storage>
+    friend class SPointerVar;
     
     template<typename t1>
     friend class SLocal;
@@ -79,7 +82,7 @@ namespace spurv {
   template<typename tt>
   class SStoreEvent : public STimeEventBase {
     
-    SLocal<tt>* pointer;
+    SPointerTypeBase<tt>* pointer;
     SValue<tt>* val_p;
 
     virtual void ensure_type_defined(std::vector<uint32_t>& bin,
@@ -88,12 +91,15 @@ namespace spurv {
     virtual void write_binary(std::vector<uint32_t>& bin);
     virtual bool stores_to_pointer(int n);
     
-    SStoreEvent(int event_num, SLocal<tt>* pointer);
+    SStoreEvent(int event_num, SPointerTypeBase<tt>* pointer);
     
     friend class SEventRegistry;
     
     template<typename t1>
     friend class SLocal;
+
+    template<typename t1>
+    friend class SPointerTypeBase;
   };
 
 
@@ -236,7 +242,7 @@ namespace spurv {
     static SLoadEvent<tt>* addLoad(int pointer_id);
 
     template<typename tt>
-    static SStoreEvent<tt>* addStore(SLocal<tt>* pointer);
+    static SStoreEvent<tt>* addStore(SPointerTypeBase<tt>* pointer);
 
     template<typename tt>
     static void addDeclaration(SValue<tt>* pointer);
@@ -267,6 +273,12 @@ namespace spurv {
 
     template<typename tt>
     friend class SLocal;
+
+    template<typename tt>
+    friend class SPointerTypeBase;
+
+    template<typename tt, SStorageClass storage>
+    friend class SPointerVar;
 
     template<typename tt>
     friend class SValue;

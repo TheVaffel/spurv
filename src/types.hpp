@@ -317,9 +317,6 @@ namespace spurv {
   template<SStorageClass storage, typename tt>
   struct is_spurv_type<SPointer<storage, tt> > : std::true_type { static_assert(is_spurv_type<tt>::value); };
 
-  template<typename... InnerTypes>
-  struct is_spurv_type<SStruct<InnerTypes...> > : std::true_type{ static_assert(SUtils::isSTypeRecursive<InnerTypes...>); };
-  
   template<int d>
   struct is_spurv_type<STexture<d> > : std::true_type {} ;
 
@@ -355,6 +352,24 @@ namespace spurv {
   struct is_spurv_texture_type<STexture<n> > : std::true_type {};
 
 
+  
+  template<typename FirstType, typename... InnerTypes>
+  constexpr bool isSTypeRecursive() {
+    if constexpr(is_spurv_type<FirstType>::value == false) {
+	return false;
+      }
+    
+    if constexpr(sizeof...(InnerTypes) > 0) {
+	return isSTypeRecursive<InnerTypes...>();
+      }
+
+    return true;
+  }
+  
+  template<typename... InnerTypes>
+  struct is_spurv_type<SStruct<InnerTypes...> > : std::true_type{ static_assert(isSTypeRecursive<InnerTypes...>()); };
+  
+  
   /* 
    * Function to determine whether a type represents a uniform constant (as opposed
    * to a descriptor set)

@@ -85,7 +85,7 @@ namespace spurv {
 
   template<typename tt>
   SStoreEvent<tt>::SStoreEvent(int event_id,
-			       SLocal<tt>* pointer) : STimeEventBase(event_id) {
+			       SPointerTypeBase<tt>* pointer) : STimeEventBase(event_id) {
     is_written = false;
     this->pointer = pointer;
   }
@@ -129,7 +129,7 @@ namespace spurv {
 
 
   template<typename tt>
-  SStoreEvent<tt>* SEventRegistry::addStore(SLocal<tt>* pointer) {
+  SStoreEvent<tt>* SEventRegistry::addStore(SPointerTypeBase<tt>* pointer) {
     SStoreEvent<tt>* sl = new SStoreEvent<tt>(SEventRegistry::events.size(), pointer);
 
     SEventRegistry::events.push_back(sl);

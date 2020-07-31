@@ -4,6 +4,7 @@
 #include "declarations.hpp"
 #include "utils.hpp"
 #include "values.hpp"
+#include "pointers.hpp"
 
 namespace spurv { 
 
@@ -12,22 +13,23 @@ namespace spurv {
    */
 
   class SUniformBindingBase {
-
   protected:
     int set_no, binding_no;
-    int pointer_id;
     
   public:
     SUniformBindingBase(int s, int b);
 
     int getSetNo();
     int getBindingNo();
-    int getPointerID();
 
     virtual void definePointer(std::vector<uint32_t>& bin,
 			       std::vector<SDeclarationState*>& declaration_states) = 0;
     virtual void decorateType(std::vector<uint32_t>& bin,
 			      std::vector<bool*>& decoration_states);
+
+    virtual void* getPointer() = 0;
+
+    virtual int getPointerID() = 0;
 
     template<typename type>
     friend class SUniformConstant;
@@ -36,24 +38,26 @@ namespace spurv {
 
   
   /*
-   * SStructBinding - Base for bindings using structs (uniforms and 
+   * SStructBinding - Base for bindings using structs (uniforms and storage buffers)
    */
 
   template<SStorageClass store_ind, typename... InnerTypes>
   class SStructBinding : public SUniformBindingBase {
   protected:
-    std::vector<void*> value_pointers;
-    
+    SPointerVar<SStruct<InnerTypes...>, store_ind>* pointer;
   public:  
     SStructBinding(int sn, int bn);
     
-    template<int n>
-    SValue<typename SUtils::NthType<n, InnerTypes...>::type >& member();
+    // template<int n>
+    // SValue<typename SUtils::NthType<n, InnerTypes...>::type >& member();
 
     virtual void definePointer(std::vector<uint32_t>& bin,
 			       std::vector<SDeclarationState*>& declaration_states);
     virtual void decorateType(std::vector<uint32_t>& bin,
 			      std::vector<bool*>& decoration_states);
+
+    virtual void* getPointer();
+    virtual int getPointerID();
   };
 
   
@@ -68,6 +72,7 @@ namespace spurv {
     friend class SUtils;
   };
 
+  
   /*
    * SStorageBuffer - represents storage buffers
    */
@@ -78,22 +83,29 @@ namespace spurv {
 
     friend class SUtils;
   };
+
   
   /*
    * SUniformConstant - for uniforms that don't need structs - like textures
    */
 
   template<typename type>
-  class SUniformConstant : public SUniformBindingBase, public SValue<type> {
+  class SUniformConstant : public SUniformBindingBase {
+
+    SPointerVar<type, SStorageClass::STORAGE_UNIFORM_CONSTANT>* pointer;
+    
   public:
     SUniformConstant(int sn, int bn);
     
     virtual void definePointer(std::vector<uint32_t>& bin,
 			       std::vector<SDeclarationState*>& declaration_states);
 
-    virtual void define(std::vector<uint32_t>& res);
-    virtual void ensure_type_defined(std::vector<uint32_t>& res,
-				     std::vector<SDeclarationState*>& declaration_states);
+    // virtual void define(std::vector<uint32_t>& res);
+    // virtual void ensure_type_defined(std::vector<uint32_t>& res,
+    // 				     std::vector<SDeclarationState*>& declaration_states);
+
+    virtual void* getPointer();
+    virtual int getPointerID();
   };
 
 

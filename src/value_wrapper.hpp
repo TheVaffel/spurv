@@ -134,8 +134,8 @@ namespace spurv {
     template<typename tt>
     struct unwrapped_type<SLocal<tt> > { using type = tt; };
 
-    template<typename tt>
-    struct unwrapped_type<SLoadedVal<tt> > { using type = tt; };
+    template<typename tt, SStorageClass stind>
+    struct unwrapped_type<SLoadedVal<tt, stind> > { using type = tt; };
 
     template<typename tt>
     struct unwrapped_type<SCustomVal<tt> > { using type = tt; };
@@ -229,8 +229,8 @@ namespace spurv {
     template<typename tt>
     struct ToType<SLocal<tt> > { using type = tt; };
 
-    template<typename tt>
-    struct ToType<SLoadedVal<tt> > { using type = tt; };
+    template<typename tt, SStorageClass stind>
+    struct ToType<SLoadedVal<tt, stind> > { using type = tt; };
 
     template<typename tt>
     struct ToType<SCustomVal<tt> > { using type = tt; };

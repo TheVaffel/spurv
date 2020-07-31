@@ -144,13 +144,18 @@ namespace spurv {
     template<typename tt>
     friend class SelectConstruct;
 
+    friend class SPointerBase;
+
     template<typename tt, SStorageClass storage>
     friend class SPointerVar;
 
-    template<typename tt>
-    friend class SLocal;
+    template<typename tt, SStorageClass storage>
+    friend class SAccessChain;
 
     template<typename tt>
+    friend class SLocal;
+    
+    template<typename tt, SStorageClass stind>
     friend class SLoadedVal;
 
     template<typename tt>
@@ -171,7 +176,6 @@ namespace spurv {
     friend class SForEndEvent;
     
     friend class SForLoop;
-
     
   public:
 
@@ -182,6 +186,8 @@ namespace spurv {
     // Utility to get nth type from a parameter pack of types
     template<int n, typename...Types>
     struct NthType;
+
+    static void binaryPrettyPrint(const std::vector<uint32_t>& bin);
     
   };
 

@@ -176,49 +176,21 @@ namespace spurv {
 
     friend class SUtils;
   };
-
-
-  // /* 
-  //  * SLocal - represents a pointer to local variable
-  //  */
   
-  // template<typename tt>
-  // class SLocal : public SValue<SPointer<STORAGE_FUNCTION, tt> > {
-  // public:
 
-  //   virtual void define(std::vector<uint32_t>& res);
-  //   virtual void ensure_type_defined(std::vector<uint32_t>& res,
-  // 				     std::vector<SDeclarationState*>& declaration_states);
 
-  //   SLocal();
+  /* 
+   * SLocal - represents a pointer to local variable
+   */
+
+  template<typename tt>
+  class SLocal : public SPointerVar<tt, SStorageClass::STORAGE_FUNCTION> {
+
+    SLocal();
     
-  //   SLoadedVal<tt>& load();
-
-  //   template<typename t1>
-  //   void store(t1&& val);
-
-  //   friend class SUtils;
-  // };
-
-  
-  // /*
-  //  * SLoadedVal - represents a value loaded from a local pointer (SLocal)
-  //  */
-
-  // template<typename tt>
-  // class SLoadedVal : public SValue< tt > {
-  //   SLocal<tt>* pointer;
-    
-  //   SLoadEvent<tt>* event;
-
-  //   SLoadedVal(SLocal<tt>* pointer, SLoadEvent<tt>* event);
-    
-  //   virtual void define(std::vector<uint32_t>& res);
-  //   virtual void ensure_type_defined(std::vector<uint32_t>& res,
-  // 				     std::vector<SDeclarationState*>& declaration_states);
-
-  //   friend class SUtils;
-  // };
+    friend class SForLoop;
+    friend class SUtils;
+  };
 
   
   /*
@@ -388,8 +360,8 @@ namespace spurv {
   template<typename tt>
   struct is_spurv_value<SLocal<tt> > : std::true_type {};
 
-  template<typename tt>
-  struct is_spurv_value<SLoadedVal<tt> > : std::true_type {};
+  template<typename tt, SStorageClass stind>
+  struct is_spurv_value<SLoadedVal<tt, stind> > : std::true_type {};
 
   template<typename tt>
   struct is_spurv_value<SCustomVal<tt> > : std::true_type {};

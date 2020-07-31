@@ -199,9 +199,6 @@ namespace spurv {
   class SLocal;
 
   template<typename tt>
-  class SLoadedVal;
-
-  template<typename tt>
   class Constant;
   
   template<int n, int m, typename inner>
@@ -224,6 +221,21 @@ namespace spurv {
 
   template<typename tt>
   class SVariableEntry;
+
+  class SPointerBase;
+  
+  template<typename tt>
+  class SPointerTypeBase;
+  
+  template<typename tt, SStorageClass stind>
+  class SPointerVar;
+
+  template<typename tt, SStorageClass stind>
+  class SAccessChain;
+  
+  template<typename tt, SStorageClass stind>
+  class SLoadedVal;
+
   
   class SUtils;
   

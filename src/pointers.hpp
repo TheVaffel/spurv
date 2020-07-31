@@ -25,19 +25,23 @@ namespace spurv {
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states) = 0;
 
-  };
-
-
-  /*
-   * SAccessChainBase - base (interface) for access chain pointers (which includes all pointers)
-   */
-
-  class SAccessChainBase {
-  protected:
+    int getID();
     
     virtual int getChainLength() = 0;
     virtual void outputChainNumber(std::vector<uint32_t>& res) = 0;
+
+    template<typename tt, SStorageClass storage>
+    friend class SAccessChain;
+
+    template<typename tt>
+    friend class SStoreEvent;
+
+    friend class SVariableRegistry;
+
+    template<typename tt>
+    friend class SVariableEntry;
   };
+  
 
   /*
    * SPointerTypeBase - base for pointers parameterized by type
@@ -45,11 +49,11 @@ namespace spurv {
 
   template<typename tt>
   class SPointerTypeBase : public SPointerBase {
-  protected:
-    SValue<tt>& load();
-
+  public:
     template<typename t1>
     void store(t1&& val);
+
+    virtual SValue<tt>& load() = 0;
   };
 
 
@@ -62,7 +66,7 @@ namespace spurv {
   struct member_access_result { using type = void; };
 
   template<typename... inner_types, int n>
-  struct member_access_result<SStruct<inner_types...> > { using type = typename SUtils::NthType<n, inner_types>::type; };
+  struct member_access_result<SStruct<inner_types...>, n > { using type = typename SUtils::NthType<n, inner_types...>::type; };
 
 
   template<typename tt>
@@ -80,7 +84,7 @@ namespace spurv {
    */
 
   template<typename tt, SStorageClass storage>
-  class SPointerVar : public SPointerBase, public SAccessChainBase {
+  class SPointerVar : public SPointerTypeBase<tt> /*, public SAccessChainBase */ {
   protected:
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
@@ -88,6 +92,10 @@ namespace spurv {
 
     virtual int getChainLength();
     virtual void outputChainNumber(std::vector<uint32_t>& res);
+
+    
+  public:
+    virtual SValue<tt>& load();
     
     template<int n>
     SAccessChain<typename member_access_result<tt, n>::type, storage>& member();
@@ -98,6 +106,15 @@ namespace spurv {
     friend class SUtils;
 
     friend class SLoadedVal<tt, storage>;
+
+    template<SShaderType tp, typename... InputTypes>
+    friend class SShader;
+
+    template<SStorageClass stind, typename... InnerTypes>
+    friend class SStructBinding;
+
+    template<typename type>
+    friend class SUniformConstant;
   };
 
 
@@ -108,15 +125,18 @@ namespace spurv {
   template<typename tt, SStorageClass storage>
   class SAccessChain : public SPointerVar<tt, storage> {
 
-    SAccessChainBase* acb;
+    SPointerBase* acb;
     SValue<int_s>* index_value;
 
     template<typename tind>
-    SAccessChain(SAccessChainBase* parent, tind&& index);
+    SAccessChain(SPointerBase* parent, tind&& index);
 
     virtual void define(std::vector<uint32_t>& res);
     virtual int getChainLength();
     virtual void outputChainNumber(std::vector<uint32_t>& res);
+
+    virtual void ensure_type_defined(std::vector<uint32_t>& res,
+				     std::vector<SDeclarationState*>& declaration_states);
 
     friend class SUtils;
   };
@@ -129,14 +149,13 @@ namespace spurv {
   template<typename tt, SStorageClass storage>
   class SLoadedVal : public SValue<tt> {
 
-    SLoadedVal(SPointerVal<tt, storage>* pointer);
+    SLoadedVal(SPointerVar<tt, storage>* pointer);
 
-    SPointerVal<tt, storage>* pointer;
+    SPointerVar<tt, storage>* pointer;
     
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
-
     
     friend class SUtils;
     
