@@ -10,6 +10,7 @@ Somewhat in order of priority
 
 ### Structural Features
 - [x] Conditionals
+- [x] Loops
 - [ ] Functions
 
 ### BIG features (probably)
@@ -20,12 +21,16 @@ Somewhat in order of priority
 ### Operations
 - [x] Arithmetics
 - [x] Basic vector and matrix operations
-- [ ] Int `mod` and `rem`
-- [ ] Floating point `mod` and `rem`
-- [ ] Implement addition, subtraction, multiplication and the like for all combinations of matrices and scalars
+- [x] Int `mod` and `rem`
+- [x] Floating point `mod` and `rem`
+- [x] Implement addition, subtraction, multiplication and the like for all combinations of matrices and scalars
 
 ### "Minor" Refactorizations
 - [x] Simplify datatype names
 - [x] Simplify exposed user functions
 - [x] Make shortcuts for types of value nodes
-- [ ] Make conversion system that allows for simpler interaction where user can provide primitive datatypes (or matrices from FlatAlg) in place for Spurv value
+- [x] Make conversion system that allows for simpler interaction where user can provide primitive datatypes (or matrices from FlatAlg) in place for Spurv value
+
+### Cleanup
+
+- [ ] Make sure non-template member functions of non-template classes are declared in .cpp files (violators found in pointers_impl.hpp and control_flow_impl.hpp)
