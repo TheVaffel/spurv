@@ -78,7 +78,7 @@ namespace spurv {
   // Returns component type (which is the type itself if scalar)
   static const DSType& get_comp_type(const DSType& ds) {
     if(ds.kind == STypeKind::KIND_MAT || ds.kind == STypeKind::KIND_ARR) {
-      return *ds.inner_types;
+      return ds.inner_types[0];
     }
 
     return ds;

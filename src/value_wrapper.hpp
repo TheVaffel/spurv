@@ -244,7 +244,7 @@ namespace spurv {
     template<typename S>
     struct ToType {
       using type = typename MapSType<S>::type;
-      };
+    };
 
 
     /* template<typename S>

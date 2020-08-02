@@ -42,18 +42,13 @@ namespace spurv {
     STypeKind kind;
     int a0, a1, a2, a3, a4;
     
-    // NB: This will be a list if kind == KIND_STRUCT
-    DSType* inner_types;
-    int num_inner_types;
+    std::vector<DSType> inner_types;
     
-    constexpr DSType() : kind(STypeKind::KIND_INVALID),
-      a0(0), a1(0), a2(0), a3(0), a4(0),
-      inner_types(nullptr),  
-      num_inner_types(0){ };
+    DSType() : kind(STypeKind::KIND_INVALID),
+	       a0(0), a1(0), a2(0), a3(0), a4(0), inner_types(0) { };
 
-    ~DSType() ;
-    
     bool operator==(const DSType& ds) const;
+    bool operator!=(const DSType& ds) const;
   };
   
   

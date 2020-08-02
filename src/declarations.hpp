@@ -148,6 +148,8 @@ namespace spurv {
   template<SShaderType type, typename... InputTypes>
   class SShader;
 
+  struct IOVariableBase;
+
   template<int n>
   class SFloat;
 

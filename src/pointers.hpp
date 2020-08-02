@@ -40,6 +40,11 @@ namespace spurv {
 
     template<typename tt>
     friend class SVariableEntry;
+
+    friend struct IOVariableBase;
+
+    template<typename tt>
+    friend struct InputVariableEntry;
   };
   
 

@@ -35,7 +35,9 @@ namespace spurv {
 
   template<>
   struct BuiltinToType<BUILTIN_FRAG_COORD> { using type = vec4_s; };
+
   
+
   
   /*
    * SShader - The object responsible for IO and compilation of the shader
@@ -50,26 +52,81 @@ namespace spurv {
        "SPV_KHR_storage_buffer_storage_class"
       };
 
-    struct InputVariableBase {
-    public: 
-      int num;
 
-      // I actually can't see any other way out than having these return void pointers
+    
+    /*
+     * Inner structs describing input and output variables
+     */
+
+    // Base for all IO variables
+
+    struct IOVariableBase {
+      virtual DSType getPointerDSType() = 0;
+      
       virtual void* getVar() = 0;
+      virtual int getPointerID() = 0;
+
+      template<typename tt>
+      SPointerTypeBase<tt>* getVarTyped() {
+	DSType dt = this->getPointerDSType();
+	if(dt != tt::getDSType()) {
+	  printf("[spurv::IOVariableBase::getVarTyped] Supplied type differed from true type\n");
+	  exit(-1);
+	}
+
+	return (SPointerTypeBase<tt>*)this->getVar();
+      }
+    };
+
+    // Base for input variables
+    struct InputVariableBase : public IOVariableBase {
+      int num;
       
       virtual void* getValue() = 0;
+
+      template<typename tt>
+      SValue<tt>* getValueTyped() {
+	DSType dt = this->getPointerDSType();
+	DSType ds;
+	tt::getDSType(&ds);
+	if(dt != ds) {
+	  printf("[spurv::InputVariableBase::getValueTyped] Supplied type differed from true type\n");
+	  exit(-1);
+	}
+
+	return (SValue<tt>*)this->getValue();
+      }
 
       InputVariableBase(int num) {
 	this->num = num;
       }
-      
-      int getNum() {
-	return this->num;
-      }
-
-      virtual int getPointerID() = 0;
     };
 
+    // Base for output variables (Ended up creating separate for output variable base)
+    struct OutputVariableBase : public IOVariableBase {
+      int num;
+      
+      template<typename tt, typename t1>
+      void store(t1&& in1) {
+	DSType dt = this->getPointerDSType();
+	DSType ds;
+	tt::getDSType(&ds);
+	if(dt != ds) {
+	  printf("[spurv::OutputVariableBase::store] Supplied type differed from true type\n");
+	  exit(-1);
+	}
+	
+	SOutputVar<tt>* variable = (SOutputVar<tt>*)this->getVar();
+      
+	variable->store(in1);
+      }
+    
+      OutputVariableBase(int num) {
+	this->num = num;
+      }
+    };
+  
+    // Templated input variables
     template<typename tt>
     struct InputVariableEntry : public InputVariableBase {
       InputVar<tt>* input_var;
@@ -81,18 +138,51 @@ namespace spurv {
       }
 
       virtual void* getVar() {
-	return (void*)input_var;
+	return (void*)this->input_var;
       }
-
+      
       virtual void* getValue() {
-	return (void*)val;
+	return (void*)this->val;
       }
 
       virtual int getPointerID() {
 	return input_var->getID();
       }
+
+      virtual DSType getPointerDSType() {
+	DSType dt;
+	tt::getDSType(&dt);
+	return dt;
+      }
     };
 
+
+    // Templated output variable entries
+    template<typename tt>
+    struct OutputVariableEntry : public OutputVariableBase {
+      SOutputVar<tt>* output_var;
+
+      OutputVariableEntry(int n) : OutputVariableBase(n) {
+	this->output_var = SUtils::allocate<SOutputVar<tt> >(n);
+      }
+
+      virtual void* getVar() {
+	return (void*)this->output_var;
+      }
+
+      virtual int getPointerID() {
+	return this->output_var->getID();
+      }
+
+      virtual DSType getPointerDSType() {
+	DSType dt;
+	tt::getDSType(&dt);
+	return dt;
+      }
+    };
+    
+
+    // Templated builtin entries
     template<typename s_type, SStorageClass storage>
     struct BuiltinEntry {
       SPointerVar<s_type, storage>* pointer;
@@ -111,7 +201,7 @@ namespace spurv {
     std::vector<bool*> decoration_states;
     
     std::vector<InputVariableBase*> input_entries;
-    std::vector<uint32_t> output_pointer_ids;
+    std::vector<OutputVariableBase*> output_entries;
     std::vector<SUniformBindingBase*> uniform_bindings;
 
     // Keeps track of the most recent loop, so we know which one to close
@@ -132,7 +222,8 @@ namespace spurv {
     void output_shader_header_decorate_begin(std::vector<uint32_t>& bin);
 
     void output_shader_header_output_variables(std::vector<uint32_t>& binary,
-					       int n); 
+					       int n);
+    
     template<typename in1, typename... NodeTypes>
     void output_shader_header_output_variables(std::vector<uint32_t>& binary, int n,
 					       in1&& val, NodeTypes&&... args);
@@ -160,20 +251,14 @@ namespace spurv {
     
     void output_main_function_end(std::vector<uint32_t>& res);
     
-    void output_output_definitions(std::vector<uint32_t>& res, int n);
-
-    template<typename in1, typename... NodeType>
-    void output_output_definitions(std::vector<uint32_t>& res, int n, in1&& node,
-				   NodeType&&... args);    
-    void output_output_pointers(std::vector<uint32_t>& res, int n);
-    
-    template<typename in1, typename... NodeTypes>
-    void output_output_pointers(std::vector<uint32_t>& res, int n, in1&& val, NodeTypes&&... args);
-
-    
     void output_used_builtin_pointers(std::vector<uint32_t>& res);
     
     int get_num_defined_builtins();
+
+    void create_output_variables();
+    
+    template<typename tt1, typename... NodeTypes>
+    void create_output_variables(SValue<tt1>& val, NodeTypes&&... rest);
     
 
     // Builtins

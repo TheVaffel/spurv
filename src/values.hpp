@@ -118,28 +118,6 @@ namespace spurv {
   };
 
   
-  // /*
-  //  * SPointerVar - Base class for pointer-based values (input attributes, uniforms, builtins etc.)
-  //  * NB: Currently, since it only contains one ID from SValue, it only supports loading once. 
-  //  * Yeah... It is a bit of a mess
-  //  */
-
-  // template<typename tt, SStorageClass storage>
-  // class SPointerVar : public SValue<tt> {
-  // protected:
-  //   int pointer_id;
-  //   SPointerVar(int pointer_id);
-  // public:
-  //   virtual void define(std::vector<uint32_t>& res);
-  //   virtual void ensure_type_defined(std::vector<uint32_t>& res,
-  // 				     std::vector<SDeclarationState*>& declaration_states);
-  //   virtual void ensure_type_decorated(std::vector<uint32_t>& bin,
-  // 				       std::vector<bool*>& decoration_states);
-
-  //   friend class SUtils;
-  // };
-
-
   /*
    * SUniformVar - Represents uniforms (duh)
    */
@@ -171,8 +149,19 @@ namespace spurv {
     
     InputVar(int n);
 
-  public:
-    // virtual void define(std::vector<uint32_t>& res);
+    friend class SUtils;
+  };
+
+  
+  /*
+   * OutputVar - Represents output attributes
+   */
+  
+  template<typename tt>
+  class SOutputVar : public SPointerVar<tt, STORAGE_OUTPUT> {
+    int output_no;
+    
+    SOutputVar(int n);
 
     friend class SUtils;
   };
@@ -332,9 +321,6 @@ namespace spurv {
   
   template<typename T>
   struct is_spurv_value<SValue<T> > : std::true_type {};
-
-  // template<typename T>
-  // struct is_spurv_value<SValue<T>& > : std::true_type {};
   
   template<typename t1, SExprOp op, typename t2, typename t3>
   struct is_spurv_value<SExpr<t1, op, t2, t3> > : std::true_type {};

@@ -195,6 +195,15 @@ namespace spurv {
     this->input_no = n;
   }
 
+  
+  /*
+   * OutputVar member functions
+   */
+
+  template<typename tt>
+  SOutputVar<tt>::SOutputVar(int n) {
+    this->output_no = n;
+  }
 
   /*
    * SLocal member functions

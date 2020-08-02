@@ -20,10 +20,9 @@ namespace spurv {
       constexpr int n = sizeof...(InnerTypes);
       
       if constexpr (n > 0) {
-	  type->num_inner_types = n;
-	type->inner_types = new DSType[n];
-	SUtils::getDSTypesRecursive<InnerTypes...>(type->inner_types);
-      }
+	  type->inner_types = std::vector<DSType>(n);
+	  SUtils::getDSTypesRecursive<InnerTypes...>(type->inner_types.data());
+	}
     }
 
   template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>

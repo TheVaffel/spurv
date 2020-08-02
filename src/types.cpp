@@ -23,29 +23,28 @@ namespace spurv {
    * DSType member functions
    */
   
-  DSType::~DSType() {
-    if (this->inner_types) {
-      delete[] this->inner_types;
-    }
-  }
-  
   bool DSType::operator==(const DSType& ds) const {
     bool a = true;
     a = a && this->kind == ds.kind;
     a = a && this->a0 == ds.a0;
     a = a && this->a1 == ds.a1;
+    a = a && this->a2 == ds.a2;
+    a = a && this->a3 == ds.a3;
+    a = a && this->a4 == ds.a4;
     
-    if(this->inner_types && ds.inner_types) {
-      for(int i = 0; i < this->num_inner_types; i++) {
+    if(this->inner_types.size() == ds.inner_types.size()) {
+      for(int i = 0; i < this->inner_types.size(); i++) {
 	a = a && (this->inner_types[i] == ds.inner_types[i]);
       }
       
       return a;
-    } else if( this->inner_types || ds.inner_types) {
+    } else {
       return false;
     }
+  }
 
-    return a;
+  bool DSType::operator!=(const DSType& ds) const {
+    return !(*this == ds);
   }
 
   
