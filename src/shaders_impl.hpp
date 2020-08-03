@@ -118,6 +118,8 @@ namespace spurv {
 	arg0.ensure_type_decorated(bin,
 				   this->decoration_states);
       }
+    
+    output_shader_header_decorate_tree(bin, args...);
   }
   
 

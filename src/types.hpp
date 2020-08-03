@@ -261,12 +261,18 @@ namespace spurv {
     static void define(std::vector<uint32_t>& bin);
     static void ensure_decorated(std::vector<uint32_t>& bin,
 				 std::vector<bool*>& decoration_states);
-    static void decorate_members(std::vector<uint32_t>& bin);
+    template<int member_no, int start_size, typename First, typename... Types>
+    static void decorate_members(std::vector<uint32_t>& bin,
+				 std::vector<bool*>& decoration_states);
+
+    static void decorate_block(std::vector<uint32_t>& bin,
+			       std::vector<bool*>& decoration_states);
     
     static constexpr int getSize();
 
-    template<int member_no, int start_size, typename First, typename... Types>
-    static void decorate_members(std::vector<uint32_t>& bin);
+    template<SStorageClass stind, typename... inner>
+    friend class SStructBinding;
+    
   };
 
 
@@ -345,6 +351,12 @@ namespace spurv {
 
   template<int n>
   struct is_spurv_texture_type<STexture<n> > : std::true_type {};
+
+  template<typename>
+  struct is_spurv_runtime_array : std::false_type {};
+
+  template<SStorageClass storage, typename tt>
+  struct is_spurv_runtime_array<SRunArr<storage, tt> > : std::true_type {};
 
 
   

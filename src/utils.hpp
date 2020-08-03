@@ -63,7 +63,7 @@ namespace spurv {
     
 
     template<typename First, typename... Types>
-    constexpr int getSumSize();
+    static constexpr int getSumSize();
 
     
     SUtils() = delete;
@@ -188,7 +188,7 @@ namespace spurv {
     struct NthType;
 
     static void binaryPrettyPrint(const std::vector<uint32_t>& bin);
-    
+
   };
 
 };

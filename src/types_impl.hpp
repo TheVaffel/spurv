@@ -261,6 +261,7 @@ namespace spurv {
 				     std::vector<bool*>& decoration_states) {
     tt::ensure_decorated(bin,
 			 decoration_states);
+
   }
 
   template<int n, SStorageClass storage, typename tt>
@@ -308,7 +309,6 @@ namespace spurv {
     
     tt::ensure_decorated(bin,
 			 decoration_states);
-
     
     SRunArr<storage, tt>::ensureInitID();
     
@@ -320,6 +320,7 @@ namespace spurv {
     SUtils::add(bin, SRunArr<storage, tt>::declarationState.id);
     SUtils::add(bin, 6); // ArrayStride
     SUtils::add(bin, tt::getSize());
+
   }
   
   
@@ -359,6 +360,7 @@ namespace spurv {
 					       std::vector<bool*>& decoration_states) {
     // Most input/output variable decorations are handled in shader, only decorate inner types here
     tt::ensure_decorated(bin, decoration_states);
+
   }
 
   // No getSize function defined for pointers
@@ -413,10 +415,10 @@ namespace spurv {
   
   template<typename... InnerTypes>
   template<int member_no, int start_size, typename First, typename... Types>
-  void SStruct<InnerTypes...>::decorate_members(std::vector<uint32_t>& bin) {
-
+  void SStruct<InnerTypes...>::decorate_members(std::vector<uint32_t>& bin,
+						std::vector<bool*>& decoration_states) {
     
-    if constexpr( is_spurv_mat_type<First>::value ) {
+    if constexpr( is_spurv_mat_type<First>::value && First::getArg1() != 1) {
 	// MemberDecorate <struct_id> <member_no> ColMajor
 	SUtils::add(bin, (4 << 16) | 72);
 	SUtils::add(bin, SStruct<InnerTypes...>::getID());
@@ -429,6 +431,7 @@ namespace spurv {
 	SUtils::add(bin, member_no);
 	SUtils::add(bin, 7);
 	SUtils::add(bin, First::getSize() / First::getArg1());
+
       }
     
     // MemberDecorate <struct_id> <member_no> Offset <offset>
@@ -447,12 +450,14 @@ namespace spurv {
     SUtils::add(bin, SStruct<InnerTypes...>::getID());
     SUtils::add(bin, member_no);
     SUtils::add(bin, 24);
+
+    First::ensure_decorated(bin, decoration_states);
     
 
     if constexpr( sizeof...(Types) > 0) {
         decorate_members<member_no + 1,
-					     start_size + First::getSize(),
-					     Types...>(bin);
+			 start_size + First::getSize(),
+			 Types...>(bin);
       }	       
   }
 
@@ -468,13 +473,17 @@ namespace spurv {
     is_decorated = true;
     decoration_states.push_back(&is_decorated);
 
+    SStruct<InnerTypes...>::
+      decorate_members<0, 0, InnerTypes...>(bin, decoration_states);
+  }
+
+  template<typename... InnerTypes>
+  void SStruct<InnerTypes...>::decorate_block(std::vector<uint32_t>& bin,
+					      std::vector<bool*>& decoration_states) {
     // OpDecorate <type id> Block
     SUtils::add(bin, (3 << 16) | 71);
     SUtils::add(bin, SStruct<InnerTypes...>::declarationState.id);
     SUtils::add(bin, 2);
-
-    SStruct<InnerTypes...>::
-      decorate_members<0, 0, InnerTypes...>(bin);
   }
 
   

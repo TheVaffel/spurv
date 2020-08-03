@@ -54,6 +54,12 @@ namespace spurv {
   }
 
   template<typename tt, SStorageClass storage>
+  void SPointerVar<tt, storage>::ensure_type_decorated(std::vector<uint32_t>& res,
+						       std::vector<bool*>& declaration_states) {
+    SPointer<storage, tt>::ensure_decorated(res, declaration_states);
+  }
+
+  template<typename tt, SStorageClass storage>
   int SPointerVar<tt, storage>::getChainLength() {
     return 1; // Count this (the base pointer) as the first link
   }
@@ -125,6 +131,15 @@ namespace spurv {
     SPointer<storage, tt>::ensure_defined(res, declaration_states);
   }
 
+  template<typename tt, SStorageClass storage>
+  void SAccessChain<tt, storage>::ensure_type_decorated(std::vector<uint32_t>& res,
+							std::vector<bool*>& declaration_states) {
+    this->acb->ensure_type_decorated(res, declaration_states);
+    this->index_value->ensure_type_decorated(res, declaration_states);
+
+    SPointer<storage, tt>::ensure_decorated(res, declaration_states);
+  }
+
   /*
    * SLoadedVal member functions
    */
@@ -149,7 +164,14 @@ namespace spurv {
 						    std::vector<SDeclarationState*>& declaration_states) {
     
     this->pointer->ensure_type_defined(res, declaration_states);
-    
+  }
+
+  template<typename tt, SStorageClass storage>
+  void SLoadedVal<tt, storage>::ensure_type_decorated(std::vector<uint32_t>& res,
+						      std::vector<bool*>& declaration_states) {
+    this->pointer->ensure_type_decorated(res, declaration_states);
+
+    tt::ensure_decorated(res, declaration_states);
   }
   
 };

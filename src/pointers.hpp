@@ -24,6 +24,8 @@ namespace spurv {
     virtual void define(std::vector<uint32_t>& res) = 0;
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states) = 0;
+    virtual void ensure_type_decorated(std::vector<uint32_t>& res,
+				       std::vector<bool*>& declaration_states) = 0;
 
     int getID();
     
@@ -89,11 +91,14 @@ namespace spurv {
    */
 
   template<typename tt, SStorageClass storage>
-  class SPointerVar : public SPointerTypeBase<tt> /*, public SAccessChainBase */ {
+  class SPointerVar : public SPointerTypeBase<tt>  {
   protected:
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
+
+    virtual void ensure_type_decorated(std::vector<uint32_t>& res,
+				       std::vector<bool*>& declaration_states);
 
     virtual int getChainLength();
     virtual void outputChainNumber(std::vector<uint32_t>& res);
@@ -142,6 +147,8 @@ namespace spurv {
 
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
+    virtual void ensure_type_decorated(std::vector<uint32_t>& res,
+				       std::vector<bool*>& declaration_states);
 
     friend class SUtils;
   };
@@ -161,6 +168,8 @@ namespace spurv {
     virtual void define(std::vector<uint32_t>& res);
     virtual void ensure_type_defined(std::vector<uint32_t>& res,
 				     std::vector<SDeclarationState*>& declaration_states);
+    virtual void ensure_type_decorated(std::vector<uint32_t>& res,
+				       std::vector<bool*>& declaration_states);
     
     friend class SUtils;
     

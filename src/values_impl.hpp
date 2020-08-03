@@ -96,39 +96,6 @@ namespace spurv {
     SConstantRegistry::ensureDefinedConstant<tt>(this->value, this->id,
 						 res);
   }
-
-
-  // /*
-  //  * SPointerVar member functions
-  //  */
-
-  // template<typename tt, SStorageClass storage>
-  // SPointerVar<tt, storage>::SPointerVar(int pointer_id) : pointer_id(pointer_id) { }
-
-  // template<typename tt, SStorageClass storage>
-  // void SPointerVar<tt, storage>::define(std::vector<uint32_t>& res) {
-  //   // This default implementation assumes the pointer itself has already
-  //   // been defined somewhere else (which is the case for input vars, builtins),
-  //   // and only loads from the pointer
-    
-  //   // OpLoad
-  //   SUtils::add(res, (4 << 16) | 61);
-  //   SUtils::add(res, tt::getID());
-  //   SUtils::add(res, this->id);
-  //   SUtils::add(res, this->pointer_id);
-  // }
-
-  // template<typename tt, SStorageClass storage>
-  // void SPointerVar<tt, storage>::ensure_type_defined(std::vector<uint32_t>& res,
-  // 						std::vector<SDeclarationState*>& declaration_states) {
-  //   SPointer<storage, tt>::ensure_defined(res, declaration_states);
-  // }
-
-  // template<typename tt, SStorageClass storage>
-  // void SPointerVar<tt, storage>::ensure_type_decorated(std::vector<uint32_t>& res,
-  // 						       std::vector<bool*>& decoration_states) {
-  //   SPointer<storage, tt>::ensure_decorated(res, decoration_states);
-  // }
   
   
   /*
