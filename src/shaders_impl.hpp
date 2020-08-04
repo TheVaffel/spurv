@@ -413,20 +413,20 @@ namespace spurv {
 
   template<SShaderType type, typename... InputTypes>
   template<typename... InnerTypes>
-  SPointerVar<SStruct<InnerTypes...>, SStorageClass::STORAGE_UNIFORM >&
+  SPointerVar<SStruct<SDecoration::BLOCK, InnerTypes...>, SStorageClass::STORAGE_UNIFORM >&
   SShader<type, InputTypes...>::uniformBinding(int set_no, int binding_no) {
     SUniformBindingBase* sb = construct_binding<SUniformBinding<InnerTypes...> >(set_no, binding_no);
-    return  *(SPointerVar<SStruct<InnerTypes...>, SStorageClass::STORAGE_UNIFORM>*)sb->getPointer();
+    return  *(SPointerVar<SStruct<SDecoration::BLOCK, InnerTypes...>, SStorageClass::STORAGE_UNIFORM>*)sb->getPointer();
   }
 
   template<SShaderType type, typename... InputTypes>
   template<typename... InnerTypes>
-  SPointerVar<SStruct<InnerTypes...>, SStorageClass::STORAGE_STORAGE_BUFFER >&
+  SPointerVar<SStruct<SDecoration::BLOCK, InnerTypes...>, SStorageClass::STORAGE_STORAGE_BUFFER >&
   SShader<type, InputTypes...>::storageBuffer(int set_no, int binding_no) {
     this->extensions.insert(SExtension::EXTENSION_STORAGE_BUFFER);
 
     SUniformBindingBase* sb = construct_binding<SStorageBuffer<InnerTypes...> >(set_no, binding_no);
-    return *(SPointerVar<SStruct<InnerTypes...>, SStorageClass::STORAGE_STORAGE_BUFFER >*)sb->getPointer();
+    return *(SPointerVar<SStruct<SDecoration::BLOCK, InnerTypes...>, SStorageClass::STORAGE_STORAGE_BUFFER >*)sb->getPointer();
   }
 
   template<SShaderType type, typename... InputTypes>

@@ -129,7 +129,7 @@ namespace spurv {
     template<SStorageClass storage, typename tt>
     friend class SUniformVar;
 
-    template<typename... InnerTypes>
+    template<SDecoration decor, typename... InnerTypes>
     friend class SStruct;
 
     template<int dims, int depth, int arrayed, int multisamp, int sampled>

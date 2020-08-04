@@ -370,8 +370,8 @@ namespace spurv {
    * Struct member variables
    */ 
 
-  template<typename... InnerTypes>
-  bool SStruct<InnerTypes...>::is_decorated = false;
+  template<SDecoration decor, typename... InnerTypes>
+  bool SStruct<decor, InnerTypes...>::is_decorated = false;
 
   template<SStorageClass storage, typename inner>
   bool SRunArr<storage, inner>::is_decorated = false;
@@ -381,53 +381,53 @@ namespace spurv {
    * Struct member functions
    */
   
-  template<typename... InnerTypes>
-  void SStruct<InnerTypes...>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
+  template<SDecoration decor, typename... InnerTypes>
+  void SStruct<decor, InnerTypes...>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
 							       std::vector<SDeclarationState*>& declaration_states) {
     SUtils::ensureDefinedRecursive<InnerTypes...>(bin, declaration_states);
   }
 
-  template<typename... InnerTypes>
-  void SStruct<InnerTypes...>::ensure_defined(std::vector<uint32_t>& bin,
+  template<SDecoration decor, typename... InnerTypes>
+  void SStruct<decor, InnerTypes...>::ensure_defined(std::vector<uint32_t>& bin,
 						   std::vector<SDeclarationState*>& declaration_states) {
-    if( !SStruct<InnerTypes...>::isDefined()) {
+    if( !SStruct<decor, InnerTypes...>::isDefined()) {
       ensure_defined_dependencies(bin, declaration_states);
       define(bin);
-      declaration_states.push_back(&(SStruct<InnerTypes...>::declarationState));
+      declaration_states.push_back(&(SStruct<decor, InnerTypes...>::declarationState));
     }
   }
 
-  template<typename... InnerTypes>
-  void SStruct<InnerTypes...>::define(std::vector<uint32_t>& bin) {
-    SStruct<InnerTypes...>::ensureInitID();
-    SStruct<InnerTypes...>::declareDefined();
+  template<SDecoration decor, typename... InnerTypes>
+  void SStruct<decor, InnerTypes...>::define(std::vector<uint32_t>& bin) {
+    SStruct<decor, InnerTypes...>::ensureInitID();
+    SStruct<decor, InnerTypes...>::declareDefined();
     
     SUtils::add(bin, ((2 + sizeof...(InnerTypes)) << 16) | 30);
-    SUtils::add(bin, SStruct<InnerTypes...>::declarationState.id);
+    SUtils::add(bin, SStruct<decor, InnerTypes...>::declarationState.id);
     SUtils::addIDsRecursive<InnerTypes...>(bin);
 
   }
 
-  template<typename... InnerTypes>
-  constexpr int SStruct<InnerTypes...>::getSize() {
+  template<SDecoration decor, typename... InnerTypes>
+  constexpr int SStruct<decor, InnerTypes...>::getSize() {
     return SUtils::getSumSize<InnerTypes...>();
   }
   
-  template<typename... InnerTypes>
+  template<SDecoration decor, typename... InnerTypes>
   template<int member_no, int start_size, typename First, typename... Types>
-  void SStruct<InnerTypes...>::decorate_members(std::vector<uint32_t>& bin,
-						std::vector<bool*>& decoration_states) {
+  void SStruct<decor, InnerTypes...>::decorate_members(std::vector<uint32_t>& bin,
+						       std::vector<bool*>& decoration_states) {
     
     if constexpr( is_spurv_mat_type<First>::value && First::getArg1() != 1) {
 	// MemberDecorate <struct_id> <member_no> ColMajor
 	SUtils::add(bin, (4 << 16) | 72);
-	SUtils::add(bin, SStruct<InnerTypes...>::getID());
+	SUtils::add(bin, SStruct<decor, InnerTypes...>::getID());
 	SUtils::add(bin, member_no);
 	SUtils::add(bin, 5);
 
 	// MemberDecorate <struct_id> <member_no> MatrixStride <stride>
 	SUtils::add(bin, (5 << 16) | 72);
-	SUtils::add(bin, SStruct<InnerTypes...>::getID());
+	SUtils::add(bin, SStruct<decor, InnerTypes...>::getID());
 	SUtils::add(bin, member_no);
 	SUtils::add(bin, 7);
 	SUtils::add(bin, First::getSize() / First::getArg1());
@@ -436,7 +436,7 @@ namespace spurv {
     
     // MemberDecorate <struct_id> <member_no> Offset <offset>
     SUtils::add(bin, (5 << 16) | 72);
-    SUtils::add(bin, SStruct<InnerTypes...>::getID());
+    SUtils::add(bin, SStruct<decor, InnerTypes...>::getID());
     SUtils::add(bin, member_no);
     SUtils::add(bin, 35);
     SUtils::add(bin, start_size);
@@ -447,7 +447,7 @@ namespace spurv {
 
     // MemberDecorate <struct_id> <member_no> NonWritable
     SUtils::add(bin, (4 << 16) | 72);
-    SUtils::add(bin, SStruct<InnerTypes...>::getID());
+    SUtils::add(bin, SStruct<decor, InnerTypes...>::getID());
     SUtils::add(bin, member_no);
     SUtils::add(bin, 24);
 
@@ -455,34 +455,43 @@ namespace spurv {
     
 
     if constexpr( sizeof...(Types) > 0) {
-        decorate_members<member_no + 1,
-			 start_size + First::getSize(),
-			 Types...>(bin);
+	SStruct<decor, InnerTypes...>::decorate_members<member_no + 1,
+							start_size + First::getSize(),
+							Types...>(bin, decoration_states);
       }	       
   }
 
-  template<typename... InnerTypes>
-  void SStruct<InnerTypes...>::ensure_decorated(std::vector<uint32_t>& bin,
+  template<SDecoration decor, typename... InnerTypes>
+  void SStruct<decor, InnerTypes...>::ensure_decorated(std::vector<uint32_t>& bin,
 						std::vector<bool*>& decoration_states) {
     if( is_decorated) {
       return;
     }
 
-    SStruct<InnerTypes...>::ensureInitID();
+    SStruct<decor, InnerTypes...>::ensureInitID();
 
     is_decorated = true;
     decoration_states.push_back(&is_decorated);
 
-    SStruct<InnerTypes...>::
+    if constexpr(decor == SDecoration::BLOCK) {
+	SStruct<decor, InnerTypes...>::decorate_block(bin, decoration_states);
+      }
+
+    SStruct<decor, InnerTypes...>::
       decorate_members<0, 0, InnerTypes...>(bin, decoration_states);
   }
 
-  template<typename... InnerTypes>
-  void SStruct<InnerTypes...>::decorate_block(std::vector<uint32_t>& bin,
+  template<SDecoration decor, typename... InnerTypes>
+  void SStruct<decor, InnerTypes...>::decorate_block(std::vector<uint32_t>& bin,
 					      std::vector<bool*>& decoration_states) {
+    if(!((int)decor & (int)SDecoration::BLOCK)) {
+      printf("[spurv::SStruct::decorate_block] Tried to decorate struct without Block decoration as Block\n");
+      exit(-1);
+    }
+    
     // OpDecorate <type id> Block
     SUtils::add(bin, (3 << 16) | 71);
-    SUtils::add(bin, SStruct<InnerTypes...>::declarationState.id);
+    SUtils::add(bin, SStruct<decor, InnerTypes...>::declarationState.id);
     SUtils::add(bin, 2);
   }
 

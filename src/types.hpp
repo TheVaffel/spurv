@@ -249,8 +249,8 @@ namespace spurv {
    * SStruct - Representation of structs
    */
   
-  template<typename... InnerTypes>
-  class SStruct : public SType<STypeKind::KIND_STRUCT, 0, 0, 0, 0, 0, InnerTypes...> {
+  template<SDecoration decoration, typename... InnerTypes>
+  class SStruct : public SType<STypeKind::KIND_STRUCT, (int)decoration, 0, 0, 0, 0, InnerTypes...> {
     static bool is_decorated;
     
   public:
@@ -261,6 +261,7 @@ namespace spurv {
     static void define(std::vector<uint32_t>& bin);
     static void ensure_decorated(std::vector<uint32_t>& bin,
 				 std::vector<bool*>& decoration_states);
+    
     template<int member_no, int start_size, typename First, typename... Types>
     static void decorate_members(std::vector<uint32_t>& bin,
 				 std::vector<bool*>& decoration_states);
@@ -373,8 +374,8 @@ namespace spurv {
     return true;
   }
   
-  template<typename... InnerTypes>
-  struct is_spurv_type<SStruct<InnerTypes...> > : std::true_type{ static_assert(isSTypeRecursive<InnerTypes...>()); };
+  template<SDecoration decor, typename... InnerTypes>
+  struct is_spurv_type<SStruct<decor, InnerTypes...> > : std::true_type{ static_assert(isSTypeRecursive<InnerTypes...>()); };
   
   
   /* 
@@ -425,7 +426,6 @@ namespace spurv {
   typedef SPointer<STORAGE_FUNCTION, vec4_s> vec4_ls;
   
   typedef STexture<2> texture2D_s;
-
   
   /*
    * Small type mapper

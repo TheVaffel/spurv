@@ -132,6 +132,12 @@ namespace spurv {
     GLSL_NORMALIZE,
     GLSL_REFLECT = 71,
   };
+
+  enum class SDecoration {
+			  NONE = 0,
+			  BLOCK = 1,
+			  // Later decorations could include alignments etc.
+  };
   
 
   /*
@@ -188,7 +194,7 @@ namespace spurv {
   template<SStorageClass storage, typename tt>
   class SUniformVar;
 
-  template<typename... InnerTypes>
+  template<SDecoration decoration, typename... InnerTypes>
   class SStruct;
 
   template<typename tt>

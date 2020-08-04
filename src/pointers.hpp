@@ -72,8 +72,8 @@ namespace spurv {
   template<typename tt, int n>
   struct member_access_result { using type = void; };
 
-  template<typename... inner_types, int n>
-  struct member_access_result<SStruct<inner_types...>, n > { using type = typename SUtils::NthType<n, inner_types...>::type; };
+  template<SDecoration decoration, typename... inner_types, int n>
+  struct member_access_result<SStruct<decoration, inner_types...>, n > { using type = typename SUtils::NthType<n, inner_types...>::type; };
 
 
   template<typename tt>

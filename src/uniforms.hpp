@@ -44,7 +44,7 @@ namespace spurv {
   template<SStorageClass store_ind, typename... InnerTypes>
   class SStructBinding : public SUniformBindingBase {
   protected:
-    SPointerVar<SStruct<InnerTypes...>, store_ind>* pointer;
+    SPointerVar<SStruct<SDecoration::BLOCK, InnerTypes...>, store_ind>* pointer;
   public:  
     SStructBinding(int sn, int bn);
     

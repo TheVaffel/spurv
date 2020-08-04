@@ -300,10 +300,12 @@ namespace spurv {
     SPointerVar<tt, SStorageClass::STORAGE_UNIFORM_CONSTANT>& uniformConstant(int set_no, int binding_no);
     
     template<typename... InnerTypes>
-    SPointerVar<SStruct<InnerTypes...>, SStorageClass::STORAGE_UNIFORM >& uniformBinding(int set_no, int binding_no);
+    SPointerVar<SStruct<SDecoration::BLOCK, InnerTypes...>, SStorageClass::STORAGE_UNIFORM >& uniformBinding(int set_no,
+													     int binding_no);
 
     template<typename... InnerTypes>
-    SPointerVar<SStruct<InnerTypes...>, SStorageClass::STORAGE_STORAGE_BUFFER>& storageBuffer(int set_no, int binding_no);
+    SPointerVar<SStruct<SDecoration::BLOCK, InnerTypes...>, SStorageClass::STORAGE_STORAGE_BUFFER>& storageBuffer(int set_no,
+														  int binding_no);
     
     template<typename tt>
     SLocal<tt>& local();

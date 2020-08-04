@@ -11,7 +11,7 @@ namespace spurv {
 
   template<SStorageClass stind, typename... InnerTypes>
   SStructBinding<stind, InnerTypes...>::SStructBinding(int sn, int bn) : SUniformBindingBase(sn, bn) {
-    this->pointer = SUtils::allocate<SPointerVar<SStruct<InnerTypes...>, stind > >();
+    this->pointer = SUtils::allocate<SPointerVar<SStruct<SDecoration::BLOCK, InnerTypes...>, stind > >();
   }
 
   template<SStorageClass stind, typename... InnerTypes>
@@ -25,9 +25,8 @@ namespace spurv {
   template<SStorageClass stind, typename... InnerTypes>
   void SStructBinding<stind, InnerTypes...>::decorateType(std::vector<uint32_t>& bin,
 							  std::vector<bool*>& decoration_states) {
-    if(!SStruct<InnerTypes...>::is_decorated) {
-      SStruct<InnerTypes...>::ensure_decorated(bin, decoration_states);
-      SStruct<InnerTypes...>::decorate_block(bin, decoration_states);
+    if(!SStruct<SDecoration::BLOCK, InnerTypes...>::is_decorated) {
+      SStruct<SDecoration::BLOCK, InnerTypes...>::ensure_decorated(bin, decoration_states);
     }
   }
 
@@ -63,13 +62,14 @@ namespace spurv {
   template<SStorageClass storage, typename tt>
   struct contains_runtime_array<SRunArr<storage, tt> > : std::true_type {};
   
-  template<typename... Types>
-  struct contains_runtime_array<SStruct<Types...> > : contains_runtime_array<Types...> {};
+  template<SDecoration decor, typename... Types>
+  struct contains_runtime_array<SStruct<decor, Types...> > : contains_runtime_array<Types...> {};
   
   
   template<typename... InnerTypes>
   SUniformBinding<InnerTypes...>::SUniformBinding(int sn, int bn) : SStructBinding<STORAGE_UNIFORM, InnerTypes...>(sn, bn) {
-    static_assert(!contains_runtime_array<SStruct<InnerTypes...> >::value,
+    // Doesn't matter which decoration we use here, since it cannot affect the existence of a runtime array within.
+    static_assert(!contains_runtime_array<SStruct<SDecoration::BLOCK, InnerTypes...> >::value,
 		  "[spurv::SUniformBinding()] A uniform binding cannot contain a runtime-length array. Use storage buffer instead.");
   }
 
