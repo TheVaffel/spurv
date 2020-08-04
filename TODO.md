@@ -37,4 +37,4 @@ Somewhat in order of priority
 
 ### Bugs
 
-- [ ] Currently, only one instance of a struct with given members is created. This means that if there are multiple structs with the same member types in e.g. different uniforms, they will receieve the same decorations. A case where this will actually be a problem, is when one instance of the struct appears as a member of a uniform buffer struct, while another instance appears as another uniform buffer struct. Then the first instance will be Block-decorated, which it should not be. Possible solution: Give SStruct another template parameter, a "decoration parameter". E.g. 2 means block annotated, 0 means not annotated
+- [x] If one instance of a struct appears as a member of a uniform buffer struct, while another instance of that same struct appears as another uniform buffer struct. Then the first instance will be Block-decorated, which it should not be. Solved by giving the SStruct-type a template parameter indicationg its decoration.
