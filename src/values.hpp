@@ -405,16 +405,8 @@ namespace spurv {
   typedef SValue<vec3_sarr_s>&    vec3_sarr_v;
   typedef SValue<vec4_sarr_s>&    vec4_sarr_v;
 
-  typedef SLocal<float_s>&       float_lv;
-  typedef SLocal<int_s>&         int_lv;
-  typedef SLocal<uint_s>&        uint_lv;
-  typedef SLocal<mat2_s>&        mat2_lv;
-  typedef SLocal<mat3_s>&        mat3_lv;
-  typedef SLocal<mat4_s>&        mat4_lv;
-  typedef SLocal<vec2_s>&        vec2_lv;
-  typedef SLocal<vec3_s>&        vec3_lv;
-  typedef SLocal<vec4_s>&        vec4_lv;
-
+  template<typename tt>
+  using local_v = SLocal<tt>&;
 };
 
 #endif // __SPURV_NODES

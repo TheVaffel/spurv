@@ -427,15 +427,9 @@ namespace spurv {
   using sstruct = SStruct<SDecoration::NONE, inner_types...>;
 
   // Local variables
-  typedef SPointer<STORAGE_FUNCTION, float_s> float_ls;
-  typedef SPointer<STORAGE_FUNCTION, int_s> int_ls;
-  typedef SPointer<STORAGE_FUNCTION, uint_s> uint_ls;
-  typedef SPointer<STORAGE_FUNCTION, mat2_s> mat2_ls;
-  typedef SPointer<STORAGE_FUNCTION, mat3_s> mat3_ls;
-  typedef SPointer<STORAGE_FUNCTION, mat4_s> mat4_ls;
-  typedef SPointer<STORAGE_FUNCTION, vec2_s> vec2_ls;
-  typedef SPointer<STORAGE_FUNCTION, vec3_s> vec3_ls;
-  typedef SPointer<STORAGE_FUNCTION, vec4_s> vec4_ls;
+
+  template<typename tt>
+  using local_s = SPointer<STORAGE_FUNCTION, tt>;
   
   typedef STexture<2> texture2D_s;
   
