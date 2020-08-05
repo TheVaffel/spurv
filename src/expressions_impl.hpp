@@ -423,10 +423,15 @@ namespace spurv {
 		SUtils::add(res, this->getID());
 		SUtils::add(res, this->v1->getID());
 	      }
+	    } else {
+	      printf("[spurv] Conversion float to int not yet implemented (if that's what you tried)\n");
+	      exit(-1);
 	    }
+	  } else {
+	    printf("[spurv] Type not yet supported for conversion\n");
 	  }
 	} else {
-	printf("Expression operation not yet implemented\n");
+	printf("[spurv] Expression operation not yet implemented\n");
 	exit(-1);
       }
     }
