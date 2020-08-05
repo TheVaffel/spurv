@@ -414,6 +414,18 @@ namespace spurv {
   typedef SRunArr<STORAGE_STORAGE_BUFFER, vec3_s> vec3_sarr_s;
   typedef SRunArr<STORAGE_STORAGE_BUFFER, vec4_s> vec4_sarr_s;
 
+  template<typename inner_type>
+  using storage_rarray = SRunArr<SStorageClass::STORAGE_STORAGE_BUFFER, inner_type>;
+
+  template<int n, typename inner_type>
+  using storage_array = SArr<n, SStorageClass::STORAGE_STORAGE_BUFFER, inner_type>;
+
+  template<int n, typename inner_type>
+  using uniform_array = SArr<n, SStorageClass::STORAGE_UNIFORM, inner_type>;
+
+  template<typename... inner_types>
+  using sstruct = SStruct<SDecoration::NONE, inner_types...>;
+
   // Local variables
   typedef SPointer<STORAGE_FUNCTION, float_s> float_ls;
   typedef SPointer<STORAGE_FUNCTION, int_s> int_ls;
