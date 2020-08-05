@@ -385,7 +385,7 @@ namespace spurv {
 	      SUtils::add(res, this->getID());
 	      SUtils::add(res, this->v1->getID());
 	    } else {
-	      printf("[spurv] Error: Trying to convert to float from unsupported value\n");
+	      printf("[spurv] Error: Trying to convert to float from unsupported type\n");
 	    }
 	  } else if(d1_comp.kind == STypeKind::KIND_INT) {
 	    if(d2_comp.kind == STypeKind::KIND_INT) {
@@ -423,8 +423,16 @@ namespace spurv {
 		SUtils::add(res, this->getID());
 		SUtils::add(res, this->v1->getID());
 	      }
+	    } else if (d2_comp.kind == STypeKind::KIND_FLOAT) {
+	      // OpConvertFToU / OpConvertFToS
+	      int opcode = d1_comp.a1 == 0 ? 109 : 110;
+		
+	      SUtils::add(res, (4 << 16) | opcode);
+	      SUtils::add(res, tt::getID());
+	      SUtils::add(res, this->getID());
+	      SUtils::add(res, this->v1->getID());
 	    } else {
-	      printf("[spurv] Conversion float to int not yet implemented (if that's what you tried)\n");
+	      printf("[spurv] Error: Trying to convert to int from unsupported type\n");
 	      exit(-1);
 	    }
 	  } else {
@@ -763,11 +771,13 @@ namespace spurv {
   SExpr<t1, EXPR_CAST, t2>& cast(SValue<t2>& val) {
     static_assert(is_spurv_castable<t2, t1>::value,
 		  "[spurv::cast] The supplied type is not castable to desired type");
+    
     SExpr<t1, EXPR_CAST, t2>* ex = SUtils::allocate<SExpr<t1, EXPR_CAST, t2> >();
 
     ex->register_left_node(val);
     return *ex;
   }
+  
   
   /*
    * Comparison operations
