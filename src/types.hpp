@@ -444,7 +444,9 @@ namespace spurv {
    */
   
   template<typename tt>
-  struct MapSType;
+  struct MapSType {
+    typedef void type;
+  };
 
   template<>
   struct MapSType<void> {
@@ -464,6 +466,11 @@ namespace spurv {
   template<>
   struct MapSType<float> {
     typedef float_s type;
+  };
+
+  template<>
+  struct MapSType<double> {
+    typedef SFloat<64> type;
   };
 
   template<int n, int m>

@@ -761,8 +761,10 @@ namespace spurv {
 
   template<typename t1, typename t2>
   SExpr<t1, EXPR_CAST, t2>& cast(SValue<t2>& val) {
+    static_assert(is_spurv_castable<t2, t1>::value,
+		  "[spurv::cast] The supplied type is not castable to desired type");
     SExpr<t1, EXPR_CAST, t2>* ex = SUtils::allocate<SExpr<t1, EXPR_CAST, t2> >();
-    
+
     ex->register_left_node(val);
     return *ex;
   }

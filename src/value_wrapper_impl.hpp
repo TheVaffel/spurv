@@ -14,6 +14,16 @@ namespace spurv {
 
     return T::cons(static_cast<typename InvMapSType<tt>::type>(val));
   }
+
+  template<typename S, typename T>
+  requires IsSpurvCastable<S, T>
+  SValue<T>& SValueWrapper::unwrap_to(S& val) {
+    using ss = typename std::remove_reference<S>::type;
+    using tt = typename std::remove_reference<T>::type;
+    static_assert(does_wrap<ss, tt>::value);
+
+    return cast<tt>(val);
+  }
   
   template<typename S, typename T>
   requires IsSpurvValueOf<S, T>

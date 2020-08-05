@@ -59,6 +59,27 @@ namespace spurv {
   template<SStorageClass storage, typename inner, int iw, int is>
   struct is_lookup_index<SRunArr<storage, inner>, SInt<iw, is> > : std::true_type {};
 
+
+  /*
+   * Utility to determine castability
+   */
+
+  template<typename t1, typename t2>
+  struct is_spurv_castable : std::false_type {};
+
+  template<int n, int m, int a, int b>
+  struct is_spurv_castable<SInt<n, a>, SInt<m, b> > : std::true_type {
+    static constexpr bool value = (n != m || a != b);
+  };
+
+  template<int n, int a, int b>
+  struct is_spurv_castable<SInt<n, a>, SFloat<b> > : std::true_type { };
+
+  template<int n, int m, typename t1, typename t2>
+  struct is_spurv_castable<SMat<n, m, t1>, SMat<n, m, t2> > : is_spurv_castable<t1, t2> {
+    static constexpr bool value = !std::is_same<t1, t2>::value;
+  };
+
   
   /*
    * SValue - The mother of all nodes in the syntax trees

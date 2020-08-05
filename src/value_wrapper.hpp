@@ -67,7 +67,19 @@ namespace spurv {
     is_spurv_type<T>::value &&
     is_spurv_value<typename std::remove_reference<S>::type>::value &&
     std::is_base_of<SValue<T>, typename std::remove_reference<S>::type>::value;
+  
 
+  /*
+   * Concept checking whether the first argument can be cast to the second type
+   */
+  
+  template<typename S, typename T>
+  static BOOL_CONCEPT IsSpurvCastable =
+    is_spurv_value<typename std::remove_reference<S>::type>::value &&
+    is_spurv_castable<typename std::remove_reference<S>::type::type,
+		      typename std::remove_reference<T>::type>::value;
+
+  
   /*
    * Some utils used in expression_impl and values_impl
    */
@@ -90,15 +102,7 @@ namespace spurv {
     // does_wrap - check if a type can be unwrapped
 
     template<typename S, typename T>
-    struct does_wrap {
-      using ss = typename std::remove_reference<S>::type;
-      using tt = typename std::remove_reference<T>::type;
-      
-      static constexpr bool value =
-	std::is_base_of<SValue<tt>, ss>::value ||
-	(std::is_fundamental<typename InvMapSType<tt>::type>::value &&
-	 std::is_convertible<ss, typename InvMapSType<tt>::type>::value);
-    };
+    struct does_wrap;
     
     // unwrapped_type - the type of an unwrapped value
 
@@ -146,16 +150,6 @@ namespace spurv {
     template<typename tt>
     struct unwrapped_type<tt&> { using type = typename unwrapped_type<tt>::type; };
 
-    
-    // Accessible functions
-  
-    template<typename S, typename T>
-    requires NoSpurvValue<S>
-    static SValue<T>& unwrap_to(S &val);
-
-    template<typename S, typename T>
-    requires IsSpurvValueOf<S, T>
-    static SValue<T>& unwrap_to(S& val);
 
     // Get type from primitives
     template<typename S, typename T>
@@ -190,10 +184,11 @@ namespace spurv {
      * - Really wish I knew a better way of doing this... (Especially since this is mostly a copy of the
      *   code above)
      */
+
     
     template<typename S>
     struct ToType;
-
+    
     template<typename S>
     struct ToType<SValue<S> > {
       using type = S;
@@ -246,14 +241,22 @@ namespace spurv {
       using type = typename MapSType<S>::type;
     };
 
+    
+    // Accessible functions
+  
+    template<typename S, typename T>
+    requires NoSpurvValue<S>
+    static SValue<T>& unwrap_to(S& val);
 
-    /* template<typename S>
-    struct ToType {
-      using type = typename std::conditional<is_spurv_value<S>::value,
-					     typename unwrapped_type<S>::type,
-					     typename MapSType<S>::type>::type;
-					     }; */
+    template<typename S, typename T>
+    requires IsSpurvCastable<S, T>
+    static SValue<T>& unwrap_to(S& val);
 
+    template<typename S, typename T>
+    requires IsSpurvValueOf<S, T>
+    static SValue<T>& unwrap_to(S& val);
+
+    
     // Get unwrapped type where we accept both primitives and spurv values
     template<typename S, typename T>
     struct unambiguous_unwrapped_allow_primitives {
@@ -267,6 +270,19 @@ namespace spurv {
       using type = uw1;
     };
   };
+
+  template<typename S, typename T>
+  struct SValueWrapper::does_wrap {
+    using ss = typename std::remove_reference<S>::type;
+    using tt = typename std::remove_reference<T>::type;
+      
+    static constexpr bool value =
+      std::is_base_of<SValue<tt>, ss>::value ||
+      (std::is_fundamental<typename InvMapSType<tt>::type>::value &&
+       std::is_convertible<ss, typename InvMapSType<tt>::type>::value) ||
+      is_spurv_castable<typename SValueWrapper::ToType<ss>::type, tt>::value;
+  };
+  
 };
 
 
