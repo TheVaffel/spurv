@@ -25,8 +25,10 @@ namespace spurv {
      is_spurv_value<typename std::remove_reference<T>::type>::value);
 
   template<typename S, typename T>
-  requires !RequireOneSpurvValue<S, T>
-  BOOL_CONCEPT SameSpurvType = (std::is_same<typename MapSType<typename std::remove_reference<S>::type>::type,
+  // requires !RequireOneSpurvValue<S, T>
+  BOOL_CONCEPT SameSpurvTypeNonSpurv = !(is_spurv_value<typename std::remove_reference<S>::type>::value ||
+      is_spurv_value<typename std::remove_reference<T>::type>::value) &&
+      (std::is_same<typename MapSType<typename std::remove_reference<S>::type>::type,
 					    typename MapSType<typename std::remove_reference<T>::type>::type>::value);
     
   
@@ -74,7 +76,7 @@ namespace spurv {
    */
   
   template<typename S, typename T>
-  static BOOL_CONCEPT IsSpurvCastable =
+  BOOL_CONCEPT IsSpurvCastable =
     is_spurv_value<typename std::remove_reference<S>::type>::value &&
     is_spurv_castable<typename std::remove_reference<S>::type::type,
 		      typename std::remove_reference<T>::type>::value;
