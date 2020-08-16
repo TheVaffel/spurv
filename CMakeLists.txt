@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 project(spurv)
 
 if(WIN32)
-  add_definitions(/std:c++17)
+  add_definitions(/std:c++latest /arch:AVX2)
 else()
 	add_definitions(-std=c++1z -fconcepts -mavx -fPIC)
 endif()

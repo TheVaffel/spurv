@@ -50,23 +50,26 @@ namespace spurv {
     return n * m;
   }
 
-  template<typename t1>
-  constexpr int SUtils::num_elements(t1&& ft) {
-    using rt = typename std::remove_reference<t1>::type;
-    if constexpr(is_spurv_value<rt>::value) {
-	using tt = typename rt::type;
-	if constexpr(tt::getKind() == STypeKind::KIND_MAT) {
-	    return tt::getArg0() * tt::getArg1();
-	  } else {
-	  return 1;
-	}
-      } else if constexpr(is_falg_mat<t1>::value) {
-	return dims(ft);
-      } else {
+  template<typename tt>
+  struct SUtils::num_elements { static constexpr int value = 1; };
 
-      return 1;
-    }
-  }
+  template<int n, int m, typename tt>
+  struct SUtils::num_elements<SMat<n, m, tt> > { static constexpr int value = n * m; };
+
+  template<int n, int m>
+  struct SUtils::num_elements<falg::Matrix<n, m> > { static constexpr int value = n * m; };
+
+  template<typename FirstType, typename SecType, typename... InnerTypes>
+  struct SUtils::sum_num_elements<FirstType, SecType, InnerTypes...> { 
+      static constexpr int value = 
+      SUtils::num_elements<SValueWrapper::ToType<FirstType>::type>::value + 
+      SUtils::sum_num_elements<SecType, InnerTypes...>::value; 
+  };
+
+  template<typename FirstType>
+  struct SUtils::sum_num_elements < FirstType > { 
+      static constexpr int value = 
+      SUtils::num_elements<SValueWrapper::ToType<FirstType>::type>::value; };
 
   template<typename First, typename... InnerTypes>
   constexpr bool SUtils::has_only_1_comps(First&& ft, InnerTypes&&... args) {
@@ -86,15 +89,6 @@ namespace spurv {
       }
 
     return (SUtils::num_elements(ft) == n) && s;
-  }
-  
-  template<typename FirstType, typename... InnerTypes>
-  constexpr int SUtils::sum_num_elements(FirstType&& ft, InnerTypes&&... args) {
-    int s = 0;
-    if constexpr (sizeof...(InnerTypes) > 0) {
-	s = SUtils::sum_num_elements(args...);
-      }
-    return s + SUtils::num_elements(ft);
   }
 
   

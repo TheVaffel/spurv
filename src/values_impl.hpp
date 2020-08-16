@@ -234,9 +234,9 @@ namespace spurv {
   template<int n, int m, typename inner>
   template<typename... Types>
   ConstructMatrix<n, m, inner>::ConstructMatrix(Types&&... args) {
-    constexpr int num = SUtils::sum_num_elements(args...);
-    static_assert(num  ==  n * m, // sizeof...(args) == n * m,
-    		  "Number of arguments to matrix construction does not match number of components in matrix, nums were ");
+    constexpr int num = SUtils::sum_num_elements<Types...>::value;
+    static_assert(num ==  n * m, // sizeof...(args) == n * m,
+    		  "Number of arguments to matrix construction does not match number of components in matrix");
 
     // Only vectors can be constructed with concatenating other vectors
     // Matrices, on the other hand, must be given every element explicitly, or constructed from columns only
