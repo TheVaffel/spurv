@@ -30,6 +30,7 @@ namespace spurv {
   enum class SShaderType {
     SHADER_VERTEX,
     SHADER_FRAGMENT,
+    SHADER_COMPUTE,
   };
 
   enum SStorageClass {
@@ -72,7 +73,8 @@ namespace spurv {
     BUILTIN_CULL_DISTANCE = 4,
     BUILTIN_INSTANCE_INDEX = 43,
     BUILTIN_VERTEX_INDEX = 42,
-    BUILTIN_FRAG_COORD = 15
+    BUILTIN_FRAG_COORD = 15,
+    BUILTIN_GLOBAL_INVOCATION_ID = 28
   };
 
   enum SControlType {

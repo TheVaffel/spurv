@@ -42,7 +42,10 @@ namespace spurv {
   template<>
   struct BuiltinInfo<SShaderType::SHADER_FRAGMENT, BUILTIN_FRAG_COORD>
   { using type = vec4_s; static const SStorageClass storage = SStorageClass::STORAGE_INPUT; };
-  
+
+  template<>
+  struct BuiltinInfo<SShaderType::SHADER_COMPUTE, BUILTIN_GLOBAL_INVOCATION_ID>
+  { using type = uvec3; static const SStorageClass storage = SStorageClass::STORAGE_INPUT; };
 
   
   /*
