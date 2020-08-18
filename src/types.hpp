@@ -404,6 +404,14 @@ namespace spurv {
   typedef SMat<2, 1, float_s> vec2_s;
   typedef SMat<3, 1, float_s> vec3_s;
   typedef SMat<4, 1, float_s> vec4_s;
+  
+  typedef SMat<2, 1, int_s>   ivec2_s;
+  typedef SMat<3, 1, int_s>   ivec3_s;
+  typedef SMat<4, 1, int_s>   ivec4_s;
+  typedef SMat<2, 1, uint_s>  uvec2_s;
+  typedef SMat<3, 1, uint_s>  uvec3_s;
+  typedef SMat<4, 1, uint_s>  uvec4_s;
+  
   typedef SArr<1, STORAGE_INPUT, float_s> arr_1_float_s;
   
   typedef SRunArr<STORAGE_STORAGE_BUFFER, float_s> float_sarr_s;

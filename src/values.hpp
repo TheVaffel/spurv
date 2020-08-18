@@ -397,6 +397,15 @@ namespace spurv {
   typedef SValue<vec2_s>&        vec2_v;
   typedef SValue<vec3_s>&        vec3_v;
   typedef SValue<vec4_s>&        vec4_v;
+
+  typedef SValue<ivec2_s>&       ivec2_v;
+  typedef SValue<ivec3_s>&       ivec3_v;
+  typedef SValue<ivec4_s>&       ivec4_v;
+
+  typedef SValue<uvec2_s>&       uvec2_v;
+  typedef SValue<uvec3_s>&       uvec3_v;
+  typedef SValue<uvec4_s>&       uvec4_v;
+  
   typedef SValue<arr_1_float_s>& arr_1_float_v;
   typedef SValue<texture2D_s>&   texture2D_v;
 
