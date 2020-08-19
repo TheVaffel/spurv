@@ -325,9 +325,11 @@ namespace spurv {
   template<SStorageClass storage, typename tt>
   struct is_spurv_type<SRunArr<storage, tt> > : std::true_type {};
 
+  template<int dims, int depth, int arrayed, int multisamp, int sampled>
+  struct is_spurv_type<SImage<dims, depth, arrayed, multisamp, sampled> > : std::true_type { };
+  
   template<int n, int m, typename inner>
   struct is_spurv_mat_type<SMat<n, m, inner> > : std::true_type {};
-
   
   template<typename>
   struct is_spurv_float_type : std::false_type {};
@@ -438,8 +440,9 @@ namespace spurv {
 
   template<typename tt>
   using local_s = SPointer<STORAGE_FUNCTION, tt>;
-  
-  typedef STexture<2> texture2D_s;
+
+  typedef SImage<1, 0, 0, 0, 0>  image2D_s;
+  typedef STexture<2>            texture2D_s;
   
   /*
    * Small type mapper

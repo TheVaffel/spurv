@@ -24,6 +24,11 @@ namespace spurv {
     using type = vec4_s;
   };
 
+  template<int dim, int depth, int arrayed, int multisamp, int sampled>
+  struct lookup_result<SImage<dim, depth, arrayed, multisamp, sampled> > {
+    using type = vec4_s;
+  };
+
   template<int n, typename inner>
   struct lookup_result<SMat<n, 1, inner> > {
     using type = inner;
@@ -50,6 +55,9 @@ namespace spurv {
   template<int n>
   struct is_lookup_index<STexture<n>, SMat<n, 1, float_s>  > : std::true_type {};
 
+  template<int dims, int depth, int arrayed, int multisamp, int sampled>
+  struct is_lookup_index<SImage<dims, depth, arrayed, multisamp, sampled>, SMat<dims + 1, 1, uint_s> > : std::true_type {};
+
   template<int n, typename inner, int iw, int is>
   struct is_lookup_index<SMat<n, 1, inner>, SInt<iw, is> > : std::true_type {};
   
@@ -60,6 +68,39 @@ namespace spurv {
   struct is_lookup_index<SRunArr<storage, inner>, SInt<iw, is> > : std::true_type {};
 
 
+  /*
+   * Same as above, actually
+   */
+
+  template<typename tt>
+  struct lookup_index { };
+
+  template<int n>
+  struct lookup_index<STexture<n> > {
+    using type = vec2_s;
+  };
+  
+  template<int dims, int depth, int arrayed, int multisamp, int sampled>
+  struct lookup_index<SImage<dims, depth, arrayed, multisamp, sampled> > {
+    using type = uvec2_s;
+  };
+
+  template<int n, typename inner>
+  struct lookup_index<SMat<n, 1, inner> > {
+    using type = SInt<32, 0>;
+  };
+
+  template<int n, SStorageClass storage, typename inner>
+  struct lookup_index<SArr<n, storage, inner> > {
+    using type = SInt<32, 0>;
+  };
+
+  template<SStorageClass storage, typename inner>
+  struct lookup_index<SRunArr<storage, inner> > {
+    using type = SInt<32, 0>;
+  };
+
+  
   /*
    * Utility to determine castability
    */
@@ -118,6 +159,10 @@ namespace spurv {
     SValue<typename lookup_result<tt>::type>& operator[](SValue<ti>& index);
     
     SValue<typename lookup_result<tt>::type>& operator[](int s); // Lookup operator that requires constants
+
+    // Image storing
+    template<typename tind, typename tval>
+    void store(tind&& ind, tval&& val);
     
     friend class SUtils;
   };
@@ -405,8 +450,11 @@ namespace spurv {
   typedef SValue<uvec2_s>&       uvec2_v;
   typedef SValue<uvec3_s>&       uvec3_v;
   typedef SValue<uvec4_s>&       uvec4_v;
+
+  typedef SValue<image2D_s>&     image2D_v;
   
   typedef SValue<arr_1_float_s>& arr_1_float_v;
+
   typedef SValue<texture2D_s>&   texture2D_v;
 
   typedef SValue<float_sarr_s>&   float_sarr_v;

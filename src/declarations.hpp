@@ -206,6 +206,9 @@ namespace spurv {
   class SStoreEvent;
 
   template<typename tt>
+  class SImageStoreEvent;
+
+  template<typename tt>
   class SLocal;
 
   template<typename tt>

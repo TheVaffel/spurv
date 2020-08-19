@@ -324,7 +324,7 @@ namespace spurv {
 	      if (d2.a1 == 1) {
 		// OpVectorExtractDynamic <result_type> <result_id> <vector> <index>
 		SUtils::add(res, (5 << 16) | 77);
-		SUtils::add(res, float_s::getID());
+		SUtils::add(res, tt2::inner_type::getID());
 		SUtils::add(res, this->getID());
 		SUtils::add(res, this->v1->getID());
 		SUtils::add(res, this->v2->getID());

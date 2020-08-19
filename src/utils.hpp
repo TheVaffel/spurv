@@ -169,6 +169,9 @@ namespace spurv {
     template<typename tt>
     friend class SStoreEvent;
 
+    template<typename tt>
+    friend class SImageStoreEvent;
+
     friend class SIfThen;
     
     friend class SForBeginEvent;

@@ -208,7 +208,7 @@ namespace spurv {
 
     for(SValue<tt>* vv : this->args) {
       SUtils::add(bin, vv->getID());
-    } 
+    }
   }
 
   
@@ -665,6 +665,25 @@ namespace spurv {
     }
 
     return *SUtils::allocate<SGLSLHomoFun<tt> >(ft, v);
+  }
+
+  /*
+   * Image storage function 
+   */
+  
+  template<>
+  template<typename tind, typename tval>
+  void SValue<image2D_s>::store(tind&& ind, tval&& val) {
+    
+    
+    static_assert(SValueWrapper::does_wrap<tind, uvec2_s>::value, "[spurv::store] Index type not compatible with image");
+    static_assert(SValueWrapper::does_wrap<tval, vec4_s>::value, "[spurv::store] Value type not compatible with image");
+    
+    uvec2_v inds = SValueWrapper::unwrap_to<tind, uvec2_s>(ind);
+    vec4_v vals = SValueWrapper::unwrap_to<tval, vec4_s>(val);
+
+    SEventRegistry::addImageStore(*this,
+				  inds, vals);
   }
 
 

@@ -102,6 +102,29 @@ namespace spurv {
     friend class SPointerTypeBase;
   };
 
+  
+  /*
+   * SImageStoreEvent - Represents a store event to an image
+   */
+
+  template<typename im_type>
+  class SImageStoreEvent : public STimeEventBase {
+    
+    SValue<im_type>* image;
+    SValue<typename lookup_index<im_type>::type>* coord;
+    SValue<typename lookup_result<im_type>::type>* value;
+    
+    virtual void ensure_type_defined(std::vector<uint32_t>& bin,
+				     std::vector<SDeclarationState*>& declaration_states);
+    virtual void write_binary(std::vector<uint32_t>& bin);
+
+    SImageStoreEvent(int event_num, SValue<im_type>& image,
+		     SValue<typename lookup_index<im_type>::type>& coord,
+		     SValue<typename lookup_result<im_type>::type>& value);
+
+    friend class SEventRegistry;
+  };
+  
 
   /*
    * SIfEvent - represents the beginning of an if-statement
@@ -243,6 +266,11 @@ namespace spurv {
 
     template<typename tt>
     static SStoreEvent<tt>* addStore(SPointerTypeBase<tt>* pointer);
+
+    template<typename im_type>
+    static SImageStoreEvent<im_type>* addImageStore(SValue<im_type>& image,
+						    SValue<typename lookup_index<im_type>::type>& ind,
+						    SValue<typename lookup_result<im_type>::type>& val);
 
     template<typename tt>
     static void addDeclaration(SValue<tt>* pointer);

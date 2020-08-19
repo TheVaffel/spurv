@@ -80,7 +80,43 @@ namespace spurv {
   template<typename tt>
   bool SStoreEvent<tt>::stores_to_pointer(int id) {
     return this->pointer->getID() == id;
-  }  
+  }
+
+  
+  /*
+   * SImageStoreEvent member functions
+   */
+
+  template<typename im_type>
+  SImageStoreEvent<im_type>::SImageStoreEvent(int event_id,
+					      SValue<im_type>& image,
+					      SValue<typename lookup_index<im_type>::type>& coord,
+					      SValue<typename lookup_result<im_type>::type>& value) : STimeEventBase(event_id) {
+    this->image = &image;
+    this->coord = &coord;
+    this->value = &value;
+  }
+
+  template<typename im_type>
+  void SImageStoreEvent<im_type>::ensure_type_defined(std::vector<uint32_t>& bin,
+						      std::vector<SDeclarationState*>& declaration_states) {
+    this->image->ensure_type_defined(bin, declaration_states);
+    this->coord->ensure_type_defined(bin, declaration_states);
+    this->value->ensure_type_defined(bin, declaration_states);
+  }
+
+  template<typename im_type>
+  void SImageStoreEvent<im_type>::write_binary(std::vector<uint32_t>& bin) {
+    this->image->ensure_defined(bin);
+    this->coord->ensure_defined(bin);
+    this->value->ensure_defined(bin);
+
+    // OpImageWrite
+    SUtils::add(bin, (4 << 16) | 99);
+    SUtils::add(bin, this->image->getID());
+    SUtils::add(bin, this->coord->getID());
+    SUtils::add(bin, this->value->getID());
+  }
 
   
   /*
@@ -104,6 +140,16 @@ namespace spurv {
     SEventRegistry::events.push_back(sl);
 
     return sl;
+  }
+
+  template<typename im_type>
+  SImageStoreEvent<im_type>* SEventRegistry::addImageStore(SValue<im_type>& image,
+							   SValue<typename lookup_index<im_type>::type>& ind,
+							   SValue<typename lookup_result<im_type>::type>& val) {
+    SImageStoreEvent<im_type>* sise = new SImageStoreEvent<im_type>(SEventRegistry::events.size(), image, ind, val);
+
+    SEventRegistry::events.push_back(sise);
+    return sise;
   }
 
   template<typename tt>

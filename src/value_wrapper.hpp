@@ -30,7 +30,15 @@ namespace spurv {
       is_spurv_value<typename std::remove_reference<T>::type>::value) &&
       (std::is_same<typename MapSType<typename std::remove_reference<S>::type>::type,
 					    typename MapSType<typename std::remove_reference<T>::type>::type>::value);
-    
+
+  
+  /*
+   * Concept seeing if two spurv values are the same
+   */
+  
+  template<typename S, typename T>
+  BOOL_CONCEPT SameSpurvType =
+    is_spurv_type<S>::value && is_spurv_type<T>::value && std::is_same<S, T>::value;
   
   /*
    * RequireUnambiguousUnwrappable - A concept requiring the two arguments to be
@@ -50,15 +58,6 @@ namespace spurv {
   BOOL_CONCEPT NoSpurvValue =
     !is_spurv_value<typename std::remove_reference<S>::type>::value;
     
-
-  /*
-   * Concept seeing if two spurv values are the same
-   */
-  
-  template<typename S, typename T>
-  BOOL_CONCEPT SameSpurvType =
-    is_spurv_type<S>::value && is_spurv_type<T>::value && std::is_same<S, T>::value;
-
 
   /*
    * Concept seeing if first is a spurv value of the second type

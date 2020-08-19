@@ -45,7 +45,7 @@ namespace spurv {
 
   template<>
   struct BuiltinInfo<SShaderType::SHADER_COMPUTE, BUILTIN_GLOBAL_INVOCATION_ID>
-  { using type = uvec3; static const SStorageClass storage = SStorageClass::STORAGE_INPUT; };
+  { using type = uvec3_s; static const SStorageClass storage = SStorageClass::STORAGE_INPUT; };
 
   
   /*
@@ -335,6 +335,8 @@ namespace spurv {
 
   template<typename... InputTypes>
   class FragmentShader : public SShader<SShaderType::SHADER_FRAGMENT, InputTypes...> { };
+
+  class ComputeShader : public SShader<SShaderType::SHADER_COMPUTE> { };
 };
 
 

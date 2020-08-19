@@ -62,14 +62,14 @@ namespace spurv {
   template<typename FirstType, typename SecType, typename... InnerTypes>
   struct SUtils::sum_num_elements<FirstType, SecType, InnerTypes...> { 
       static constexpr int value = 
-      SUtils::num_elements<SValueWrapper::ToType<FirstType>::type>::value + 
+      SUtils::num_elements<typename SValueWrapper::ToType<FirstType>::type>::value + 
       SUtils::sum_num_elements<SecType, InnerTypes...>::value; 
   };
 
   template<typename FirstType>
   struct SUtils::sum_num_elements < FirstType > { 
       static constexpr int value = 
-      SUtils::num_elements<SValueWrapper::ToType<FirstType>::type>::value; };
+      SUtils::num_elements<typename SValueWrapper::ToType<FirstType>::type>::value; };
 
   template<typename First, typename... InnerTypes>
   constexpr bool SUtils::has_only_1_comps(First&& ft, InnerTypes&&... args) {
@@ -78,7 +78,7 @@ namespace spurv {
 	s = SUtils::has_only_1_comps(args...);
       }
     
-    return (SUtils::num_elements(ft) == 1) && s;
+    return (SUtils::num_elements<First>::value == 1) && s;
   }
 
   template<typename First, typename... InnerTypes>
@@ -88,7 +88,7 @@ namespace spurv {
 	s = SUtils::has_only_n_comps(n, args...);
       }
 
-    return (SUtils::num_elements(ft) == n) && s;
+    return (SUtils::num_elements<First>::value == n) && s;
   }
 
   

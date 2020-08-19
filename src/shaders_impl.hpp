@@ -196,6 +196,8 @@ namespace spurv {
 	SUtils::add(bin, 0); // Vertex
       } else if constexpr(type == SShaderType::SHADER_FRAGMENT) {
 	SUtils::add(bin, 4); // Fragment
+      } else if constexpr(type == SShaderType::SHADER_COMPUTE) {
+	SUtils::add(bin, 5); // GLCompute
       } else {
       printf("Shader type not yet accounted for in output_shader_header_begin\n");
       exit(-1);
@@ -225,6 +227,14 @@ namespace spurv {
 	SUtils::add(bin, (3 << 16) | 16);
 	SUtils::add(bin, this->entry_point_id);
 	SUtils::add(bin, 7);
+      } else if constexpr(type == SShaderType::SHADER_COMPUTE) {
+	// OpExecutionMode <entry_point_id> LocalSize <local_x_size> <local_y_size> <local_z_size>
+	SUtils::add(bin, (6 << 16) | 16);
+	SUtils::add(bin, this->entry_point_id);
+	SUtils::add(bin, 17); // LocalSize
+	SUtils::add(bin, 32); // Default, TODO: Make changable by user
+	SUtils::add(bin, 1); // --"--
+	SUtils::add(bin, 1); // --"--
       }
 
     

@@ -201,7 +201,7 @@ namespace spurv {
     if constexpr(m == 1) {
 	SUtils::add(bin, (4 << 16) | 23);
 	SUtils::add(bin, SMat<n, 1, inner>::getID());
-	SUtils::add(bin, SFloat<32>::getID());
+	SUtils::add(bin, inner::getID());
 	SUtils::add(bin, n);
       } else {
       SUtils::add(bin, (4 << 16) | 24);
@@ -531,7 +531,7 @@ namespace spurv {
     SUtils::add(bin, arrayed);
     SUtils::add(bin, multisamp);
     SUtils::add(bin, sampled);
-    SUtils::add(bin, 0); // Unknown
+    SUtils::add(bin, 1); // Rgba32f
   }
 
   
