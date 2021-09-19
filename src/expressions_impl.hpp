@@ -526,7 +526,7 @@ namespace spurv {
    */
   
   template<typename tt1, typename tt2>
-  BOOL_CONCEPT MultiplicableSpurvMatrices =
+  concept MultiplicableSpurvMatrices =
     (RequireOneSpurvValue<tt1, tt2> &&
      is_spurv_mat_type<typename SValueWrapper::ToType<tt1>::type>::value &&
     is_spurv_mat_type<typename SValueWrapper::ToType<tt2>::type>::value &&
@@ -564,7 +564,7 @@ namespace spurv {
   }
 
   template<typename mtt, typename stt>
-  BOOL_CONCEPT MatrixScalable =
+  concept MatrixScalable =
     RequireOneSpurvValue<mtt, stt> &&
     is_spurv_mat_type<typename SValueWrapper::unwrapped_type<mtt>::type>::value &&
     SValueWrapper::does_wrap<stt, typename SValueWrapper::unwrapped_type<mtt>::type::inner_type>::value;
@@ -628,7 +628,7 @@ namespace spurv {
   
   
   template<typename tt1, typename tt2>
-  BOOL_CONCEPT HasSameType =
+  concept HasSameType =
     RequireOneSpurvValue<tt1, tt2> &&
     SValueWrapper::does_wrap<typename std::remove_reference<typename get_not_spurv_value<tt1, tt2>::type>::type,
 			     typename std::remove_reference<typename SValueWrapper::ToType<typename get_spurv_value<tt1, tt2>::type>::type>::type>::value;
@@ -639,7 +639,7 @@ namespace spurv {
   };
 
   template<typename tt1>
-  BOOL_CONCEPT NotWideMatrix =
+  concept NotWideMatrix =
     !is_spurv_mat_type<tt1>::value || tt1::getArg1() == 1;
   
   // Elementwise multiplication
@@ -665,7 +665,7 @@ namespace spurv {
 
 
   template<typename tt1, typename tt2>
-  BOOL_CONCEPT AreDottable =
+  concept AreDottable =
     (RequireOneSpurvValue<tt1, tt2> &&
      HasSameType<typename std::remove_reference<tt1>::type,
      typename std::remove_reference<tt2>::type> &&

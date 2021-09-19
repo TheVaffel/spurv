@@ -4,15 +4,7 @@
 #include "declarations.hpp"
 #include "types.hpp"
 
-#ifdef WIN32
-#define BOOL_CONCEPT concept
-#else // for GCC
-#define BOOL_CONCEPT concept bool constexpr
-#endif
-
 namespace spurv {
-
-  
     
   /*
    * RequireOneSpurvValue - A concept requiring one Spurv type among
@@ -20,13 +12,13 @@ namespace spurv {
    */
   
   template<typename S, typename T>
-  BOOL_CONCEPT RequireOneSpurvValue =
+  concept RequireOneSpurvValue =
     (is_spurv_value<typename std::remove_reference<S>::type>::value ||
      is_spurv_value<typename std::remove_reference<T>::type>::value);
 
   template<typename S, typename T>
   // requires !RequireOneSpurvValue<S, T>
-  BOOL_CONCEPT SameSpurvTypeNonSpurv = !(is_spurv_value<typename std::remove_reference<S>::type>::value ||
+  concept SameSpurvTypeNonSpurv = !(is_spurv_value<typename std::remove_reference<S>::type>::value ||
       is_spurv_value<typename std::remove_reference<T>::type>::value) &&
       (std::is_same<typename MapSType<typename std::remove_reference<S>::type>::type,
 					    typename MapSType<typename std::remove_reference<T>::type>::type>::value);
@@ -37,7 +29,7 @@ namespace spurv {
    */
   
   template<typename S, typename T>
-  BOOL_CONCEPT SameSpurvType =
+  concept SameSpurvType =
     is_spurv_type<S>::value && is_spurv_type<T>::value && std::is_same<S, T>::value;
   
   /*
@@ -46,7 +38,7 @@ namespace spurv {
    */
 
   template<typename S, typename T>
-  BOOL_CONCEPT RequireUnambiguousUnwrappable =
+  concept RequireUnambiguousUnwrappable =
     (RequireOneSpurvValue<S, T> || SameSpurvType<S, T>);
   
 
@@ -55,7 +47,7 @@ namespace spurv {
    */
   
   template<typename S>
-  BOOL_CONCEPT NoSpurvValue =
+  concept NoSpurvValue =
     !is_spurv_value<typename std::remove_reference<S>::type>::value;
     
 
@@ -64,7 +56,7 @@ namespace spurv {
    */
   
   template<typename S, typename T>
-  BOOL_CONCEPT IsSpurvValueOf =
+  concept IsSpurvValueOf =
     is_spurv_type<T>::value &&
     is_spurv_value<typename std::remove_reference<S>::type>::value &&
     std::is_base_of<SValue<T>, typename std::remove_reference<S>::type>::value;
@@ -75,7 +67,7 @@ namespace spurv {
    */
   
   template<typename S, typename T>
-  BOOL_CONCEPT IsSpurvCastable =
+  concept IsSpurvCastable =
     is_spurv_value<typename std::remove_reference<S>::type>::value &&
     is_spurv_castable<typename std::remove_reference<S>::type::type,
 		      typename std::remove_reference<T>::type>::value;

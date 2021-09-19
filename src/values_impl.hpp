@@ -688,12 +688,12 @@ namespace spurv {
 
 
   template<typename t1>
-  BOOL_CONCEPT IsFloatVector =
+  concept IsFloatVector =
     (is_spurv_mat_type<t1>::value && is_spurv_float_type<typename t1::inner_type>::value &&
      t1::mm == 1);
 
   template<typename t1>
-  BOOL_CONCEPT Has3Columns =
+  concept Has3Columns =
     (is_spurv_mat_type<t1>::value && (t1::nn == 3));
   
   template<typename t1, typename t2>
@@ -709,7 +709,7 @@ namespace spurv {
   }
 
   template<typename t1>
-  BOOL_CONCEPT IsFloatScalar =
+  concept IsFloatScalar =
     (is_spurv_float_type<t1>::value);
 
   template<typename t1>
