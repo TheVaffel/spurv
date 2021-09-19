@@ -2,6 +2,7 @@
 #define __SPURV_LOAD_STORE_REGISTRY
 
 #include "declarations.hpp"
+#include "values.hpp"
 #include "control_flow.hpp"
 
 namespace spurv {
