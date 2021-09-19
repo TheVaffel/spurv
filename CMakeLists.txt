@@ -4,7 +4,7 @@ project(spurv)
 if(WIN32)
   add_definitions(/std:c++latest /arch:AVX2)
 else()
-	add_definitions(-std=c++1z -fconcepts -mavx -fPIC)
+	add_definitions(-std=c++2a -fconcepts -mavx -fPIC)
 endif()
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/lib)
