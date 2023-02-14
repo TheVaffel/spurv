@@ -1,13 +1,14 @@
 
 HCONLIB_ROOT = /home/haakon/Documents/Code/C++/HConLib
 WINGINE_ROOT = /home/haakon/Documents/Code/C++/Wingine
+FLAWED_ROOT = /home/haakon/Documents/Code/C++/flawed
 SROOT = ..
 
-CFLAGS=-Wall -std=c++1z -fconcepts -g -mavx
+CFLAGS=-Wall -std=c++2a -g -mavx
 
-LIBS=-lWingine -lvulkan -lFlatAlg -lWinval -lX11 -ldl -lspurv
-LIB_DIRS=-L$(HCONLIB_ROOT)/lib -L$(WINGINE_ROOT)/build -L../lib
-INCLUDE_DIRS=-I$(HCONLIB_ROOT)/include -I. -I$(WINGINE_ROOT)/include
+LIBS=-lWingine -lvulkan -lFlatAlg -lWinval -lX11 -ldl -lspurv -lflawed
+LIB_DIRS=-L$(HCONLIB_ROOT)/lib -L$(WINGINE_ROOT)/build -L../lib -L$(FLAWED_ROOT)/lib
+INCLUDE_DIRS=-I$(HCONLIB_ROOT)/include -I. -I$(WINGINE_ROOT)/include -I$(FLAWED_ROOT)/include
 
 ANTI_WARNINGS=-Wno-delete-non-virtual-dtor
 
@@ -39,5 +40,5 @@ test2:	test2.cpp $(HDRS) $(IMPL_HDRS)
 texture_test:	texture_test.cpp $(HDRS) $(IMPL_HDRS)
 	g++ $< -o $@ $(INCLUDE_DIRS) $(LIB_DIRS) $(LIBS) $(CFLAGS) $(ANTI_WARNINGS)
 
-clean:  
+clean:
 	rm texture_test test2 test

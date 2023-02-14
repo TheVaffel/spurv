@@ -1,0 +1,22 @@
+[
+    {
+        "arguments": [
+            "g++",
+            "-c",
+            "-I/home/haakon/Documents/Code/C++/HConLib/include",
+            "-I.",
+            "-I/home/haakon/Documents/Code/C++/Wingine/include",
+            "-I/home/haakon/Documents/Code/C++/flawed/include",
+            "-Wall",
+            "-std=c++2a",
+            "-g",
+            "-mavx",
+            "-Wno-delete-non-virtual-dtor",
+            "-o",
+            "test2",
+            "test2.cpp"
+        ],
+        "directory": "/home/haakon/Dropbox/Documents/Code/C++/spurv/examples",
+        "file": "test2.cpp"
+    }
+]
