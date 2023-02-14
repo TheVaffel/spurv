@@ -4,8 +4,8 @@
 #include "shaders.hpp"
 
 namespace spurv {
-  
-  
+
+
   /*
    * Constructor(s?)
    */
@@ -13,7 +13,7 @@ namespace spurv {
   template<SShaderType type, typename... InputTypes>
   SShader<type, InputTypes...>::SShader() {
 
-    input_entries = std::vector<InputVariableBase*>(sizeof...(InputTypes), nullptr); 
+    input_entries = std::vector<InputVariableBase*>(sizeof...(InputTypes), nullptr);
   }
 
 
@@ -42,7 +42,7 @@ namespace spurv {
 	this->create_output_variables(rest...);
       }
   }
-  
+
   template<SShaderType type, typename...InputTypes>
   void SShader<type, InputTypes...>::cleanup_declaration_states() {
     for(unsigned int i = 0; i < this->defined_type_declaration_states.size(); i++) {
@@ -57,18 +57,18 @@ namespace spurv {
       *this->decoration_states[i] = false;
     }
   }
-  
-  
+
+
   /*
    * Output member functions - functions writing binaries to vector
    */
-  
+
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_shader_header_output_variables(std::vector<uint32_t>& binary,
 									       int n) {
     return;
-    } 
-  
+    }
+
   template<SShaderType type, typename... InputTypes>
   template<typename in1, typename... NodeTypes>
   void SShader<type, InputTypes...>::output_shader_header_output_variables(std::vector<uint32_t>& binary,
@@ -89,8 +89,8 @@ namespace spurv {
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_shader_header_decorate_output_variables(std::vector<uint32_t>& bin, int n) {
     return;
-  }									 
-  
+  }
+
   template<SShaderType type, typename... InputTypes>
   template<typename in1, typename... NodeTypes>
   void SShader<type, InputTypes...>::output_shader_header_decorate_output_variables(std::vector<uint32_t>& bin, int n,
@@ -100,7 +100,7 @@ namespace spurv {
     bin.push_back(30);
     bin.push_back(n);
 
-    output_shader_header_decorate_output_variables(bin, n + 1, args...); 
+    output_shader_header_decorate_output_variables(bin, n + 1, args...);
   }
 
 
@@ -108,7 +108,7 @@ namespace spurv {
   void SShader<type, InputTypes...>::output_shader_header_decorate_tree(std::vector<uint32_t>& bin) {
     return;
   }
-  
+
   template<SShaderType type, typename... InputTypes>
   template<typename in1, typename... NodeTypes>
   void SShader<type, InputTypes...>::output_shader_header_decorate_tree(std::vector<uint32_t>& bin,
@@ -118,10 +118,10 @@ namespace spurv {
 	arg0.ensure_type_decorated(bin,
 				   this->decoration_states);
       }
-    
+
     output_shader_header_decorate_tree(bin, args...);
   }
-  
+
 
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_used_builtin_ids(std::vector<uint32_t>& bin) {
@@ -145,7 +145,7 @@ namespace spurv {
     return;
   }
 
-  
+
   template<SShaderType type, typename... InputTypes>
   template<typename in1, typename... NodeTypes>
   void SShader<type, InputTypes...>::output_output_tree_type_definitions(std::vector<uint32_t>& bin,
@@ -156,7 +156,7 @@ namespace spurv {
     this->output_output_tree_type_definitions(bin, args...);
   }
 
-  
+
   static const std::string entry_point_name = "main";
 
   template<SShaderType type, typename... InputTypes>
@@ -176,10 +176,10 @@ namespace spurv {
     std::string glsl_import_str = "GLSL.std.450";
     int length = SUtils::stringWordLength(glsl_import_str);
     SUtils::add(bin, ((2 + length) << 16) | 11);
-    
+
     this->glsl_id = SUtils::getNewID();
     SUtils::setGLSLID(this->glsl_id);
-    
+
     SUtils::add(bin, this->glsl_id);
     SUtils::add(bin, glsl_import_str);
 
@@ -187,7 +187,7 @@ namespace spurv {
     SUtils::add(bin, (3 << 16) | 14);
     SUtils::add(bin, 0);
     SUtils::add(bin, 1);
-    
+
     // entry_point vertex_shader main "main" input/output_variables
     this->entry_point_declaration_size_index = bin.size(); // Add size afterwards
     SUtils::add(bin, 15);
@@ -208,6 +208,12 @@ namespace spurv {
     SUtils::add(bin, entry_point_name);
 
     for(unsigned int i = 0; i < this->input_entries.size(); i++) {
+
+      if (this->input_entries[i] == nullptr) {
+        printf("[spurv] Input variable %d not used in shader, This is considered illegal for now.\n", i);
+        exit(-1);
+      }
+
       if (this->input_entries[i]->getPointerID() == -1) {
 	printf("Input variable not initialized");
 	exit(-1);
@@ -237,23 +243,23 @@ namespace spurv {
 	SUtils::add(bin, 1); // --"--
       }
 
-    
+
     int strl = SUtils::stringWordLength(entry_point_name);
-    
+
     // OpName <main_id> "main"
     SUtils::add(bin, ((2 + strl) << 16) | 5);
     SUtils::add(bin, this->entry_point_id);
     SUtils::add(bin, entry_point_name);
-    
+
   }
-  
+
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_shader_header_decorate_begin(std::vector<uint32_t>& bin) {
-      
+
     for(unsigned int i = 0; i < builtin_entries.size(); i++) {
       builtin_entries[i]->decorate(bin);
     }
-    
+
     // Decorate <input_var> Location <index>
     for(unsigned int i = 0; i < input_entries.size(); i++) {
       SUtils::add(bin, (4 << 16) | 71);
@@ -268,7 +274,7 @@ namespace spurv {
       // This could be handled through the recursive tree decoration
       // but it's safer to do it here as well
       uniform_bindings[i]->decorateType(bin,
-					this->decoration_states); 
+					this->decoration_states);
 
       // Decorate <uniform_binding> DescriptorSet <num>
       SUtils::add(bin, (4 << 16) | 71);
@@ -284,15 +290,15 @@ namespace spurv {
 
     }
   }
-  
+
 
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::output_main_function_begin(std::vector<uint32_t>& res) {
     SType<STypeKind::KIND_VOID>::ensure_defined(res, this->defined_type_declaration_states);
 
     int void_function_type = SUtils::getNewID();
-    
-    // OpTypeFunction <result_id> <result type> <result_id> 
+
+    // OpTypeFunction <result_id> <result type> <result_id>
     SUtils::add(res, (3 << 16) | 33);
     SUtils::add(res, void_function_type);
     SUtils::add(res, SType<STypeKind::KIND_VOID>::getID());
@@ -307,7 +313,7 @@ namespace spurv {
     // OpLabel <result_id>
     SUtils::add(res, (2 << 16) | 248);
     SUtils::add(res, SUtils::getNewID());
-    
+
   }
 
   template<SShaderType type, typename... InputTypes>
@@ -318,8 +324,8 @@ namespace spurv {
     // OpFunctionEnd
     SUtils::add(res, (1 << 16) | 56);
   }
-  
-  
+
+
   /*
    * Public member function
    */
@@ -329,15 +335,15 @@ namespace spurv {
   SValue< typename BuiltinInfo<type, ind>::type >& SShader<type, InputTypes...>::getBuiltin() {
     using tt = typename BuiltinInfo<type, ind>::type;
     constexpr SStorageClass stind = BuiltinInfo<type, ind>::storage;
-    
-    
+
+
     for(unsigned int i = 0; i < this->builtin_entries.size(); i++) {
       if(this->builtin_entries[i]->builtin_id == ind) {
 	return ((BuiltinEntry<tt, stind>*)this->builtin_entries[i])->pointer->load();
       }
     }
 
-    BuiltinEntry<tt, stind>* entry = SUtils::allocate<BuiltinEntry<tt, stind> >(ind); 
+    BuiltinEntry<tt, stind>* entry = SUtils::allocate<BuiltinEntry<tt, stind> >(ind);
     this->builtin_entries.push_back(entry);
     return entry->pointer->load();
   }
@@ -350,7 +356,7 @@ namespace spurv {
 
     using res_type = typename BuiltinInfo<type, ind>::type;
     constexpr SStorageClass stind = BuiltinInfo<type, ind>::storage;
-    
+
     BuiltinEntry<res_type, stind>* entry = nullptr;
     for(unsigned int i = 0; i < this->builtin_entries.size(); i++) {
       if(this->builtin_entries[i]->builtin_id == ind) {
@@ -369,13 +375,13 @@ namespace spurv {
   template<SShaderType type, typename... InputTypes>
   template<int n>
   SValue<typename SUtils::NthType<n, InputTypes...>::type>& SShader<type, InputTypes...>::input() {
-    
+
     using itt = typename SUtils::NthType<n, InputTypes...>::type;
-    
+
     if(input_entries[n] == nullptr) {
       input_entries[n] = SUtils::allocate<InputVariableEntry<itt> >(n);
     }
-    
+
     InputVariableBase* in = input_entries[n];
 
     return *in->template getValueTyped<itt>();
@@ -391,7 +397,7 @@ namespace spurv {
 	// for checking whether the type is equal in the two accesses
 	printf("[spurv::SShader::find_binding()] Accessing the same binding multiple times is currently disallowed\n");
 	exit(-1);
-	
+
 	return uniform_bindings[i];
       }
     }
@@ -403,7 +409,7 @@ namespace spurv {
   template<typename BindingType>
   SUniformBindingBase* SShader<type, InputTypes...>::construct_binding(int set, int binding) {
     SUniformBindingBase* sb = find_binding(set, binding);
-    
+
     if(sb != nullptr) {
       return sb;
     }
@@ -487,7 +493,7 @@ namespace spurv {
     SEventRegistry::addEndIf((SIfThen*)this->block_stack[this->block_stack.size() - 1]);
     this->block_stack.pop_back();
   }
-  
+
   template<SShaderType type, typename... InputTypes>
   SValue<int_s>& SShader<type, InputTypes...>::forLoop(int arg0, int arg1) {
     SForLoop* fl = SUtils::allocate<SForLoop>(arg0, arg1);
@@ -507,7 +513,7 @@ namespace spurv {
       printf("[spurv] Cannot end for-loop, as there are other unclosed blocks\n");
       exit(-1);
     }
-    
+
     SForLoop* fl = (SForLoop*)this->block_stack[this->block_stack.size() - 1];
     this->block_stack.pop_back();
     SEventRegistry::addForEnd(fl);
@@ -516,7 +522,7 @@ namespace spurv {
   template<SShaderType type, typename... InputTypes>
   void SShader<type, InputTypes...>::breakLoop() {
     SForLoop* fl = nullptr;
-    
+
     for(int i = (int)(this->block_stack.size()) - 1; i >= 0; i--) {
       if(this->block_stack[i]->getControlType() == CONTROL_FOR) {
 	fl = (SForLoop*)this->block_stack[i];
@@ -564,15 +570,15 @@ namespace spurv {
 
     this->output_preamble(res);
     this->output_shader_header_begin(res);
-    
+
     constexpr int num_args = sizeof...(NodeTypes);
-    
+
     this->output_shader_header_output_variables(res, 0, args...);
 
     this->output_shader_header_end(res);
 
     res[this->entry_point_declaration_size_index] |= ( 3 + 2 + this->input_entries.size() + num_args + get_num_defined_builtins()) << 16;
-    
+
 
     this->output_shader_header_decorate_begin(res);
     this->output_shader_header_decorate_output_variables(res, 0, args...);
@@ -587,14 +593,14 @@ namespace spurv {
     SVariableRegistry::write_variable_definitions(res);
 
     SEventRegistry::write_events(res);
-    
+
     this->output_main_function_end(res);
 
     res[this->id_max_bound_index] = SUtils::getCurrentID();
 
     this->cleanup_declaration_states();
     this->cleanup_decoration_states();
-    
+
     SUtils::resetID();
     SUtils::clearAllocations();
     SConstantRegistry::resetRegistry();
