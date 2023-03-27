@@ -441,13 +441,13 @@ namespace spurv {
   template<typename tt>
   using local_s = SPointer<STORAGE_FUNCTION, tt>;
 
-  typedef SImage<1, 0, 0, 0, 0>  image2D_s;
+  typedef SImage<1, 0, 0, 0, 2>  image2D_s;
   typedef STexture<2>            texture2D_s;
-  
+
   /*
    * Small type mapper
    */
-  
+
   template<typename tt>
   struct MapSType {
     typedef void type;

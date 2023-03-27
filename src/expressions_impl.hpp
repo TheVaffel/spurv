@@ -20,28 +20,28 @@ namespace spurv {
   void SExpr<tt, op, tt2, tt3>::register_left_node(SValue<tt2>& node) {
     v1 = &node;
   };
-  
+
   template<typename tt, SExprOp op, typename tt2, typename tt3>
   void SExpr<tt, op, tt2, tt3>::register_right_node(SValue<tt3>& node) {
     v2 = &node;
   }
 
-  
+
   /*
    * Overrides of inherited member functions
    */
-  
+
   template<typename tt, SExprOp op, typename tt2, typename tt3>
   void SExpr<tt, op, tt2, tt3>::print_nodes_post_order(std::ostream& str) const {
-    v1->print_nodes_post_order(str);
-      
-    if constexpr(op != EXPR_NEGATIVE) {
-	v2->print_nodes_post_order(str);
+    this->v1->print_nodes_post_order(str);
+
+    if (this->v2 != nullptr) {
+	this->v2->print_nodes_post_order(str);
       }
     str << this->getID() << std::endl;
   }
 
-  
+
   template<typename tt, SExprOp op, typename tt2, typename tt3>
   void SExpr<tt, op, tt2, tt3>::ensure_type_defined(std::vector<uint32_t>& res,
 						    std::vector<SDeclarationState*>& declaration_states) {

@@ -545,7 +545,7 @@ namespace spurv {
     static_assert(n > 0 && n <= 3, "Texture dimension must be positive and at most 3");
 
     // 2D is 1, etc..
-    SImage<n - 1, 0, 0, 0, 0>::ensure_defined(bin, declaration_states);
+    SImage<n - 1, 0, 0, 0, 1>::ensure_defined(bin, declaration_states);
 
     // Explicitly define 0 to be default Lod when sampling
     SFloat<32>::ensure_defined(bin, declaration_states);
@@ -574,7 +574,7 @@ namespace spurv {
     // OpTypeSampledImage
     SUtils::add(bin, (3 << 16) | 27);
     SUtils::add(bin, STexture<n>::getID());
-    SUtils::add(bin, SImage<n - 1, 0, 0, 0, 0>::getID());
+    SUtils::add(bin, SImage<n - 1, 0, 0, 0, 1>::getID());
   }
 };
 #endif // __SPURV_TYPES_IMPL

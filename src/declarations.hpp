@@ -11,7 +11,7 @@ namespace spurv {
   /*
    * Enums
    */
-  
+
    enum class STypeKind {
     KIND_INVALID,
     KIND_BOOL,
