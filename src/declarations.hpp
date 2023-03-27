@@ -26,7 +26,7 @@ namespace spurv {
     KIND_IMAGE,
     KIND_TEXTURE
   };
-  
+
   enum class SShaderType {
     SHADER_VERTEX,
     SHADER_FRAGMENT,
@@ -42,9 +42,11 @@ namespace spurv {
     STORAGE_STORAGE_BUFFER = 12,
     // ... There are more, but perhaps not needed just now
   };
-  
+
   enum SExprOp {
     EXPR_NEGATIVE,
+    EXPR_DPDX,
+    EXPR_DPDY,
     EXPR_ADDITION,
     EXPR_SUBTRACTION,
     EXPR_MULTIPLICATION,
@@ -81,7 +83,7 @@ namespace spurv {
     CONTROL_IF,
     CONTROL_FOR
   };
-  
+
   enum SExtension {
     EXTENSION_STORAGE_BUFFER = 0,
     EXTENSION_END
@@ -140,7 +142,7 @@ namespace spurv {
 			  BLOCK = 1,
 			  // Later decorations could include alignments etc.
   };
-  
+
 
   /*
    * Classes - declared to ease dependency graph
@@ -177,7 +179,7 @@ namespace spurv {
 
   template<SStorageClass n, typename inn>
   class SPointer;
-  
+
   template<typename tt>
   class SValue;
 
@@ -189,7 +191,7 @@ namespace spurv {
 
   template<SStorageClass storage, typename... InnerTypes>
   class SStructBinding;
-  
+
   template<typename... InnerTypes>
   class SUniformBinding;
 
@@ -213,19 +215,19 @@ namespace spurv {
 
   template<typename tt>
   class Constant;
-  
+
   template<int n, int m, typename inner>
   class ConstructMatrix;
 
   template<typename tt>
   class SelectConstruct;
-  
+
   class SDeclarationState;
-  
+
   class SConstantRegistry;
 
   class SIfThen;
-  
+
   class SForLoop;
 
   class SVariableRegistry;
@@ -236,21 +238,21 @@ namespace spurv {
   class SVariableEntry;
 
   class SPointerBase;
-  
+
   template<typename tt>
   class SPointerTypeBase;
-  
+
   template<typename tt, SStorageClass stind>
   class SPointerVar;
 
   template<typename tt, SStorageClass stind>
   class SAccessChain;
-  
+
   template<typename tt, SStorageClass stind>
   class SLoadedVal;
 
-  
+
   class SUtils;
-  
+
 };
 #endif // __SPURV_DECLARATIONS

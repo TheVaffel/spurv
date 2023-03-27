@@ -5,12 +5,12 @@
 #include "constant_registry.hpp"
 
 namespace spurv {
-  
-  
-  /* 
+
+
+  /*
    * Static methods
    */
-  
+
   template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
   void SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::getDSType(DSType* type) {
       type->kind = kind;
@@ -18,7 +18,7 @@ namespace spurv {
       type->a1 = arg1;
 
       constexpr int n = sizeof...(InnerTypes);
-      
+
       if constexpr (n > 0) {
 	  type->inner_types = std::vector<DSType>(n);
 	  SUtils::getDSTypesRecursive<InnerTypes...>(type->inner_types.data());
@@ -71,16 +71,16 @@ namespace spurv {
   constexpr int SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::getArg1() {
     return arg1;
   }
-  
-  
+
+
   /*
    * Static variables
    */
-  
+
   template<STypeKind kind, int arg0, int arg1, int arg2, int arg3, int arg4, typename... InnerTypes>
   SDeclarationState SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::declarationState;
-  
-  
+
+
   /*
    * Default Member functions
    */
@@ -89,16 +89,16 @@ namespace spurv {
   void SType<kind, arg0, arg1, arg2, arg3, arg4, InnerTypes...>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
 									       std::vector<SDeclarationState*>& declaration_states) { }
 
-  
+
   /*
    * Int member functions
    */
-  
+
   template<int n, int signedness>
   void SInt<n, signedness>::define(std::vector<uint32_t>& bin) {
     SInt<n, signedness>::ensureInitID();
     SInt<n, signedness>::declareDefined();
-    
+
     SUtils::add(bin, (4 << 16) | 21);
     SUtils::add(bin, SInt<n, signedness>::declarationState.id);
     SUtils::add(bin, n); // Width
@@ -118,7 +118,7 @@ namespace spurv {
   constexpr int SInt<n, signedness>::getSize() {
     return (n + 7) / 8; // Round up number of bytes
   }
-  
+
   template<int n, int signedness>
   template<typename tt>
   SValue<SInt<n, signedness> >& SInt<n, signedness>::cons(tt&& arg) {
@@ -127,22 +127,22 @@ namespace spurv {
     return *value;
   }
 
-  
+
   /*
    * Float member functions
    */
-  
+
   template<int n>
   void SFloat<n>::define(std::vector<uint32_t>& bin) {
     SFloat<n>::ensureInitID();
     SFloat<n>::declareDefined();
-    
+
     SUtils::add(bin, (3 << 16) | 22);
     SUtils::add(bin, SFloat<n>::declarationState.id);
     SUtils::add(bin, n);
 
   }
-  
+
   template<int n>
   void SFloat<n>::ensure_defined(std::vector<uint32_t>& bin,
 				 std::vector<SDeclarationState*>& declaration_states) {
@@ -171,7 +171,7 @@ namespace spurv {
   /*
    * Mat member functions
    */
-  
+
   template<int n, int m, typename inner>
   void SMat<n, m, inner>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
 							       std::vector<SDeclarationState*>& declaration_states) {
@@ -191,13 +191,13 @@ namespace spurv {
       declaration_states.push_back(&(SMat<n, m, inner>::declarationState));
     }
   }
-  
+
   template<int n, int m, typename inner>
   void SMat<n, m, inner>::define(std::vector<uint32_t>& bin) {
 
     SMat<n, m, inner>::ensureInitID();
     SMat<n, m, inner>::declareDefined();
-    
+
     if constexpr(m == 1) {
 	SUtils::add(bin, (4 << 16) | 23);
 	SUtils::add(bin, SMat<n, 1, inner>::getID());
@@ -214,21 +214,21 @@ namespace spurv {
   template<int n, int m, typename inner>
   constexpr int SMat<n, m, inner>::getSize() {
     // Assume perfectly aligned and with 32-bit components
-    return n * m * 4; 
+    return n * m * 4;
   }
 
-  
+
   template<int n, int m, typename inner>
   template<typename... Types>
   ConstructMatrix<n, m, inner>& SMat<n, m, inner>::cons(Types&&... args) {
     return *(SUtils::allocate<ConstructMatrix<n, m, inner> >(args...));
   }
-  
+
 
   /*
    * Arr member functions
    */
-  
+
   template<int n, SStorageClass storage, typename tt>
   void SArr<n, storage, tt>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
 						    std::vector<SDeclarationState*>& declaration_states) {
@@ -244,12 +244,12 @@ namespace spurv {
 	declaration_states.push_back(&(SArr<n, storage, tt>::declarationState));
       }
     }
-  
+
   template<int n, SStorageClass storage, typename tt>
   void SArr<n, storage, tt>::define(std::vector<uint32_t>& bin) {
     SArr<n, storage, tt>::ensureInitID();
     SArr<n, storage, tt>::declareDefined();
-    
+
     SUtils::add(bin, (4 << 16) | 28);
     SUtils::add(bin, SArr<n, storage, tt>::declarationState.id);
     SUtils::add(bin, tt::getID());
@@ -306,12 +306,12 @@ namespace spurv {
     if( is_decorated) {
       return;
     }
-    
+
     tt::ensure_decorated(bin,
 			 decoration_states);
-    
+
     SRunArr<storage, tt>::ensureInitID();
-    
+
     is_decorated = true;
     decoration_states.push_back(&is_decorated);
 
@@ -322,8 +322,8 @@ namespace spurv {
     SUtils::add(bin, tt::getSize());
 
   }
-  
-  
+
+
   /*
    * Pointer member functions
    */
@@ -347,7 +347,7 @@ namespace spurv {
   void SPointer<storage, tt>::define(std::vector<uint32_t>& bin) {
     SPointer<storage, tt>::ensureInitID();
     SPointer<storage, tt>::declareDefined();
-    
+
     SUtils::add(bin, (4 << 16) | 32);
     SUtils::add(bin, SPointer<storage, tt>::declarationState.id);
     SUtils::add(bin, (int)storage);
@@ -365,10 +365,10 @@ namespace spurv {
 
   // No getSize function defined for pointers
 
-  
+
   /*
    * Struct member variables
-   */ 
+   */
 
   template<SDecoration decor, typename... InnerTypes>
   bool SStruct<decor, InnerTypes...>::is_decorated = false;
@@ -376,11 +376,11 @@ namespace spurv {
   template<SStorageClass storage, typename inner>
   bool SRunArr<storage, inner>::is_decorated = false;
 
-  
+
   /*
    * Struct member functions
    */
-  
+
   template<SDecoration decor, typename... InnerTypes>
   void SStruct<decor, InnerTypes...>::ensure_defined_dependencies(std::vector<uint32_t>& bin,
 							       std::vector<SDeclarationState*>& declaration_states) {
@@ -401,7 +401,7 @@ namespace spurv {
   void SStruct<decor, InnerTypes...>::define(std::vector<uint32_t>& bin) {
     SStruct<decor, InnerTypes...>::ensureInitID();
     SStruct<decor, InnerTypes...>::declareDefined();
-    
+
     SUtils::add(bin, ((2 + sizeof...(InnerTypes)) << 16) | 30);
     SUtils::add(bin, SStruct<decor, InnerTypes...>::declarationState.id);
     SUtils::addIDsRecursive<InnerTypes...>(bin);
@@ -412,12 +412,12 @@ namespace spurv {
   constexpr int SStruct<decor, InnerTypes...>::getSize() {
     return SUtils::getSumSize<InnerTypes...>();
   }
-  
+
   template<SDecoration decor, typename... InnerTypes>
   template<int member_no, int start_size, typename First, typename... Types>
   void SStruct<decor, InnerTypes...>::decorate_members(std::vector<uint32_t>& bin,
 						       std::vector<bool*>& decoration_states) {
-    
+
     if constexpr( is_spurv_mat_type<First>::value && First::getArg1() != 1) {
 	// MemberDecorate <struct_id> <member_no> ColMajor
 	SUtils::add(bin, (4 << 16) | 72);
@@ -433,7 +433,7 @@ namespace spurv {
 	SUtils::add(bin, First::getSize() / First::getArg1());
 
       }
-    
+
     // MemberDecorate <struct_id> <member_no> Offset <offset>
     SUtils::add(bin, (5 << 16) | 72);
     SUtils::add(bin, SStruct<decor, InnerTypes...>::getID());
@@ -452,13 +452,13 @@ namespace spurv {
     SUtils::add(bin, 24);
 
     First::ensure_decorated(bin, decoration_states);
-    
+
 
     if constexpr( sizeof...(Types) > 0) {
 	SStruct<decor, InnerTypes...>::decorate_members<member_no + 1,
 							start_size + First::getSize(),
 							Types...>(bin, decoration_states);
-      }	       
+      }
   }
 
   template<SDecoration decor, typename... InnerTypes>
@@ -488,14 +488,14 @@ namespace spurv {
       printf("[spurv::SStruct::decorate_block] Tried to decorate struct without Block decoration as Block\n");
       exit(-1);
     }
-    
+
     // OpDecorate <type id> Block
     SUtils::add(bin, (3 << 16) | 71);
     SUtils::add(bin, SStruct<decor, InnerTypes...>::declarationState.id);
     SUtils::add(bin, 2);
   }
 
-  
+
   /*
    * SImage functions
    */
@@ -534,7 +534,7 @@ namespace spurv {
     SUtils::add(bin, 1); // Rgba32f
   }
 
-  
+
   /*
    * STexture functions
    */
@@ -549,13 +549,13 @@ namespace spurv {
 
     // Explicitly define 0 to be default Lod when sampling
     SFloat<32>::ensure_defined(bin, declaration_states);
-    
+
     SConstantRegistry::ensureDefinedConstant<float>(0.0f, SUtils::getNewID(), bin);
 
     // Result will always be 4-component vector (according to specs, for some reason)
-    vec4_s::ensure_defined(bin, declaration_states); 
+    vec4_s::ensure_defined(bin, declaration_states);
   }
-  
+
   template<int n>
   void STexture<n>::ensure_defined(std::vector<uint32_t>& bin, std::vector<SDeclarationState*>& declaration_states) {
     if(!STexture<n>::isDefined()) {

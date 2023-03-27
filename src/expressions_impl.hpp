@@ -69,12 +69,12 @@ namespace spurv {
 
     tt::ensure_decorated(res, decoration_states);
   }
-  
+
 
   /*
    * Utility functions for the expression define() function
    */
-  
+
   // Returns component type (which is the type itself if scalar)
   static const DSType& get_comp_type(const DSType& ds) {
     if(ds.kind == STypeKind::KIND_MAT || ds.kind == STypeKind::KIND_ARR) {
@@ -100,7 +100,7 @@ namespace spurv {
   /*
    * Output the expression to the binary
    */
-  
+
   template<typename tt, SExprOp op, typename tt2, typename tt3>
   void SExpr<tt, op, tt2, tt3>::define(std::vector<uint32_t>& res) {
     if(this->v1) {
@@ -119,7 +119,7 @@ namespace spurv {
     const DSType& d1_comp = get_comp_type(d1);
     const DSType& d2_comp = get_comp_type(d2);
     const DSType& d3_comp = get_comp_type(d3);
-    
+
     int opcode = 0;
 
     if(op == EXPR_NEGATIVE) {
@@ -137,11 +137,19 @@ namespace spurv {
       SUtils::add(res, tt::getID());
       SUtils::add(res, this->getID());
       SUtils::add(res, this->v1->getID());
-	
+
+    } else if (op == EXPR_DPDX || op == EXPR_DPDY) {
+      opcode = (op == EXPR_DPDX) ? 207 : 208;
+
+      SUtils::add(res, (4 << 16) | opcode);
+      SUtils::add(res, tt::getID());
+      SUtils::add(res, this->getID());
+      SUtils::add(res, this->v1->getID());
+
     } else if(d1.kind == STypeKind::KIND_BOOL) {
       if (d2.kind == STypeKind::KIND_INT &&
 	  d3.kind == STypeKind::KIND_INT) {
-	
+
 	if constexpr(op == EXPR_EQUAL) {
 	    opcode = 170;
 	  } else if(op == EXPR_NOTEQUAL) {
@@ -204,7 +212,7 @@ namespace spurv {
       SUtils::add(res, this->getID());
       SUtils::add(res, this->v1->getID());
       SUtils::add(res, this->v2->getID());
-      
+
     } else if(d1 == d2 && d2 == d3 &&
 	      !(tt2::getKind() == STypeKind::KIND_MAT && // Make sure not a matrix
 		tt2::getArg1() > 1 && tt2::getArg0() > 1)) {
@@ -246,7 +254,7 @@ namespace spurv {
 	printf("Tried to output expression where types were equal, but not int or float (feature yet to be implemented, probably)\n");
 	exit(-1);
       }
-      
+
       SUtils::add(res, (5 << 16) | opcode);
       SUtils::add(res, tt::getID());
       SUtils::add(res, this->getID());
@@ -262,7 +270,7 @@ namespace spurv {
 	    } else {
 	      SUtils::add(res, (5 << 16) | 143);
 	    }
-	    
+
 	    SUtils::add(res, tt::getID());
 	    SUtils::add(res, this->getID());
 	    SUtils::add(res, this->v1->getID());
@@ -320,7 +328,7 @@ namespace spurv {
 	      SUtils::add(res, 2); // LoD
 	      SUtils::add(res, SConstantRegistry::getIDFloat(32, 0.0f));
 	    } else if constexpr (tt2::getKind() == STypeKind::KIND_MAT) {
-	    
+
 	      if (d2.a1 == 1) {
 		// OpVectorExtractDynamic <result_type> <result_id> <vector> <index>
 		SUtils::add(res, (5 << 16) | 77);
@@ -328,7 +336,7 @@ namespace spurv {
 		SUtils::add(res, this->getID());
 		SUtils::add(res, this->v1->getID());
 		SUtils::add(res, this->v2->getID());
-	      
+
 	      } else {
 		// OpCompositeExtract <result_type> <result_id> <matrix> <index>
 		SUtils::add(res, (5 << 16) | 81);
@@ -336,16 +344,16 @@ namespace spurv {
 		SUtils::add(res, this->getID());
 		SUtils::add(res, this->v1->getID());
 		SUtils::add(res, this->v2->getID());
-	    
+
 	      }
 	    } else if constexpr (tt2::getKind() == STypeKind::KIND_ARR ||
 				 tt2::getKind() == STypeKind::KIND_RUN_ARR) {
 	      int temp_id = SUtils::getNewID();
-	    
+
 	      // OpAccessChain <result_pointer_type> <result_id> <array_pointer> <index>
 	      SUtils::add(res, (5 << 16) | 65);
 	      SUtils::add(res, SPointer<(SStorageClass)tt2::getArg0(),
-			  typename tt2::firstInnerType>::getID()); 
+			  typename tt2::firstInnerType>::getID());
 	      SUtils::add(res, temp_id);
 	      SUtils::add(res, this->v1->getID());
 	      SUtils::add(res, this->v2->getID());
@@ -355,7 +363,7 @@ namespace spurv {
 	      SUtils::add(res, tt2::firstInnerType::getID());
 	      SUtils::add(res, this->getID());
 	      SUtils::add(res, temp_id);
-	    
+
 	    }else {
 	    printf("Expression lookup operation not yet implemented\n");
 	    exit(-1);
@@ -367,7 +375,7 @@ namespace spurv {
 	  }
 
 	  assert(num_components(d1) == num_components(d2));
-	  
+
 	  if(d1_comp.kind == STypeKind::KIND_FLOAT) {
 	    if(d2_comp.kind == STypeKind::KIND_FLOAT) {
 	      // OpFConvert
@@ -379,7 +387,7 @@ namespace spurv {
 	      // OpConvertSToF / OpConvertUToF
 	      // (Yes, think this is right, although the order is S-U, opposite of convention)
 	      int opcode = d2.a1 == 1 ? 111 : 112;
-	      
+
 	      SUtils::add(res, (4 << 16) | opcode);
 	      SUtils::add(res, tt::getID());
 	      SUtils::add(res, this->getID());
@@ -394,7 +402,7 @@ namespace spurv {
 		int temp_id = SUtils::getNewID();
 
 		// Not sure what's the best order, I choose to bitcast first
-		
+
 		// OpBitCast
 		SUtils::add(res, (4 << 16) | 124);
 		SUtils::add(res, tt::getID());
@@ -426,7 +434,7 @@ namespace spurv {
 	    } else if (d2_comp.kind == STypeKind::KIND_FLOAT) {
 	      // OpConvertFToU / OpConvertFToS
 	      int opcode = d1_comp.a1 == 0 ? 109 : 110;
-		
+
 	      SUtils::add(res, (4 << 16) | opcode);
 	      SUtils::add(res, tt::getID());
 	      SUtils::add(res, this->getID());
@@ -449,7 +457,7 @@ namespace spurv {
   /*
    * Utility type checker
    */
-  
+
   template<typename tt1, typename tt2>
   struct multiplication_res_type {
     // NB: Doesn't cover all cases
@@ -457,7 +465,7 @@ namespace spurv {
     typedef typename std::conditional<std::is_same<tt1, float_s>::value, tt2, tmp0_type >::type type;
   };
 
-  
+
   /*
    * Operator functions
    */
@@ -468,8 +476,21 @@ namespace spurv {
     ex->register_left_node(v1);
     return *ex;
   }
-  
-  
+
+  template<typename tt>
+  SExpr<tt, EXPR_DPDX, tt, void_s>& dfdx(SValue<tt>& v1) {
+    SExpr<tt, EXPR_DPDX, tt, void_s>* ex = SUtils::allocate<SExpr<tt, EXPR_DPDX, tt, void_s> >();
+    ex->register_left_node(v1);
+    return *ex;
+  }
+
+  template<typename tt>
+  SExpr<tt, EXPR_DPDY, tt, void_s>& dfdy(SValue<tt>& v1) {
+    SExpr<tt, EXPR_DPDY, tt, void_s>* ex = SUtils::allocate<SExpr<tt, EXPR_DPDY, tt, void_s> >();
+    ex->register_left_node(v1);
+    return *ex;
+  }
+
   // Additions
   template<typename in1_t, typename in2_t>
   SExpr<typename uwr<in1_t, in2_t>::type,
@@ -477,7 +498,7 @@ namespace spurv {
 	typename uwr<in1_t, in2_t>::type,
 	typename uwr<in1_t, in2_t>::type>&
   operator+(in1_t&& in1, in2_t&& in2) {
-    
+
     using tt = typename uwr<in1_t, in2_t>::type;
 
     SExpr<tt, EXPR_ADDITION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_ADDITION, tt, tt> >();
@@ -486,7 +507,7 @@ namespace spurv {
     return *ex;
   }
 
-  
+
   // Subtractions
   template<typename in1_t, typename in2_t>
   SExpr<typename uwr<in1_t, in2_t>::type,
@@ -494,17 +515,17 @@ namespace spurv {
 	typename uwr<in1_t, in2_t>::type,
 	typename uwr<in1_t, in2_t>::type>&
   operator-(in1_t&& in1, in2_t&& in2) {
-    
+
     using tt = typename uwr<in1_t, in2_t>::type;
 
-    
+
     SExpr<tt, EXPR_SUBTRACTION, tt, tt>* ex = SUtils::allocate<SExpr<tt, EXPR_SUBTRACTION, tt, tt> >();
     ex->register_left_node(SValueWrapper::unwrap_to<in1_t, tt>(in1));
     ex->register_right_node(SValueWrapper::unwrap_to<in2_t, tt>(in2));
     return *ex;
   }
-  
-  
+
+
   // Division
   template<typename in1_t, typename in2_t>
   SExpr<typename uwr<in1_t, in2_t>::type,
@@ -519,12 +540,12 @@ namespace spurv {
     ex->register_right_node(SValueWrapper::unwrap_to<in2_t, tt>(in2));
     return *ex;
   }
-  
+
 
   /*
    * Multiplication overrides - matrix multiplication, matrix scaling, element-wise multiplication
    */
-  
+
   template<typename tt1, typename tt2>
   concept MultiplicableSpurvMatrices =
     (RequireOneSpurvValue<tt1, tt2> &&
@@ -536,7 +557,7 @@ namespace spurv {
 
   template<typename t1, typename t2>
   struct matrix_multiplication_res_type {};
-  
+
   template<int n, int m, int a, int b, typename inner>
   struct matrix_multiplication_res_type<SMat<n, m, inner>, SMat<a, b, inner> > {
     using type = SMat<n, b, inner>;
@@ -544,7 +565,7 @@ namespace spurv {
 
   // Matrix multiplication
   template<typename tt1, typename tt2>
-  requires MultiplicableSpurvMatrices<typename std::remove_reference<tt1>::type, 
+  requires MultiplicableSpurvMatrices<typename std::remove_reference<tt1>::type,
 				      typename std::remove_reference<tt2>::type>
   SExpr<typename matrix_multiplication_res_type<typename SValueWrapper::unwrapped_type<tt1>::type,
 						typename SValueWrapper::unwrapped_type<tt2>::type>::type,
@@ -606,7 +627,7 @@ namespace spurv {
 	  typename matrix_type<tt1, tt2>::type::inner_type>& operator*(tt1&& ml, tt2&& mr) {
     using comp_type = typename matrix_type<tt1, tt2>::type::inner_type;
     using mat_type = typename matrix_type<tt1, tt2>::type;
-    
+
 
     SExpr<mat_type, EXPR_MULTIPLICATION, mat_type, comp_type>* ex =
       SUtils::allocate<SExpr<mat_type, EXPR_MULTIPLICATION, mat_type, comp_type> >();
@@ -625,8 +646,8 @@ namespace spurv {
 	  typename matrix_type<tt1, tt2>::type::inner_type>& operator*(tt1&& ml, tt2&& mr) {
     return mr * ml;
   }
-  
-  
+
+
   template<typename tt1, typename tt2>
   concept HasSameType =
     RequireOneSpurvValue<tt1, tt2> &&
@@ -641,7 +662,7 @@ namespace spurv {
   template<typename tt1>
   concept NotWideMatrix =
     !is_spurv_mat_type<tt1>::value || tt1::getArg1() == 1;
-  
+
   // Elementwise multiplication
   template<typename tt1, typename tt2>
   requires (HasSameType<typename std::remove_reference<tt1>::type,
@@ -653,7 +674,7 @@ namespace spurv {
 	typename get_common_type<tt1, tt2>::type>& operator*(tt1&& el, tt2&& er) {
 
     using sptype = typename get_common_type<tt1, tt2>::type;
-    
+
     SExpr<sptype, EXPR_MULTIPLICATION, sptype, sptype>* ex =
       SUtils::allocate<SExpr<sptype, EXPR_MULTIPLICATION, sptype, sptype> >();
 
@@ -671,7 +692,7 @@ namespace spurv {
      typename std::remove_reference<tt2>::type> &&
      is_spurv_mat_type<typename SValueWrapper::unwrapped_type<tt1>::type>::value &&
      SValueWrapper::unwrapped_type<tt1>::type::mm == 1);
-     
+
 
   template<typename tt1, typename tt2>
   requires AreDottable<tt1, tt2>
@@ -690,7 +711,7 @@ namespace spurv {
     return *ex;
   }
 
-  
+
   // Mod and Rem
   template<typename in1_t, typename in2_t>
   SExpr<typename uwr<in1_t, in2_t>::type,
@@ -726,8 +747,8 @@ namespace spurv {
 	typename uwr<in1_t, in2_t>::type>& operator%(in1_t&& in1, in2_t&& in2) {
     return mod(in1, in2);
   }
-  
-  
+
+
   /*
    * Lookup functions
    */
@@ -741,11 +762,11 @@ namespace spurv {
     SExpr<typename lookup_result<tt>::type, EXPR_LOOKUP,
 	  tt, ti>* ex  =
       SUtils::allocate<SExpr<typename lookup_result<tt>::type, EXPR_LOOKUP,
-			     tt, ti> >(); 
+			     tt, ti> >();
     ex->register_left_node(*this);
     ex->register_right_node(index);
     return *ex;
-  } 
+  }
 
   template<typename tt>
   SValue<typename lookup_result<tt>::type>& SValue<tt>::operator[](int index) {
@@ -755,7 +776,7 @@ namespace spurv {
     SExpr<typename lookup_result<tt>::type, EXPR_LOOKUP,
 	  tt, SInt<32, 1> >* ex  =
       SUtils::allocate<SExpr<typename lookup_result<tt>::type, EXPR_LOOKUP,
-			     tt, SInt<32, 1> > >(); 
+			     tt, SInt<32, 1> > >();
     ex->register_left_node(*this);
     ex->register_right_node(*c);
 
@@ -771,14 +792,14 @@ namespace spurv {
   SExpr<t1, EXPR_CAST, t2>& cast(SValue<t2>& val) {
     static_assert(is_spurv_castable<t2, t1>::value,
 		  "[spurv::cast] The supplied type is not castable to desired type");
-    
+
     SExpr<t1, EXPR_CAST, t2>* ex = SUtils::allocate<SExpr<t1, EXPR_CAST, t2> >();
 
     ex->register_left_node(val);
     return *ex;
   }
-  
-  
+
+
   /*
    * Comparison operations
    */
@@ -798,7 +819,7 @@ namespace spurv {
     ex->register_right_node(SValueWrapper::unwrap_to<t2, tt>(v2));
     return *ex;
   }
-  
+
   template<typename t1, typename t2>
   SExpr<SBool, EXPR_EQUAL,
 	typename uwr<t1, t2>::type,
@@ -819,40 +840,40 @@ namespace spurv {
 	typename uwr<t1, t2>::type>& operator<(t1&& v1, t2&& v2) {
     return construct_comparison_val<t1, t2, EXPR_LESSTHAN>(v1, v2);
   }
-  
+
   template<typename t1, typename t2>
   SExpr<SBool, EXPR_GREATERTHAN,
 	typename uwr<t1, t2>::type,
 	typename uwr<t1, t2>::type>& operator>(t1&& v1, t2&& v2) {
     return construct_comparison_val<t1, t2, EXPR_GREATERTHAN>(v1, v2);
   }
-  
+
   template<typename t1, typename t2>
   SExpr<SBool, EXPR_LESSOREQUAL,
 	typename uwr<t1, t2>::type,
 	typename uwr<t1, t2>::type>& operator<=(t1&& v1, t2&& v2) {
     return construct_comparison_val<t1, t2, EXPR_LESSOREQUAL>(v1, v2);
   }
-  
+
   template<typename t1, typename t2>
   SExpr<SBool, EXPR_GREATEROREQUAL,
 	typename uwr<t1, t2>::type,
 	typename uwr<t1, t2>::type>& operator>=(t1&& v1, t2&& v2) {
     return construct_comparison_val<t1, t2, EXPR_GREATEROREQUAL>(v1, v2);
   }
-  
-  
+
+
   /*
    * Special operator functions
    */
-  
+
   template<typename tt>
   std::ostream& operator<<(std::ostream& out_stream, SValue<tt>& v) {
     v.print_nodes_post_order(out_stream);
     return out_stream;
   }
 
-  
+
 };
 
 #endif // __SPURV_EXPRESSIONS_IMPL
